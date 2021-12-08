@@ -12,3 +12,9 @@ Zebra=1
 Pebbles=2
 Bamboo=3
 Mountain=4
+
+Area
+Startbox=1
+Stem=2
+Dv=3
+Arm=4
