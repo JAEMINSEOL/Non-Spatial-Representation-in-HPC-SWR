@@ -2,28 +2,38 @@ Initial_SWRFilter_common;
 thisRegion = 'CA1';
 %% export units & ripples table
 for clRUN = 1:5
-thisSID.full = ['561-0' num2str(clRUN)];
-load([ROOT.Save '\' thisSID.full '_' thisRegion '.mat'])
-if any(strcmp('FieldPos',fieldnames(UnitsTable)))
-UnitsTable = removevars(UnitsTable, 'FieldPos');
-end
-for i=1:size(UnitsTable,1)
-    if UnitsTable.Type(i)>0
-        UnitsTable.Field(i)=1;
-    else
-        UnitsTable.Field(i)=0;
+    thisSID.full = ['561-0' num2str(clRUN)];
+    load([ROOT.Save '\' thisSID.full '_' thisRegion '.mat'])
+    if any(strcmp('FieldPos',fieldnames(UnitsTable)))
+        UnitsTable = removevars(UnitsTable, 'FieldPos');
     end
-end
-UnitsTable.Properties.VariableNames{1} = 'Region';
-UnitsTable.Region(:)=1;
-UnitsTable = movevars(UnitsTable, 'Region', 'After', 'TT');
-
-
-for i=1:size(RipplesTable,1)
-    id = cell2mat(RipplesTable.RippleID(i));
+    for i=1:size(UnitsTable,1)
+        if UnitsTable.Type(i)>0
+            UnitsTable.Field(i)=1;
+        else
+            UnitsTable.Field(i)=0;
+        end
+    end
+    UnitsTable.Properties.VariableNames{1} = 'Region';
+    UnitsTable.Region(:)=1;
+    
+    
+    UnitsTable.PeakArea(UnitsTable.PeakPos<=2) = 1;
+    UnitsTable.PeakArea(UnitsTable.PeakPos<29 & UnitsTable.PeakPos>2) = 2;
+    UnitsTable.PeakArea(UnitsTable.PeakPos<38 & UnitsTable.PeakPos>28) = 3;
+    UnitsTable.PeakArea(UnitsTable.PeakPos>37) = 4;
+    
+     
+    
+    UnitsTable = movevars(UnitsTable, 'Region', 'After', 'TT');
+    UnitsTable = movevars(UnitsTable, 'PeakArea', 'After', 'Field');
+    
+    
+    for i=1:size(RipplesTable,1)
+        id = cell2mat(RipplesTable.RippleID(i));
     RipplesTable.Rat(i) = str2double(id(1:3));
     RipplesTable.Session(i) = str2double(id(5:6));
-    RipplesTable.RipID(i) = str2double(id(end-2:end));
+    RipplesTable.RipID(i) = str2double(id(end-3:end));
     
     if strcmp(RipplesTable.Region(i),'SUB')
         RipplesTable.temp1(i) = 0;
@@ -41,7 +51,7 @@ for i=1:size(RipplesTable,1)
     elseif strcmp(RipplesTable.Area(i),'stem')
         RipplesTable.temp(i) = 2;
     elseif strcmp(RipplesTable.Area(i),'arm')
-        RipplesTable.temp(i) = 3;
+        RipplesTable.temp(i) = 4;
     end
 end
 
@@ -119,4 +129,3 @@ for clRUN = 1:5
         'VariableNames',{'RipID','SpkTime','RatID','SessionID','TT','UnitID','Region','Type','Bursting'});
     writetable(ReactTable,['ReactTable_r561_s' jmnum2str(clRUN,2) '_CA1.xlsx'])
 end
-            
