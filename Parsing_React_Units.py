@@ -98,13 +98,16 @@ y=y.reset_index(drop=True)
 h = df_rip_valid.loc[df_react_valid_dv['RipID'],['Context','meanRDI_ZB','meanRDI_PM','meanRDI_LR']]
 h=h.reset_index(drop=True)
 dat = pd.concat([x,y,h],axis=1)
+dat['RDI_LR']=dat['RDI_LR'].fillna(0)
+dat['meanRDI_LR']=dat['meanRDI_LR'].fillna(0)
 #%%
-dat['rank']=dat[['meanRDI_ZB','RipID']].apply(tuple,axis=1).rank(method='dense')
+dat['rank']=dat[['meanRDI_LR','RipID']].apply(tuple,axis=1).rank(method='dense')
+
 dat=dat.sort_values('rank')
 
 plt.figure(figsize=(20,10))
 
-ax=sns.scatterplot(y='RDI_ZB',x='rank',hue='Context',data=dat,palette='tab10')
+ax=sns.scatterplot(y='RDI_LR',x='rank',hue='Context',data=dat,palette='tab10')
 handles, labels  =  ax.get_legend_handles_labels()
 ax.legend(handles, ['Zebra','Pebbles','Bamboo','Mountain'])
 ax.set_xlabel("Ripples")
@@ -113,4 +116,5 @@ ax.set_xticklabels(dat['RipID'].unique(), fontsize=8,rotation=90)
 ax.set_ylim(-1,1)
 ax.grid(which="major",alpha=0.5)
 ax.grid()
+
 
