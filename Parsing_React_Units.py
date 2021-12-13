@@ -46,6 +46,17 @@ df_react_pivot_dv[df_react_pivot_dv==0]=np.nan
 
 df_react_pivot_dv_rdi =df_react_pivot_dv.mul(df_unit_valid_dv.RDI_ZB.values,axis=0)
 
+df_rip['meanRDI_ZB'] = 0
+df_rip['meanRDI_PM'] = 0
+df_rip['meanRDI_LR'] = 0
+for i in range(df_rip.shape[0]):
+    thisRipID = df_rip.RipID[i]
+    thisUnitID = df_react_valid_dv['TT-Unit'][df_react_valid_dv['RipID']==thisRipID]
+    thisUnits = df_unit_valid_dv[df_unit_valid_dv['TT-Unit'].isin(thisUnitID)]
+    df_rip['meanRDI_ZB'].iloc[i] = np.mean(thisUnits.RDI_ZB)
+    df_rip['meanRDI_PM'].iloc[i] = np.mean(thisUnits.RDI_PM)
+    df_rip['meanRDI_LR'].iloc[i] = np.mean(thisUnits.RDI_LR)
+    
 df_rip_valid = df_rip[df_rip['RipID'].isin(df_react_pivot_dv_rdi.columns)]
 
 #
@@ -72,41 +83,34 @@ pivot_overlap = pivot_overlap.astype('int64')
 mask = np.triu(np.ones_like(pivot_overlap, dtype=np.bool))
 sns.heatmap(pivot_overlap, cmap ='Blues', linewidths = 0.30, annot = True, mask=mask)
 
-plt.figure(figsize=(100,1))
-plt.show()
+
 
 df_unit_valid_dv=df_unit_valid_dv.set_axis(df_unit_valid_dv['TT-Unit'],axis=0)
 df_rip_valid=df_rip_valid.set_axis(df_rip_valid['RipID'],axis=0)
 # RDI distribution plot
-df_rip['meanRDI_ZB'] = 0
-df_rip['meanRDI_PM'] = 0
-df_rip['meanRDI_LR'] = 0
-for i in range(df_rip.shape[0]):
-    thisRipID = df_rip.RipID[i]
-    thisUnitID = df_react_valid_dv['TT-Unit'][df_react_valid_dv['RipID']==thisRipID]
-    thisUnits = df_unit_valid_dv[df_unit_valid_dv['TT-Unit'].isin(thisUnitID)]
-    df_rip['meanRDI_ZB'].iloc[i] = np.mean(thisUnits.RDI_ZB)
-    df_rip['meanRDI_PM'].iloc[i] = np.mean(thisUnits.RDI_PM)
-    df_rip['meanRDI_LR'].iloc[i] = np.mean(thisUnits.RDI_LR)
-    
+
 
 
 x = df_unit_valid_dv.loc[df_react_valid_dv['TT-Unit'],['RDI_ZB','RDI_PM','RDI_LR']]
 x=x.reset_index(drop=True)
-y = df_react_valid_dv['RipID'].rank(method='dense')
+y = df_react_valid_dv['RipID']
 y=y.reset_index(drop=True)
 h = df_rip_valid.loc[df_react_valid_dv['RipID'],['Context','meanRDI_ZB','meanRDI_PM','meanRDI_LR']]
 h=h.reset_index(drop=True)
 dat = pd.concat([x,y,h],axis=1)
-dat['rank']=dat['meanRDI_ZB'].rank(method='dense')
+#%%
+dat['rank']=dat[['meanRDI_ZB','RipID']].apply(tuple,axis=1).rank(method='dense')
+dat=dat.sort_values('rank')
 
 plt.figure(figsize=(20,10))
 
-ax=sns.scatterplot(y='RDI_LR',x='rank',hue='Context',data=dat,palette='tab10')
+ax=sns.scatterplot(y='RDI_ZB',x='rank',hue='Context',data=dat,palette='tab10')
 handles, labels  =  ax.get_legend_handles_labels()
 ax.legend(handles, ['Zebra','Pebbles','Bamboo','Mountain'])
 ax.set_xlabel("Ripples")
-ax.set_xticks(range(int(max(dat['rank']))))
+ax.set_xticks(dat['rank'].unique())
+ax.set_xticklabels(dat['RipID'].unique(), fontsize=8,rotation=90)
+ax.set_ylim(-1,1)
 ax.grid(which="major",alpha=0.5)
 ax.grid()
-plt.show()
+
