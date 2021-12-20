@@ -3,8 +3,6 @@
 Created on Thu Dec  9 10:43:10 2021
 
 1. Reactivated group의 RDI 분포 확인
-
-21.12.20 - Wilcoxon signed ranksum test 결과 추가
 @author: user
 """
 
@@ -17,30 +15,47 @@ import seaborn as sns
 import itertools as ite
 #%% import data
 ROOT_data = 'D:/HPC-SWR project/Processed Data'
+df_rip=pd.DataFrame()
+df_unit=pd.DataFrame()
+df_react=pd.DataFrame()
 
-thisRID = 561
-thisSID = 1
-thisRegion = 'CA1'
-
-df_rip = pd.read_excel(f'{ROOT_data}/RipplesTable_r{thisRID}_s{str(thisSID).zfill(2)}_{thisRegion}.xlsx')
-df_unit = pd.read_excel(f'{ROOT_data}/UnitsTable_r{thisRID}_s{str(thisSID).zfill(2)}_{thisRegion}.xlsx')
-df_react = pd.read_excel(f'{ROOT_data}/ReactTable_r{thisRID}_s{str(thisSID).zfill(2)}_{thisRegion}.xlsx')
-
+for thisSID in range(5):
+    thisRID = 561
+    thisSID = thisSID+1
+    thisRegion = 'CA1'
+    
+    df_rip_temp = pd.read_excel(f'{ROOT_data}/RipplesTable_r{thisRID}_s{str(thisSID).zfill(2)}_{thisRegion}.xlsx')
+    df_unit_temp = pd.read_excel(f'{ROOT_data}/UnitsTable_r{thisRID}_s{str(thisSID).zfill(2)}_{thisRegion}.xlsx')
+    df_react_temp = pd.read_excel(f'{ROOT_data}/ReactTable_r{thisRID}_s{str(thisSID).zfill(2)}_{thisRegion}.xlsx')
+    
+    df_rip=df_rip.append(df_rip_temp, ignore_index=True)
+    df_unit=df_unit.append(df_unit_temp, ignore_index=True)
+    df_react=df_react.append(df_react_temp, ignore_index=True)
 #%% data processing
+df_rip['RipID'] = df_rip['RipID'].astype(str).str.zfill(4)
+df_rip['Session'] = df_rip['Session'].astype(str).str.zfill(1)
+df_rip['RipID'] = df_rip['Session'] + '-' + df_rip['RipID']
+
+df_unit['Session'] = df_unit['Session'].astype(str).str.zfill(1)
+df_unit['TT'] = df_unit['TT'].astype(str).str.zfill(2)
+df_unit['Unit'] = df_unit.Unit.astype(str).str.zfill(2)
+df_unit['TT-Unit'] = df_unit['Session'] + '-' + df_unit['TT'] +  '-' + df_unit['Unit']
+
+df_react['RipID'] = df_react['RipID'].astype(str).str.zfill(4)
+df_react['SessionID'] = df_react['SessionID'].astype(str).str.zfill(1)
+df_react['TT'] = df_react['TT'].astype(str).str.zfill(2)
+df_react['UnitID'] = df_react.UnitID.astype(str).str.zfill(2)
+df_react['TT-Unit'] = df_react['SessionID'] + '-' + df_react['TT'] +  '-' + df_react['UnitID']
+df_react['RipID'] = df_react['SessionID'] + '-' + df_react['RipID']
+
 valid_rips = df_rip.RipID[df_rip.Filter>0]
-
 df_react_valid = df_react[df_react['RipID'].isin(valid_rips) & df_react['Type']>0]
-df_unit_valid = df_unit[(df_unit.Type>0)]
+df_unit_valid = df_unit[df_unit['TT-Unit'].isin(df_react_valid['TT-Unit'])]
 
 
-df_unit_valid['TT'] = df_unit_valid['TT'].astype(str).str.zfill(2)
-df_unit_valid['Unit'] = df_unit_valid.Unit.astype(str).str.zfill(2)
-df_unit_valid['TT-Unit'] = df_unit_valid['TT'] +  '-' + df_unit_valid['Unit']
 df_unit_valid_dv = df_unit_valid[(df_unit_valid.PeakArea==3)]
 
-df_react_valid['TT'] = df_react_valid['TT'].astype(str).str.zfill(2)
-df_react_valid['UnitID'] = df_react_valid.UnitID.astype(str).str.zfill(2)
-df_react_valid['TT-Unit'] = df_react_valid['TT'] +  '-' + df_react_valid['UnitID']
+
 df_react_valid_dv = df_react_valid[df_react_valid['TT-Unit'].isin(df_unit_valid_dv['TT-Unit'])]
 
 df_react_pivot_dv = pd.pivot_table(df_react_valid_dv, index='TT-Unit', columns = 'RipID',values='Region',aggfunc='count')
@@ -101,34 +116,48 @@ dat['meanRDI_LR']=dat['meanRDI_LR'].fillna(0)
 dat['rank']=dat[['RipID']].apply(tuple,axis=1).rank(method='dense')
 dat=dat.sort_values('rank')
 
-# dat.to_excel(f'{ROOT_data}/ReactTable_r{thisRID}_s{str(thisSID).zfill(2)}_{thisRegion}_2.xlsx')
+dat.to_excel(f'{ROOT_data}/ReactTable_r{thisRID}_all_{thisRegion}_2.xlsx')
 
-#%% Wilcoxon signed rank sum test
-Targ='LR'
-dat['p_Wcx']=1
-for thisRID in dat.RipID.unique():
-    temp = dat[dat['RipID']==thisRID]
-    # temp = temp.drop_duplicates(subset='TT-Unit')
-    p=sp.stats.wilcoxon(temp[f'RDI_{Targ}'])
-    dat['p_Wcx'][dat['RipID']==thisRID]=p[1]
-
-#%% plotting
-
+#%% Wilcoxon signed rank sum test & plotting
+Targ='PM'
+y=[[0,0],[0,0],[0,0],[0,0]]
+for c in range(1,5):
+    dat_part = dat[(dat['Context']==3) & (dat['PeakArea']==3)]
+    dat_part['rank']=dat_part[[f'meanRDI_{Targ}','RipID']].apply(tuple,axis=1).rank(method='dense')
+    
+    dat_part['p_Wcx']=1
+    dat_part['p_Wcx2']=1
+    for thisRID in dat_part.RipID.unique():
+        try:
+            temp = dat_part[dat_part['RipID']==thisRID]
+            # temp = temp.drop_duplicates(subset='TT-Unit')
+            p=sp.stats.wilcoxon(temp[f'RDI_{Targ}'],alternative='greater')
+            dat_part['p_Wcx'][dat_part['RipID']==thisRID]=p[1]
+            p=sp.stats.wilcoxon(temp[f'RDI_{Targ}'],alternative='less')
+            dat_part['p_Wcx2'][dat_part['RipID']==thisRID]=p[1]
+        except:
+            print(1)
+    
+    temp = dat_part
+    temp['p_Wcx'] = temp['p_Wcx']<0.05
+    temp['p_Wcx2'] = temp['p_Wcx2']<0.05
+    t=temp[temp['p_Wcx']<2]
+    y[c-1][0] = len(t['RipID'].unique())
+    t=temp[temp['p_Wcx2']==1]
+    y[c-1][1] = len(t['RipID'].unique())
+y=pd.DataFrame(y)
+#%%
 plt.figure(figsize=(40,10))
-dat_part = dat[(dat['Context']!=0)]
-dat_part['rank']=dat_part[[f'meanRDI_{Targ}','RipID']].apply(tuple,axis=1).rank(method='dense')
-temp = dat_part
-temp['p_Wcx'] = temp['p_Wcx']<0.05
-
 ax=sns.scatterplot(y=f'RDI_{Targ}',x='rank',data=dat_part[dat_part['PeakArea']==3],color='k')
 ax=sns.scatterplot(y=f'RDI_{Targ}',x='rank',data=dat_part[dat_part['PeakArea']==2],color='k',marker='x')
-ax=sns.scatterplot(y='p_Wcx',x='rank',data=temp[temp.p_Wcx==True],color='r',marker='*',s=160)
+ax=sns.scatterplot(y='p_Wcx2',x='rank',data=temp[temp.p_Wcx2==True],color='r',marker='*',s=160)
+ax=sns.scatterplot(y='p_Wcx',x='rank',data=temp[temp.p_Wcx==True],color='b',marker='*',s=160)
 handles, labels  =  ax.get_legend_handles_labels()
 ax.legend(handles, ['Stbox','Stem','Dv','Arm'])
 ax.set_xlabel("Ripples")
 ax.set_xticks(dat_part['rank'].unique())
 ax.set_xticklabels(dat_part['RipID'].unique(), fontsize=7,rotation=90)
-ax.set_ylim(-1,1.1)
+ax.set_xlim(-1,1)
 ax.set_xlim(0.5,dat_part['rank'].max()+0.5)
 ax.grid(which="major",alpha=0.5)
 ax.grid()
