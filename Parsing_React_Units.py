@@ -103,7 +103,7 @@ df_react_valid=df_react_valid[df_react_valid['RipID'].isin(df_rip_valid['RipID']
 
 x = df_unit_valid.loc[df_react_valid['TT-Unit'],['TT-Unit','PeakArea','RDI_ZB','RDI_PM','RDI_LR']]
 x=x.reset_index(drop=True)
-y = df_react_valid['RipID']
+y = df_react_valid.loc[:,['RipID','SpkTime']]
 y=y.reset_index(drop=True)
 h = df_rip_valid.loc[df_react_valid['RipID'],['Context','meanRDI_ZB','meanRDI_PM','meanRDI_LR']]
 h=h.reset_index(drop=True)
@@ -117,6 +117,9 @@ dat['rank']=dat[['RipID']].apply(tuple,axis=1).rank(method='dense')
 dat=dat.sort_values('rank')
 
 dat.to_excel(f'{ROOT_data}/ReactTable_r{thisRID}_all_{thisRegion}_2.xlsx')
+df_unit_valid.to_excel(f'{ROOT_data}/UnitTable_r{thisRID}_all_{thisRegion}.xlsx')
+df_rip_valid.to_excel(f'{ROOT_data}/RipplesTable_r{thisRID}_all_{thisRegion}.xlsx')
+df_react_valid.to_excel(f'{ROOT_data}/ReactTable_r{thisRID}_all_{thisRegion}.xlsx')
 
 #%% Wilcoxon signed rank sum test & plotting
 Targ='PM'
