@@ -69,11 +69,11 @@ df_rip_valid=df_rip_valid.set_axis(df_rip_valid['RipID'],axis=0)
 df_act_valid=df_act_valid[df_act_valid['RipID'].isin(df_rip_valid['RipID'])]
 #%% export data
 
-df_unit.to_excel(f'{ROOT_data}/UnitsTable_r{thisRID}_all_{thisRegion}.xlsx')
-df_rip.to_excel(f'{ROOT_data}/RipplesTable_r{thisRID}_all_{thisRegion}.xlsx')
-df_act.to_excel(f'{ROOT_data}/ActTable_r{thisRID}_all_{thisRegion}.xlsx')
+df_unit.to_excel(f'{ROOT_data}/UnitsTable_r{thisRID}_all_{thisRegion}.xlsx', index=False)
+df_rip.to_excel(f'{ROOT_data}/RipplesTable_r{thisRID}_all_{thisRegion}.xlsx', index=False)
+df_act.to_excel(f'{ROOT_data}/ActTable_r{thisRID}_all_{thisRegion}.xlsx', index=False)
 
 
-df_unit_valid.to_excel(f'{ROOT_data}/UnitsTable_r{thisRID}_all_{thisRegion}_v.xlsx')
-df_rip_valid.to_excel(f'{ROOT_data}/RipplesTable_r{thisRID}_all_{thisRegion}_v.xlsx')
-df_act_valid.to_excel(f'{ROOT_data}/ActTable_r{thisRID}_all_{thisRegion}_v.xlsx')
+df_unit_valid.to_excel(f'{ROOT_data}/UnitsTable_r{thisRID}_all_{thisRegion}_v.xlsx', index=False)
+df_rip_valid.to_excel(f'{ROOT_data}/RipplesTable_r{thisRID}_all_{thisRegion}_v.xlsx', index=False)
+df_act_valid.to_excel(f'{ROOT_data}/ActTable_r{thisRID}_all_{thisRegion}_v.xlsx', index=False)
