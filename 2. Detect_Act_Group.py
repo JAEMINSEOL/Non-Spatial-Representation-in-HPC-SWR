@@ -23,7 +23,7 @@ thisRegion='CA1'
    
 df_rip_valid = pd.read_excel(f'{ROOT_data}/RipplesTable_r{thisRID}_{thisSID}_{thisRegion}_v.xlsx')
 df_unit_valid = pd.read_excel(f'{ROOT_data}/UnitsTable_r{thisRID}_{thisSID}_{thisRegion}_v.xlsx')
-df_act_valid = pd.read_excel(f'{ROOT_data}/ReactTable_r{thisRID}_{thisSID}_{thisRegion}_v.xlsx')
+df_act_valid = pd.read_excel(f'{ROOT_data}/ActTable_r{thisRID}_{thisSID}_{thisRegion}_v.xlsx')
 
 #%% data processing
 df_unit_valid_dv = df_unit_valid[(df_unit_valid.PeakArea==3)]
