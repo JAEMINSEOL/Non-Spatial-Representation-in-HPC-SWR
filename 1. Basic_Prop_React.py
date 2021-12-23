@@ -2,9 +2,11 @@
 """
 Created on Tue Dec 21 17:28:19 2021
 
-0. Reactivated cell들이 갖는 특성 확인
+1. Reactivated cell들이 갖는 특성 확인
+input: ReactTable_valid, RipplesTable_valid, UnitsTable_valid
+output: unit property plots
 
-@author: user
+@author: JM_Seol
 """
 
 #%% import libraries
@@ -13,7 +15,21 @@ import scipy as sp
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import itertools as ite
+
+#%% import data
+ROOT_data = 'D:/HPC-SWR project/Processed Data'
+thisRID=561
+thisSID='all'
+thisRegion='CA1'
+
+df_rip = pd.read_excel(f'{ROOT_data}/RipplesTable_r{thisRID}_{thisSID}_{thisRegion}.xlsx')
+df_unit = pd.read_excel(f'{ROOT_data}/UnitsTable_r{thisRID}_{thisSID}_{thisRegion}.xlsx')
+df_react = pd.read_excel(f'{ROOT_data}/ReactTable_r{thisRID}_{thisSID}_{thisRegion}.xlsx')
+
+df_rip_valid = pd.read_excel(f'{ROOT_data}/RipplesTable_r{thisRID}_{thisSID}_{thisRegion}_v.xlsx')
+df_unit_valid = pd.read_excel(f'{ROOT_data}/UnitsTable_r{thisRID}_{thisSID}_{thisRegion}_v.xlsx')
+df_react_valid = pd.read_excel(f'{ROOT_data}/ReactTable_r{thisRID}_{thisSID}_{thisRegion}_v.xlsx')
+
 
 #%%
 
@@ -43,12 +59,12 @@ for Cxt in range(1,5):
 plt.xlabel('Participation in Ripple')
 
 #%%
-temp = df_unit_valid.loc[:,'RDI_ZB':'RDI_LR']
 
     
-f,axes=plt.subplots(2,2,figsize=(10,8),sharex=True,sharey=True)
-for Cxt in range(1,5):
-
-    sns.histplot(df_unit_valid.iloc[:,i+9], color='k'])
+f,axes=plt.subplots(2,2,figsize=(10,8))
+for i in range(1,5):
+   sns.histplot(df_unit.iloc[:,i+8], color='k',ax=axes[divmod(i-1,2)],stat='probability',binwidth=3 if i==1 else 0.1)
+   sns.histplot(df_unit_valid.iloc[:,i+8], color='r',ax=axes[divmod(i-1,2)],stat='probability',binwidth=3 if i==1 else 0.1)
+   if i>1:
+       plt.xlim(-1,1)
     
-plt.xlabel('Participation in Ripple')
