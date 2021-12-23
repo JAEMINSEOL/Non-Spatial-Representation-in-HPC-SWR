@@ -28,7 +28,7 @@ ax = sns.histplot(temp.ReactRips / temp.TotRips,stat='probability')
 ax.set_xlabel('Participation in Ripple')
 
 #%%
-clist = ['r','b','y','g']
+clist = ['#5AB7D4','#F79334','#00506A','#9A4700']
 f,axes=plt.subplots(2,2,figsize=(10,8),sharex=True,sharey=True)
 for Cxt in range(1,5):
     temp = df_unit_valid.loc[:,f'NumRipples_{Cxt}']
@@ -39,5 +39,16 @@ for Cxt in range(1,5):
 
 
     sns.histplot(temp[f'NumRipples_{Cxt}'] / temp.TotRips,stat='probability', color=clist[Cxt-1],ax=axes[divmod(Cxt-1,2)])
+    
+plt.xlabel('Participation in Ripple')
+
+#%%
+temp = df_unit_valid.loc[:,'RDI_ZB':'RDI_LR']
+
+    
+f,axes=plt.subplots(2,2,figsize=(10,8),sharex=True,sharey=True)
+for Cxt in range(1,5):
+
+    sns.histplot(df_unit_valid.iloc[:,i+9], color='k'])
     
 plt.xlabel('Participation in Ripple')
