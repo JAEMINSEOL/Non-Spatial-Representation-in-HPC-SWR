@@ -30,14 +30,32 @@ df_rip_valid = pd.read_excel(f'{ROOT_data}/RipplesTable_r{thisRID}_{thisSID}_{th
 df_unit_valid = pd.read_excel(f'{ROOT_data}/UnitsTable_r{thisRID}_{thisSID}_{thisRegion}_v.xlsx')
 df_act_valid = pd.read_excel(f'{ROOT_data}/ActTable_r{thisRID}_{thisSID}_{thisRegion}_v.xlsx')
 
-df_unit = df_unit[df_unit.Type!=0]
+df_unit = df_unit[(df_unit.Type!=0) & ((df_unit.PeakArea==2) | (df_unit.PeakArea==3))]
+df_unit_valid = df_unit_valid[(df_unit_valid.Type!=0) & ((df_unit_valid.PeakArea==2) | (df_unit_valid.PeakArea==3))]
 #%% RDI, field peak position distribution
-f,axes=plt.subplots(2,2,figsize=(10,8),sharey=True)
-for i in range(1,5):
-   sns.histplot(df_unit.iloc[:,i+8], stat='probability',color='k',ax=axes[divmod(i-1,2)],binwidth=3 if i==1 else 0.1)
-   sns.histplot(df_unit_valid.iloc[:,i+8],stat='probability', color='r',ax=axes[divmod(i-1,2)],binwidth=3 if i==1 else 0.1)
-   if i>1:
-       plt.xlim(-1,1)
+
+for i in range(1,6):
+   f,axes=plt.subplots(1,2,figsize=(10,8))
+   sns.histplot(df_unit.iloc[:,i+7],stat='probability',color='k',ax=axes[0],binwidth=3 if i<=2 else 0.1)
+   sns.histplot(df_unit_valid.iloc[:,i+7],stat='probability', color='r',ax=axes[0],binwidth=3 if i<=2 else 0.1)
+   axes[0].legend([f'All (n={len(df_unit)})',f'Activated (n={len(df_unit_valid)})'])
+   plt.title('Unit distribution histogram')
+   if i>=3:
+       p=sp.stats.wilcoxon(df_unit.iloc[:,i+7])
+       axes[0].text(max(df_unit.iloc[:,i+7])*0.7,0.1,f'p={round(p[1],3)}',color='k')
+       p=sp.stats.wilcoxon(df_unit_valid.iloc[:,i+7])
+       axes[0].text(max(df_unit.iloc[:,i+7])*0.7,0.08,f'p={round(p[1],3)}',color='r')
+
+   
+   sns.ecdfplot(df_unit.iloc[:,i+7],color='k',ax=axes[1])
+   sns.ecdfplot(df_unit_valid.iloc[:,i+7],color='r',ax=axes[1])
+   p=sp.stats.ks_2samp(df_unit.iloc[:,i+7],df_unit_valid.iloc[:,i+7])
+   plt.text(max(df_unit.iloc[:,i+7])/2,0.9,f'p={round(p[1],3)}')
+   plt.title('CDF plot (K-S test)')
+   axes[1].legend(['All', 'Activated'])
+
+print(sp.stats.wilcoxon(df_unit.RDI_PM,alternative='less'))
+
 #%%
 temp=list(np.zeros(5))
 for i in range(1,6):
