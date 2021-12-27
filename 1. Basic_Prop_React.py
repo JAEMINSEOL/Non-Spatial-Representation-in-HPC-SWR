@@ -15,7 +15,7 @@ import scipy as sp
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+import Mod_SWR as swr
 #%% import data
 ROOT_data = 'D:/HPC-SWR project/Processed Data'
 thisRID=561
@@ -30,31 +30,40 @@ df_rip_valid = pd.read_excel(f'{ROOT_data}/RipplesTable_r{thisRID}_{thisSID}_{th
 df_unit_valid = pd.read_excel(f'{ROOT_data}/UnitsTable_r{thisRID}_{thisSID}_{thisRegion}_v.xlsx')
 df_act_valid = pd.read_excel(f'{ROOT_data}/ActTable_r{thisRID}_{thisSID}_{thisRegion}_v.xlsx')
 
+df_clust_summ = pd.read_excel('D:/HPC-SWR project/Information Sheet/ClusterSummary_SWR.xlsx')
+
 df_unit = df_unit[(df_unit.Type!=0) & ((df_unit.PeakArea==2) | (df_unit.PeakArea==3))]
 df_unit_valid = df_unit_valid[(df_unit_valid.Type!=0) & ((df_unit_valid.PeakArea==2) | (df_unit_valid.PeakArea==3))]
 #%% RDI, field peak position distribution
+opts = {'legend':[f'All (n={len(df_unit)})',f'Activated (n={len(df_unit_valid)})'],
+        'title_hist': 'Unit distribution histogram','title_dist': 'CDF plot (K-S test ',
+        'cmap' : ['k','r']}
+
+# SI score (1D out)
+prop = 'SpaInfoScore1D out'
+d1 = swr.Exp_from_ClustSum(df_clust_summ,thisRID,df_unit, prop)
+d2 = swr.Exp_from_ClustSum(df_clust_summ,thisRID,df_unit_valid, prop)
+opts_indiv = {**opts, **{'bins':10,'range':(0,2.5),'fontsize':15}}
+axes = swr.DrawDist_2samp(False, d1,d2,**opts_indiv)
+
+# Mean firing rate
+prop = 'onmazeAvgFR1D out'
+d1 = swr.Exp_from_ClustSum(df_clust_summ,thisRID,df_unit, prop)
+d2 = swr.Exp_from_ClustSum(df_clust_summ,thisRID,df_unit_valid, prop)
+opts_indiv = {**opts, **{'bins':24,'range':(0,12),'fontsize':15,'xlab': 'Mean FR (1D out)'}}
+axes = swr.DrawDist_2samp(False, d1,d2,**opts_indiv)
+
+# Peak firing rate
+prop = 'onmazeMaxFR1D out'
+d1 = swr.Exp_from_ClustSum(df_clust_summ,thisRID,df_unit, prop)
+d2 = swr.Exp_from_ClustSum(df_clust_summ,thisRID,df_unit_valid, prop)
+opts_indiv = {**opts, **{'bins':35,'range':(0,35),'fontsize':15,'xlab': 'Peak FR (1D out)'}}
+axes = swr.DrawDist_2samp(False, d1,d2,**opts_indiv)
+
 
 for i in range(1,6):
-   f,axes=plt.subplots(1,2,figsize=(10,8))
-   sns.histplot(df_unit.iloc[:,i+7],stat='probability',color='k',ax=axes[0],binwidth=3 if i<=2 else 0.1)
-   sns.histplot(df_unit_valid.iloc[:,i+7],stat='probability', color='r',ax=axes[0],binwidth=3 if i<=2 else 0.1)
-   axes[0].legend([f'All (n={len(df_unit)})',f'Activated (n={len(df_unit_valid)})'])
-   plt.title('Unit distribution histogram')
-   if i>=3:
-       p=sp.stats.wilcoxon(df_unit.iloc[:,i+7])
-       axes[0].text(max(df_unit.iloc[:,i+7])*0.7,0.1,f'p={round(p[1],3)}',color='k')
-       p=sp.stats.wilcoxon(df_unit_valid.iloc[:,i+7])
-       axes[0].text(max(df_unit.iloc[:,i+7])*0.7,0.08,f'p={round(p[1],3)}',color='r')
+       axes = swr.DrawDist_2samp(True, df_unit.iloc[:,i+7],df_unit_valid.iloc[:,i+7],**opts)
 
-   
-   sns.ecdfplot(df_unit.iloc[:,i+7],color='k',ax=axes[1])
-   sns.ecdfplot(df_unit_valid.iloc[:,i+7],color='r',ax=axes[1])
-   p=sp.stats.ks_2samp(df_unit.iloc[:,i+7],df_unit_valid.iloc[:,i+7])
-   plt.text(max(df_unit.iloc[:,i+7])/2,0.9,f'p={round(p[1],3)}')
-   plt.title('CDF plot (K-S test)')
-   axes[1].legend(['All', 'Activated'])
-
-print(sp.stats.wilcoxon(df_unit.RDI_PM,alternative='less'))
 
 #%%
 temp=list(np.zeros(5))
