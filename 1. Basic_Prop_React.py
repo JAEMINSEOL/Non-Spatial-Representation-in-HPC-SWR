@@ -60,9 +60,35 @@ d2 = swr.Exp_from_ClustSum(df_clust_summ,thisRID,df_unit_valid, prop)
 opts_indiv = {**opts, **{'bins':35,'range':(0,35),'fontsize':15,'xlab': 'Peak FR (1D out)'}}
 axes = swr.DrawDist_2samp(False, d1,d2,**opts_indiv)
 
+# Number of Spike
+prop = 'numOfSpk1D out'
+d1 = swr.Exp_from_ClustSum(df_clust_summ,thisRID,df_unit, prop)
+d2 = swr.Exp_from_ClustSum(df_clust_summ,thisRID,df_unit_valid, prop)
+opts_indiv = {**opts, **{'bins':22,'range':(0,2200),'fontsize':15,'xlab': 'Num. of spikes'}}
+axes = swr.DrawDist_2samp(False, d1,d2,**opts_indiv)
 
-for i in range(1,6):
-       axes = swr.DrawDist_2samp(True, df_unit.iloc[:,i+7],df_unit_valid.iloc[:,i+7],**opts)
+# Sparsity
+prop = 'Sparsity'
+d1 = swr.Exp_from_ClustSum(df_clust_summ,thisRID,df_unit, prop)
+d2 = swr.Exp_from_ClustSum(df_clust_summ,thisRID,df_unit_valid, prop)
+opts_indiv = {**opts, **{'bins':20,'range':(0,1),'fontsize':15,'xlab': 'Sparsity'}}
+axes = swr.DrawDist_2samp(False, d1,d2,**opts_indiv)
+
+# Peak to Valley
+prop = ' Peak (peak to valley)'
+d1 = swr.Exp_from_ClustSum(df_clust_summ,thisRID,df_unit, prop)
+d2 = swr.Exp_from_ClustSum(df_clust_summ,thisRID,df_unit_valid, prop)
+opts_indiv = {**opts, **{'bins':20,'range':(0,400),'fontsize':15,'xlab': 'Peak to valley'}}
+axes = swr.DrawDist_2samp(False, d1,d2,**opts_indiv)
+
+# Peak Position
+opts_indiv = {**opts, **{'bins':21,'range':(0,42),'fontsize':15,'xlab': 'Peak Position (bin)'}}
+axes = swr.DrawDist_2samp(False, df_unit.iloc[:,9],df_unit_valid.iloc[:,9],**opts_indiv)
+
+# RDIs
+for i in range(10,13):
+    opts_indiv = {**opts, **{'bins':24,'range':(-1.2, 1.2),'fontsize':15}}
+    axes = swr.DrawDist_2samp(True, df_unit.iloc[:,i],df_unit_valid.iloc[:,i],**opts_indiv)
 
 
 #%%
