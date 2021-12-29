@@ -55,11 +55,13 @@ for i in range(len(unit)):
 #%% make react sheet & save
 
 # RDI distribution plot
-x = df_unit_valid.loc[df_act_valid['TT-Unit'],['TT-Unit','PeakArea','RDI_ZB','RDI_PM','RDI_LR']]
+x = df_unit_valid.loc[df_unit_valid['TT-Unit'].isin(df_act_valid['TT-Unit']),
+                      ['TT-Unit','PeakArea','RDI_ZB','RDI_PM','RDI_LR']]
 x=x.reset_index(drop=True)
 y = df_act_valid.loc[:,['RipID','SpkTime']]
 y=y.reset_index(drop=True)
-h = df_rip_valid.loc[df_act_valid['RipID'],['Context','meanRDI_ZB','meanRDI_PM','meanRDI_LR']]
+h = df_rip_valid.loc[df_rip_valid['RipID'].isin(df_act_valid['RipID']),
+                     ['Context','meanRDI_ZB','meanRDI_PM','meanRDI_LR']]
 h=h.reset_index(drop=True)
 dat = pd.concat([x,y,h],axis=1)
 dat['RDI_LR']=dat['RDI_LR'].fillna(0)
@@ -72,6 +74,12 @@ dat=dat.sort_values('rank')
 
 dat.to_excel(f'{ROOT_data}/ReactTable_r{thisRID}_all_{thisRegion}_2.xlsx')
 
+#%% unit property distribution for each scene
+TargRDI='ZB'
+Cxt=1
+dat_part = dat[(dat['Context']==Cxt) & ((dat['PeakArea']==2) | (dat['PeakArea']==3))]
+
+sns.scatterplot(dat_part.RDI_ZB, dat_part.RDI_PM, hue=dat_part.RipID)
 
 #%% Wilcoxon signed rank sum test & plotting
 Targ='PM'
