@@ -91,7 +91,7 @@ for i in range(10,13):
     axes = swr.DrawDist_2samp(True, df_unit.iloc[:,i],df_unit_valid.iloc[:,i],**opts_indiv)
 
 
-#%%
+#%% Number of Ripples for each scene
 temp=list(np.zeros(5))
 for i in range(1,6):
     temp[i-1] = sum(df_rip_valid.Session==i)
@@ -100,6 +100,7 @@ plt.figure(figsize=(10,8))
 ax = sns.barplot(data=temp.T)
 ax.set_xticklabels(['Session1','Session2','Session3','Session4','Session5'])
 plt.ylabel('Ripples')
+plt.title('Number of Ripples in Rat561 Sessions')
 #%% Ripple participation rate (all scenes)
 temp = df_unit_valid.loc[:,'NumRipples_1':'NumRipples_4'].sum(axis=1)
 temp = pd.concat([temp,df_unit_valid.Session],axis=1)
@@ -108,11 +109,13 @@ for thisSID in temp.Session.unique():
     temp.loc[temp['Session']==thisSID,'TotRips']=sum(df_rip_valid.Session==thisSID)
 
 plt.figure(figsize=(10,8))
-ax = sns.histplot(temp.ReactRips / temp.TotRips,stat='probability')
-ax.set_xlabel('Participation in Ripple')
-
+ax = sns.histplot(temp.ReactRips / temp.TotRips,stat='probability',bins=10,binrange=(0, 0.5))
+ax.set_xlabel('Ripple Participation Rate')
+plt.rc('font',size=15)
+plt.title('Participation in Ripple')
 #%% Ripple participation rate (each scene)
 clist = ['#5AB7D4','#F79334','#00506A','#9A4700']
+CxtList = ['Zebra', 'Pebbles', 'Bamboo', 'Mountains']
 f,axes=plt.subplots(2,2,figsize=(10,8),sharex=True,sharey=True)
 for Cxt in range(1,5):
     temp = df_unit_valid.loc[:,['TT-Unit', f'NumRipples_{Cxt}']]
@@ -122,9 +125,13 @@ for Cxt in range(1,5):
         temp.loc[temp['Session']==thisSID,'TotRips']=sum((df_rip_valid.Session==thisSID) & (df_rip_valid.Context==Cxt))
 
 
-    sns.histplot(temp[f'NumRipples_{Cxt}'] / temp.TotRips,stat='probability', color=clist[Cxt-1],ax=axes[divmod(Cxt-1,2)])
+    sns.histplot(temp[f'NumRipples_{Cxt}'] / temp.TotRips,stat='probability',
+                 bins=10,binrange=(0, 0.5), color=clist[Cxt-1],ax=axes[divmod(Cxt-1,2)])
+    axes[divmod(Cxt-1,2)].set_title(CxtList[Cxt-1])
     
-plt.xlabel('Participation in Ripple')
+plt.xlabel('')
+plt.suptitle('Participation in Ripple for Each Scene')
+f.text(0.5, 0.04, 'Ripple Participation Rate', ha='center')
 
 
     
