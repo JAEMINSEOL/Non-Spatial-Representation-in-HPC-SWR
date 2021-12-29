@@ -75,11 +75,20 @@ dat=dat.sort_values('rank')
 dat.to_excel(f'{ROOT_data}/ReactTable_r{thisRID}_all_{thisRegion}_2.xlsx')
 
 #%% unit property distribution for each scene
-TargRDI='ZB'
-Cxt=1
-dat_part = dat[(dat['Context']==Cxt) & ((dat['PeakArea']==2) | (dat['PeakArea']==3))]
-
-sns.scatterplot(dat_part.RDI_ZB, dat_part.RDI_PM, hue=dat_part.RipID)
+TargRDI=['ZB','PM']
+clist = ['#5AB7D4','#F79334','#00506A','#9A4700']
+CxtList = ['Zebra', 'Pebbles', 'Bamboo', 'Mountains']
+f,axes=plt.subplots(2,2,figsize=(10,8),sharex=True,sharey=True)
+for Cxt in range(1,5):
+    
+    dat_part = dat[(dat['Context']==Cxt) & ((dat['PeakArea']==2) | (dat['PeakArea']==3))]
+    
+    p=sp.stats.wilcoxon(dat_part[f'RDI_{TargRDI[np.mod(Cxt+1,2)]}'])
+    sns.histplot(dat_part[f'RDI_{TargRDI[np.mod(Cxt+1,2)]}'],binrange=(-1.2,1.2),bins=12,
+                 color=clist[Cxt-1],ax=axes[divmod(Cxt-1,2)], stat='probability')
+    axes[divmod(Cxt-1,2)].plot((0,0),(0,0.5),color='k')
+    axes[divmod(Cxt-1,2)].set_title(f'{CxtList[Cxt-1]}, p={round(p[1],3)}')
+    axes[divmod(Cxt-1,2)].set_ylim(0,0.4)
 
 #%% Wilcoxon signed rank sum test & plotting
 Targ='PM'
