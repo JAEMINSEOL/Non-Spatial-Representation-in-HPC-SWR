@@ -55,14 +55,17 @@ for i in range(len(unit)):
 #%% make react sheet & save
 
 # RDI distribution plot
-x = df_unit_valid.loc[df_unit_valid['TT-Unit'].isin(df_act_valid['TT-Unit']),
+df_unit_valid = df_unit_valid.rename(index=df_unit_valid['TT-Unit'])
+x = df_unit_valid.loc[df_act_valid['TT-Unit'],
                       ['TT-Unit','PeakArea','RDI_ZB','RDI_PM','RDI_LR']]
 x=x.reset_index(drop=True)
 y = df_act_valid.loc[:,['RipID','SpkTime']]
-y=y.reset_index(drop=True)
-h = df_rip_valid.loc[df_rip_valid['RipID'].isin(df_act_valid['RipID']),
+y=y.reset_index(drop=False)
+
+df_rip_valid = df_rip_valid.rename(index=df_rip_valid['RipID'])
+h = df_rip_valid.loc[df_act_valid['RipID'],
                      ['Context','meanRDI_ZB','meanRDI_PM','meanRDI_LR']]
-h=h.reset_index(drop=True)
+h=h.reset_index(drop=False)
 dat = pd.concat([x,y,h],axis=1)
 dat['RDI_LR']=dat['RDI_LR'].fillna(0)
 dat['meanRDI_ZB']=dat['meanRDI_ZB'].fillna(0)
@@ -89,7 +92,6 @@ for Cxt in range(1,5):
     axes[divmod(Cxt-1,2)].plot((0,0),(0,0.5),color='k')
     axes[divmod(Cxt-1,2)].set_title(f'{CxtList[Cxt-1]}, p={round(p[1],3)}')
     axes[divmod(Cxt-1,2)].set_ylim(0,0.4)
-
 #%% Wilcoxon signed rank sum test & plotting
 Targ='PM'
 y=[[0,0],[0,0],[0,0],[0,0]]
