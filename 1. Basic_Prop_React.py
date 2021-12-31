@@ -113,6 +113,7 @@ ax = sns.histplot(temp.ReactRips / temp.TotRips,stat='probability',bins=10,binra
 ax.set_xlabel('Ripple Participation Rate')
 plt.rc('font',size=15)
 plt.title('Participation in Ripple')
+
 #%% Ripple participation rate (each scene)
 clist = ['#5AB7D4','#F79334','#00506A','#9A4700']
 CxtList = ['Zebra', 'Pebbles', 'Bamboo', 'Mountains']
@@ -126,12 +127,40 @@ for Cxt in range(1,5):
 
 
     sns.histplot(temp[f'NumRipples_{Cxt}'] / temp.TotRips,stat='probability',
-                 bins=10,binrange=(0, 0.5), color=clist[Cxt-1],ax=axes[divmod(Cxt-1,2)])
+                 bins=12,binrange=(0, 0.6), color=clist[Cxt-1],ax=axes[divmod(Cxt-1,2)])
     axes[divmod(Cxt-1,2)].set_title(CxtList[Cxt-1])
     
 plt.xlabel('')
 plt.suptitle('Participation in Ripple for Each Scene')
 f.text(0.5, 0.04, 'Ripple Participation Rate', ha='center')
+
+#%% Ripple participation rate (each scene) - CDF plot + K-S test
+clist = ['#5AB7D4','#F79334','#00506A','#9A4700']
+CxtList = ['Zebra', 'Pebbles', 'Bamboo', 'Mountains']
+
+for Cxt1 in range(1,5):
+    for Cxt2 in range(1,5):
+        if Cxt1>=Cxt2:
+            continue
+        
+        temp = df_unit_valid.loc[:,['TT-Unit', f'NumRipples_{Cxt1}']]
+        temp1 = pd.concat([temp,df_unit_valid.Session],axis=1)
+        for thisSID in temp1.Session.unique():
+            temp1.loc[temp1['Session']==thisSID,'TotRips']=sum((df_rip_valid.Session==thisSID) & (df_rip_valid.Context==Cxt1))
+        
+        temp = df_unit_valid.loc[:,['TT-Unit', f'NumRipples_{Cxt2}']]
+        temp2 = pd.concat([temp,df_unit_valid.Session],axis=1)
+        for thisSID in temp2.Session.unique():
+            temp2.loc[temp2['Session']==thisSID,'TotRips']=sum((df_rip_valid.Session==thisSID) & (df_rip_valid.Context==Cxt2))
+
+        d1 = temp1[f'NumRipples_{Cxt1}'] / temp1.TotRips
+        d2 = temp2[f'NumRipples_{Cxt2}'] / temp2.TotRips
+        
+        opts = {'legend':[f'{CxtList[Cxt1-1]}',f'{CxtList[Cxt2-1]}'],
+                'title_hist': 'Unit distribution histogram','title_dist': 'CDF plot (K-S test ',
+                'cmap' : [clist[Cxt1-1],clist[Cxt2-1]]}
+        opts_indiv = {**opts, **{'bins':12,'range':(0,0.6),'fontsize':15,'xlab': 'Ripple Participation Rate'}}
+        axes = swr.DrawDist_2samp(False, d1,d2,**opts_indiv)
 
 
     
