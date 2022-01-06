@@ -15,6 +15,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import itertools as ite
+import Mod_SWR as swr
 #%% import data
 ROOT_data = 'D:/HPC-SWR project/Processed Data'
 thisRID=561
@@ -77,21 +78,39 @@ dat=dat.sort_values('rank')
 
 dat.to_excel(f'{ROOT_data}/ReactTable_r{thisRID}_all_{thisRegion}_2.xlsx')
 
-#%% unit property distribution for each scene
+#%% scene RDI distribution for each scene
 TargRDI=['ZB','PM']
 clist = ['#5AB7D4','#F79334','#00506A','#9A4700']
 CxtList = ['Zebra', 'Pebbles', 'Bamboo', 'Mountains']
+datasets={}
 f,axes=plt.subplots(2,2,figsize=(10,8),sharex=True,sharey=True)
 for Cxt in range(1,5):
     
     dat_part = dat[(dat['Context']==Cxt) & ((dat['PeakArea']==2) | (dat['PeakArea']==3))]
+    dat_part = dat_part.drop_duplicates(['TT-Unit'])
     
     p=sp.stats.wilcoxon(dat_part[f'RDI_{TargRDI[np.mod(Cxt+1,2)]}'])
     sns.histplot(dat_part[f'RDI_{TargRDI[np.mod(Cxt+1,2)]}'],binrange=(-1.2,1.2),bins=12,
                  color=clist[Cxt-1],ax=axes[divmod(Cxt-1,2)], stat='probability')
     axes[divmod(Cxt-1,2)].plot((0,0),(0,0.5),color='k')
-    axes[divmod(Cxt-1,2)].set_title(f'{CxtList[Cxt-1]}, p={round(p[1],3)}')
+    axes[divmod(Cxt-1,2)].set_title(f'{CxtList[Cxt-1]}, n={len(dat_part)}, p={round(p[1],3)}')
     axes[divmod(Cxt-1,2)].set_ylim(0,0.4)
+    
+    datasets[Cxt] = dat_part[f'RDI_{TargRDI[np.mod(Cxt+1,2)]}']
+plt.suptitle('RDI distribution for activated units in each scene ripple')
+
+opts = {'title_hist': 'Unit distribution histogram','title_dist': 'CDF plot (K-S test '}
+d1= datasets[1]
+d2 = datasets[3]
+opts_indiv = {**opts, **{'bins':20,'range':(-1.2,1.2),'fontsize':15,'xlab': 'RDI_ZB','cmap' : [clist[0],clist[2]],
+                         'legend':[f'{CxtList[0]} (n={len(d1)})',f'{CxtList[2]} (n={len(d2)})']}}
+axes = swr.DrawDist_2samp(True, d1,d2,**opts_indiv)
+
+d1= datasets[2]
+d2 = datasets[4]
+opts_indiv = {**opts, **{'bins':20,'range':(-1.2,1.2),'fontsize':15,'xlab': 'RDI_PM','cmap' : [clist[1],clist[3]],
+                         'legend':[f'{CxtList[1]} (n={len(d1)})',f'{CxtList[3]} (n={len(d2)})']}}
+axes = swr.DrawDist_2samp(True, d1,d2,**opts_indiv)
 #%% Wilcoxon signed rank sum test & plotting
 Targ='PM'
 y=[[0,0],[0,0],[0,0],[0,0]]
