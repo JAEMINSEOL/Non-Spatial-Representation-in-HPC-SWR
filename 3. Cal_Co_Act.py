@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import itertools as ite
 import Mod_SWR as swr
+from matplotlib.colors import ListedColormap
 #%% import data
 ROOT_data = 'D:/HPC-SWR project/Processed Data'
 thisRID=561
@@ -68,13 +69,21 @@ for c in range(1,6):
         unit.append(u)
     #
     pivot_overlap=pd.DataFrame(index = df_act_pivot_stem.index, columns=df_act_pivot_stem.index)
+    pivot_max=pd.DataFrame(index = df_act_pivot_stem.index, columns=df_act_pivot_stem.index)
     for i in range(len(unit)):
         for j in range(len(unit)):
             pivot_overlap.iat[i,j] = len(np.intersect1d(unit[i],unit[j]))
             pivot_overlap.iat[j,i] = len(np.intersect1d(unit[i],unit[j]))
+            
+    for i in range(len(unit)):
+         for j in range(len(unit)):       
+            m1 = max(pivot_overlap.iloc[i,:])
+            m2 = max(pivot_overlap.iloc[:,j])
+            pivot_max.iat[j,i] =complex(m1,m2)
     # pivot_overlap.iat[i,i] = 0
     
     pivot_overlap_dict[f's{c}'] = pivot_overlap.astype('int64')
+    pivot_overlap_dict[f's{c}m'] = pivot_max
 #%% data plotting
 # sns.scatterplot(df_unit_valid_dv.RDI_ZB,df_unit_valid_dv.RDI_PM, hue = df_unit_valid.NumRipples_1,legend=0)
 # sns.color_palette("tab10")
@@ -82,8 +91,21 @@ for c in range(1,6):
 
 # unit co-reactivate heatmap
 for c in range(1,6):
-    plt.figure(figsize=(10,8))
+    plt.figure(figsize=(11,9))
     pivot_overlap = pivot_overlap_dict[f's{c}']
-    mask = np.triu(np.ones_like(pivot_overlap, dtype=np.bool))
-    sns.heatmap(pivot_overlap, cmap ='Blues', linewidths = 0.30, annot = False, mask=mask,
-                        cbar_kws={'label': '# of co-activation'})
+    mask = np.triu(np.ones_like(pivot_overlap, dtype=np.bool),k=0)
+    mask2 = np.tril(mask,k=0)
+    m1 = pivot_overlap_dict[f's{c}m'].applymap(lambda r: r.real)
+    m2 = pivot_overlap_dict[f's{c}m'].applymap(lambda r: r.imag)
+    
+    pp1 = pivot_overlap/m1
+    pp2 = pivot_overlap/m2
+    pivot_plt = pd.concat((pp1,pp2)).groupby(level=0).mean()
+    
+    # pivot_plt = pivot_overlap/pd.concat((m1,m2)).groupby(level=0).mean()
+    cbar_kws = {'label': '# of co-activation'}
+    sns.heatmap(pivot_plt, cmap ='RdYlGn_r', linewidths = 0.30, annot =False, mask=mask,
+                        cbar_kws=cbar_kws, vmin=0, vmax=1)
+    sns.heatmap(pivot_overlap, cmap=ListedColormap(['white']), linewidths = 0.30, annot =True, mask=~mask2,cbar=False, fmt='g')
+    
+    plt.title('Co-activation rate btw units, devided by the min and max (mean)')
