@@ -89,8 +89,6 @@ axes = swr.DrawDist_2samp(False, df_unit.iloc[:,9],df_unit_valid.iloc[:,9],**opt
 for i in range(10,13):
     opts_indiv = {**opts, **{'bins':24,'range':(-1.2, 1.2),'fontsize':15}}
     axes = swr.DrawDist_2samp(True, df_unit.iloc[:,i],df_unit_valid.iloc[:,i],**opts_indiv)
-
-
 #%% Number of Ripples for each scene
 temp=list(np.zeros(5))
 for i in range(1,6):
@@ -113,10 +111,10 @@ ax = sns.histplot(temp.ReactRips / temp.TotRips,stat='probability',bins=10,binra
 ax.set_xlabel('Ripple Participation Rate')
 plt.rc('font',size=15)
 plt.title('Participation in Ripple')
-
 #%% Ripple participation rate (each scene)
 clist = ['#5AB7D4','#F79334','#00506A','#9A4700']
 CxtList = ['Zebra', 'Pebbles', 'Bamboo', 'Mountains']
+
 f,axes=plt.subplots(2,2,figsize=(10,8),sharex=True,sharey=True)
 for Cxt in range(1,5):
     temp = df_unit_valid.loc[:,['TT-Unit', f'NumRipples_{Cxt}']]
@@ -130,9 +128,12 @@ for Cxt in range(1,5):
                  bins=12,binrange=(0, 0.6), color=clist[Cxt-1],ax=axes[divmod(Cxt-1,2)])
     axes[divmod(Cxt-1,2)].set_title(CxtList[Cxt-1])
     
+    
 plt.xlabel('')
 plt.suptitle('Participation in Ripple for Each Scene')
 f.text(0.5, 0.04, 'Ripple Participation Rate', ha='center')
+
+
 
 #%% Ripple participation rate (each scene) - CDF plot + K-S test
 clist = ['#5AB7D4','#F79334','#00506A','#9A4700']
@@ -163,4 +164,39 @@ for Cxt1 in range(1,5):
         axes = swr.DrawDist_2samp(False, d1,d2,**opts_indiv)
 
 
+#%% ripple occurrence numbers for each trials 
+rips_trial = []
+for s in df_rip_valid.Session.unique():
+    df_rip_temp = df_rip_valid[df_rip_valid.Session==s]
+    temp = df_rip_temp.Trial.unique()
+    for t in temp:       
+        rips_trial.append(sum(df_rip_temp.Trial==t))
+    fig, ax = plt.subplots(figsize=(4,10))
+    ax.barh(range(len(temp)),rips_trial, color="k")
+    ax.invert_yaxis()
+    ax.set_yticks(range(len(temp)),labels = temp,size=8)
+    ax.set_ylabel('trial')
+    ax.set_xlabel('ripples')
+    ax.set_title(f'# of ripples_total, 561-0{s}')
     
+    fig, ax = plt.subplots(1,4,figsize=(18,10), sharex=True)
+    plt.suptitle(f'# of ripples_total, 561-0{s}')
+    for c in range(0,4):
+        if c==2:
+            c2=1
+        else:
+            if c==1:
+                c2=2
+            else:
+                c2=c
+        df_rip_temp = df_rip_valid[(df_rip_valid.Session==s) & (df_rip_valid.Context==c2+1)]
+        temp = df_rip_temp.Trial.unique()
+        rips_trial = []
+        for t in temp:       
+            rips_trial.append(sum(df_rip_temp.Trial==t))
+        ax[c].barh(range(len(temp)),rips_trial, color=clist[c2])
+        ax[c].invert_yaxis()
+        ax[c].set_yticks(range(len(temp)),labels = temp)
+        ax[c].set_ylabel('trial')
+        ax[c].set_xlabel('ripples')
+        ax[c].set_title(f'{CxtList[c2]}')
