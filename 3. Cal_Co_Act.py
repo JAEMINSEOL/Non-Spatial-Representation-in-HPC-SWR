@@ -91,10 +91,22 @@ for c in range(1,6):
 
 # unit co-reactivate heatmap
 for c in range(1,6):
-    plt.figure(figsize=(11,9))
+    plt.figure(figsize=(10,9))
     pivot_overlap = pivot_overlap_dict[f's{c}']
     mask = np.triu(np.ones_like(pivot_overlap, dtype=np.bool),k=0)
     mask2 = np.tril(mask,k=0)
+    
+    cbar_kws = {'label': '# of co-activation'}
+    sns.heatmap(pivot_overlap, cmap ='Greys', linewidths = 0.30, annot =True, mask=mask,
+                        cbar_kws=cbar_kws)
+    sns.heatmap(pivot_overlap, cmap=ListedColormap(['white']), linewidths = 0.30, annot =True, mask=~mask2,cbar=False, fmt='g')
+
+
+# unit co-reactivation rate heatmap
+for c in range(1,6):
+    plt.figure(figsize=(11,9))
+    pivot_overlap = pivot_overlap_dict[f's{c}']
+    mask = np.triu(np.ones_like(pivot_overlap, dtype=np.bool),k=0)
     m1 = pivot_overlap_dict[f's{c}m'].applymap(lambda r: r.real)
     m2 = pivot_overlap_dict[f's{c}m'].applymap(lambda r: r.imag)
     
@@ -102,10 +114,10 @@ for c in range(1,6):
     pp2 = pivot_overlap/m2
     pivot_plt = pd.concat((pp1,pp2)).groupby(level=0).mean()
     
-    # pivot_plt = pivot_overlap/pd.concat((m1,m2)).groupby(level=0).mean()
-    cbar_kws = {'label': '# of co-activation'}
-    sns.heatmap(pivot_plt, cmap ='RdYlGn_r', linewidths = 0.30, annot =False, mask=mask,
+    pivot_plt = pivot_overlap/pd.concat((m1,m2)).groupby(level=0).mean()
+    cbar_kws = {'label': 'Co-activation rate'}
+    sns.heatmap(pivot_plt, cmap ='RdYlBu_r', linewidths = 0.30, annot =False, mask=mask,
                         cbar_kws=cbar_kws, vmin=0, vmax=1)
-    sns.heatmap(pivot_overlap, cmap=ListedColormap(['white']), linewidths = 0.30, annot =True, mask=~mask2,cbar=False, fmt='g')
+    # sns.heatmap(pivot_overlap, cmap=ListedColormap(['white']), linewidths = 0.30, annot =True, mask=~mask2,cbar=False, fmt='g')
     
-    plt.title('Co-activation rate btw units, devided by the min and max (mean)')
+    plt.title('Co-activation rate btw units, devided by the maximum')
