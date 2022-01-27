@@ -165,19 +165,45 @@ for Cxt1 in range(1,5):
 
 
 #%% ripple occurrence numbers for each trials 
-rips_trial = []
+
+
+
 for s in df_rip_valid.Session.unique():
+    
+    
+    df_TrialTime = pd.read_excel(f'D:/HPC-SWR project/Information Sheet/TrialTime_561-0{s}.xlsx')
+    df_TrialTime.columns=['s1', 's2', 's3', 's4', 'fw', 'stbox']
+    ITI_Time = df_TrialTime['s1'].iloc[1:].reset_index(drop=True) -  df_TrialTime['stbox'].iloc[0:-1].reset_index(drop=True)
     df_rip_temp = df_rip_valid[df_rip_valid.Session==s]
+    m= len(df_TrialTime)
     temp = df_rip_temp.Trial.unique()
-    for t in temp:       
-        rips_trial.append(sum(df_rip_temp.Trial==t))
-    fig, ax = plt.subplots(figsize=(4,10))
-    ax.barh(range(len(temp)),rips_trial, color="k")
-    ax.invert_yaxis()
-    ax.set_yticks(range(len(temp)),labels = temp,size=8)
-    ax.set_ylabel('trial')
-    ax.set_xlabel('ripples')
-    ax.set_title(f'# of ripples_total, 561-0{s}')
+    rips_trial = pd.Series(0, index=range(m))
+    
+    for t in range(m):      
+        rips_trial.iloc[t] = sum(df_rip_temp.Trial==t+1)
+    rips_trial.index=range(1,m+1)
+    fig, ax = plt.subplots(1,3,figsize=(14,10))
+    ax[0].barh(range(1,m+1),rips_trial, color="k")
+    ax[0].invert_yaxis()
+    ax[0].set_yticks(range(1,m+1),labels = range(1,m+1),size=8)
+    ax[0].set_ylabel('trial')
+    ax[0].set_xlabel('ripples')
+    ax[0].set_title(f'# of ripples_total, 561-0{s}')
+    
+       
+    ax[1].barh(range(1,m),ITI_Time, color="k")
+    ax[1].invert_yaxis()
+    ax[1].set_yticks(range(1,m),labels = range(1,m),size=8)
+    ax[1].set_ylabel('trial')
+    ax[1].set_xlabel('ITI duration')
+    ax[1].set_title(f'ITI duration(s), 561-0{s}')
+    
+    ax[2].barh(range(1,m),rips_trial.iloc[0:-1].reset_index(drop=True)/ITI_Time, color="k")
+    ax[2].invert_yaxis()
+    ax[2].set_yticks(range(1,m),labels = range(1,m),size=8)
+    ax[2].set_ylabel('trial')
+    ax[2].set_xlabel('ripple rate')
+    ax[2].set_title(f'ripple rate(ripple/s), 561-0{s}')
     
     fig, ax = plt.subplots(1,4,figsize=(18,10), sharex=True)
     plt.suptitle(f'# of ripples_total, 561-0{s}')
