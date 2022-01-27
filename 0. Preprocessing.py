@@ -28,6 +28,8 @@ for thisSID in range(5):
     df_rip=df_rip.append(df_rip_temp, ignore_index=True)
     df_unit=df_unit.append(df_unit_temp, ignore_index=True)
     df_act=df_act.append(df_act_temp, ignore_index=True)
+
+
 #%% data processing
 df_rip['RipID'] = df_rip['RipID'].astype(str).str.zfill(4)
 df_rip['Session'] = df_rip['Session'].astype(str).str.zfill(1)
@@ -61,7 +63,7 @@ for i in range(df_rip.shape[0]):
     df_rip['meanRDI_PM'].iloc[i] = np.mean(thisUnits.RDI_PM)
     df_rip['meanRDI_LR'].iloc[i] = np.mean(thisUnits.RDI_LR)
     
-df_rip_valid = df_rip[df_rip['Filter']>0]
+df_rip_valid = df_rip[(df_rip['Filter']>0) & (df_rip['Area']==1)]
 
 
 df_unit_valid=df_unit_valid.set_axis(df_unit_valid['TT-Unit'],axis=0)
