@@ -103,12 +103,12 @@ for clRUN=1:5
             FigPos.Background = [100 100 1400 800];
             FigPos.LinFRMaps = [.05 .65 .2 .2];
             FigPos.TextBox = [.05 .9 .4 .1];
-            FigPos.ReactProp = [.11 .3 .12 .2];
-            FigPos.RDI_bar = [.06 .34 .03 .12];
+            FigPos.ReactProp = [.06 .05 .11 .2];
+            FigPos.RDI_bar = [.19 .32 .03 .2];
             FigPos.NormReact = [.54 .56 .18 .04];
             FigPos.ReactProbScatter = [.61 .48 .14 .14];
             
-            clist = {'#5AB7D4','#F79334','#00506A','#9A4700','#00B4B8','#FF964F'};
+            clist = {'#E72416','#4FBFD6','#711419','#4F63AD','#FF0000','#0000FF'};
             
             figure('position',FigPos.Background,'color','w')
 
@@ -159,71 +159,108 @@ for clRUN=1:5
             legend([l1 l2],{'Left','Right'},'location','northoutside','orientation','horizontal')
             
 
-           subplot('position',FigPos.ReactProp./[1 1 1 2]+[0 .04 0 0])
-            hold on
-            b1 = barh(nRip(1,:));
-            b1(1).FaceColor = 'w';
-            b2 = barh(nSpk(1,:));
-           b2(1).FaceColor = 'k';
-            v = (nSpk(:,1)./nRip(:,1));
-            xtips1 = b1(1).YEndPoints*1.1;
-            ytips1 = b1(1).XEndPoints;
-            text(xtips1,ytips1,{jjnum2str(v(1),2)},'HorizontalAlignment','left','VerticalAlignment','middle')
-             xlabel('number of ripples')
-            set(gca,'fontweight','b')
-            yticks([1]); yticklabels({'All'});
-            title('Ripple Participation Rate')
+             m = max(FRMap,[],2);
+             n = nanmean(FRMap,2);
+             
+             subplot('position',FigPos.ReactProp+[0 .3 -.03 0])
+            b= DrawRprPlot_2items(m(1),'k','w','Max. Firing Rate (Hz)',max(m)*1.3);
+             xticks([1]); xticklabels({'All'});
+             set(b,'facealpha',.5)
+%               subplot('position',FigPos.ReactProp+[.1 .3 -.03 0])
+             b=DrawRprPlot_2items(n(1),'k','w','Mean Firing Rate (Hz)',max(m)*1.3);
+             xticks([1]); xticklabels({'All'});
+             
+             subplot('position',FigPos.ReactProp+[.23 .3 -.03 0])
+             b=DrawRprPlot_2items(m(2:3),hex2rgb(clist(1)),hex2rgb(clist(3)),'Max. Firing Rate (Hz)',max(m)*1.3);
+             xticks([1:2]); xticklabels({'Z','B'})
+             set(b,'facealpha',.5)
+%              subplot('position',FigPos.ReactProp+[.34 .3 -.03 0])
+             b=DrawRprPlot_2items(n(2:3),hex2rgb(clist(1)),hex2rgb(clist(3)),'Max/Mean Firing Rate (Hz)',max(m)*1.3);
+             xticks([1:2]); xticklabels({'Z','B'})
+             
+             subplot('position',FigPos.ReactProp+[.46 .3 -.03 0])
+             b=DrawRprPlot_2items(m(4:5),hex2rgb(clist(2)),hex2rgb(clist(4)),'Max. Firing Rate (Hz)',max(m)*1.3);
+             xticks([1:2]); xticklabels({'P','M'})
+             set(b,'facealpha',.5)
+%              subplot('position',FigPos.ReactProp+[.57 .3 -.03 0])
+             b=DrawRprPlot_2items(n(4:5),hex2rgb(clist(2)),hex2rgb(clist(4)),'Max/Mean Firing Rate (Hz)',max(m)*1.3);
+             xticks([1:2]); xticklabels({'P','M'})
+             
+             subplot('position',FigPos.ReactProp+[.69 .3 -.03 0])
+             b=DrawRprPlot_2items(m(6:7),hex2rgb(clist(5)),hex2rgb(clist(6)),'Max. Firing Rate (Hz)',max(m)*1.3);
+             xticks([1:2]); xticklabels({'L','R'})
+             set(b,'facealpha',.5)
+%              subplot('position',FigPos.ReactProp+[.8 .3 -.03 0])
+             b=DrawRprPlot_2items(n(6:7),hex2rgb(clist(5)),hex2rgb(clist(6)),'Max/Mean Firing Rate (Hz)',max(m)*1.3);
+             xticks([1:2]); xticklabels({'L','R'})
+             
+             subplot('position',FigPos.ReactProp)
+             hold on
+             %             b1 = barh(nRip(1,:));
+             %             b1(1).FaceColor = 'w';
+             %             b2 = barh(nSpk(1,:));
+             %            b2(1).FaceColor = 'k';
+             
+             v = (nSpk(:,1)./nRip(:,1));
+             b=DrawRprPlot_2items(v([1],:),'k','w','Ripple Participation Rate',.6);
+             xticks([1]); xticklabels({'All'});
+%             title('Ripple Participation Rate')
             
-            subplot('position',FigPos.ReactProp+[.23 0 0 0])
-            DrawRprPlot_2items(nRip,nSpk,2,3,hex2rgb(clist(1)),hex2rgb(clist(3)))
-            yticks([1:2]); yticklabels({'Z','B'})
-            title('Ripple Participation Rate')
+            subplot('position',FigPos.ReactProp+[.25 0 0 0])
+           b=DrawRprPlot_2items(v([2,3],:),hex2rgb(clist(1)),hex2rgb(clist(3)),'Ripple Participation Rate',max(v)*1.3);
+            xticks([1:2]); xticklabels({'Z','B'})
             
-            subplot('position',FigPos.ReactProp+[.46 0 0 0])
-            DrawRprPlot_2items(nRip,nSpk,4,5,hex2rgb(clist(2)),hex2rgb(clist(4)))
-            yticks([1:2]); yticklabels({'P','M'})
-            title('Ripple Participation Rate')
+            subplot('position',FigPos.ReactProp+[.48 0 0 0])
+            b=DrawRprPlot_2items(v([4,5],:),hex2rgb(clist(2)),hex2rgb(clist(4)),'Ripple Participation Rate',max(v)*1.3);
+            xticks([1:2]); xticklabels({'P','M'})
             
-            subplot('position',FigPos.ReactProp+[.69 0 0 0])
-            DrawRprPlot_2items(nRip,nSpk,6,7,hex2rgb(clist(5)),hex2rgb(clist(6)))
-            yticks([1:2]); yticklabels({'L','R'})
-            title('Ripple Participation Rate')
+            subplot('position',FigPos.ReactProp+[.71 0 0 0])
+            DrawRprPlot_2items(v([6,7],:),hex2rgb(clist(5)),hex2rgb(clist(6)),'Ripple Participation Rate',max(v)*1.3);
+            xticks([1:2]); xticklabels({'L','R'})
             
             
-            subplot('position', FigPos.RDI_bar+[.23 0 0 0])
+            subplot('position', FigPos.RDI_bar+[.18 .08 .08 -.15])
             r = UnitsTable.RDI_ZB(clUnit);
             if r>0, c=clist{1}; elseif r<0, c=clist{3}; else, c='#000000'; end
             m=max(1.2,abs(r));
-            DrawHLine(-m,m,.8,'horizontal')
-            scatter(0,r,40,hex2rgb(c),'filled')
-            text(-1,1.9,sprintf(['Zebra']))
-            text(-1,-1.8,sprintf(['Bamboo']))
+            DrawHLine(-m,m,.8,'vertical')
+            q=quiver(0,0,r,0);
+            q.Color = hex2rgb(c); q.LineWidth=2;
+            scatter(r,0,40,hex2rgb(c),'filled')
+            text(1,-1,sprintf(['Z']),'fontweight','b')
+            text(-1,-1,sprintf(['P']),'fontweight','b')
             title(['RDI_{SCN-L}=' jjnum2str(r,2)])
-           
-            subplot('position', FigPos.RDI_bar+[.46 0 0 0])
+            
+            subplot('position', FigPos.RDI_bar+[.41 .08 .08 -.15])
             r = UnitsTable.RDI_PM(clUnit);
             if r>0, c=clist{2}; elseif r<0, c=clist{4}; else, c='#000000'; end
             m=max(1.2,abs(r));
-            DrawHLine(-m,m,.8,'horizontal')
-            scatter(0,r,40,hex2rgb(c),'filled')
-            text(-1,1.9,sprintf(['Pebbles']))
-            text(-1,-1.8,sprintf(['Mountains']))
+            DrawHLine(-m,m,.8,'vertical')
+            q=quiver(0,0,r,0);
+            q.Color = hex2rgb(c); q.LineWidth=2;
+            scatter(r,0,40,hex2rgb(c),'filled')
+            text(1,-1,sprintf(['P']),'fontweight','b')
+            text(-1,-1,sprintf(['M']),'fontweight','b')
             title(['RDI_{SCN-R}=' jjnum2str(r,2)])
-
-            subplot('position', FigPos.RDI_bar+[.69 0 0 0])
+            
+            subplot('position', FigPos.RDI_bar+[.64 .08 .08 -.15])
             r = UnitsTable.RDI_LR(clUnit);
             if r>0, c=clist{5}; elseif r<0, c=clist{6}; else, c='#000000'; end
             m=max(1.2,abs(r));
-            DrawHLine(-m,m,.8,'horizontal')
-            scatter(0,r,40,hex2rgb(c),'filled')
-            text(-1,1.9,sprintf(['Left']))
-            text(-1,-1.8,sprintf(['Right']))
+            DrawHLine(-m,m,.8,'vertical')
+            q=quiver(0,0,r,0);
+            q.Color = hex2rgb(c); q.LineWidth=2;
+            scatter(r,0,40,hex2rgb(c),'filled')
+            text(1,-1,sprintf(['L']),'fontweight','b')
+            text(-1,-1,sprintf(['R']),'fontweight','b')
             title(['RDI_C=' jjnum2str(r,2)])
 
- 
             
+            annotation('line',[.255 .255],[.05 .9],'linestyle','--')
+            annotation('line',[.485 .485],[.05 .9],'linestyle','--')
+            annotation('line',[.715 .715],[.05 .9],'linestyle','--')
             %% Save image
-            num='12U';
+            num='13U';
             cd([ROOT.Save '\Plot\IndivUnits\'])
             mkdir(num)
             saveas(gca,[ROOT.Save '\Plot\IndivUnits\' num '\' num '-rat' clusterID '.png'])
@@ -307,24 +344,38 @@ else
     line([Ulim Ulim], [h*(-1) h], 'color','k')
     line([0 0],[h*(-.7) h*(.7)],  'color','k')
     xlim([-2 2.5])
+        text(Ulim,-h-1,num2str(Ulim))
+    text(Llim,-h-1,num2str(Llim))
+    set(gca, 'XDir','reverse')
 end
 
 axis off
 end
 
-function DrawRprPlot_2items(nRip,nSpk,i,j,c1,c2)
+function b=DrawRprPlot_2items(v,c1,c2,tit,m)
 hold on
-            b1 = barh(nRip([i,j],:));
-            b1(1).FaceColor = 'w';
-            b2 = barh(nSpk([i,j],:));
-            b2.FaceColor = 'flat';
-            b2.CData = [c1; c2];
-            v = (nSpk(:,1)./nRip(:,1));
-            xtips1 = b1(1).YEndPoints*1.1;
-            ytips1 = b1(1).XEndPoints;
-            text(xtips1,ytips1,{jjnum2str(v(i),2),jjnum2str(v(j),2)},'HorizontalAlignment','left','VerticalAlignment','middle')
+%             b1 = barh(nRip([i,j],:));
+%             b1(1).FaceColor = 'w';
+if length(v)==2
+            b = bar(v);
+            b.FaceColor = 'flat';
+            b.CData = [c1; c2];
+            ytips1 = b(1).YEndPoints*1.1;
+            xtips1 = b(1).XEndPoints;
+            text(xtips1,ytips1,{jjnum2str(v(1),2),jjnum2str(v(2),2)},'HorizontalAlignment','center','VerticalAlignment','bottom')
             
-             xlabel('number of ripples')
-            axis ij
+else
+              b = bar(v(1));
+            b(1).FaceColor = c1;
+            ytips1 = b(1).YEndPoints*1.1;
+            xtips1 = b(1).XEndPoints;
+            text(xtips1,ytips1,{jjnum2str(v(1),2)},'HorizontalAlignment','center','VerticalAlignment','bottom')
+            
+end
+            
+             ylabel(tit)
+             title(tit)
+%             axis ij
             set(gca,'fontweight','b')
+            ylim([0 m])
 end
