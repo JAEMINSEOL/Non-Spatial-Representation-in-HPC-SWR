@@ -35,6 +35,8 @@ df_clust_summ = pd.read_excel('D:/HPC-SWR project/Information Sheet/ClusterSumma
 df_unit = df_unit[(df_unit.Type!=0) & ((df_unit.PeakArea==2) | (df_unit.PeakArea==3))]
 df_unit_valid = df_unit_valid[(df_unit_valid.Type!=0) & ((df_unit_valid.PeakArea==2) | (df_unit_valid.PeakArea==3))]
 
+
+# df_unit_valid = df_unit_valid[(df_unit_valid.RDI_ZB.abs()>0.2)]
 #%%
 temp=pd.DataFrame(np.zeros([5,5]))
 
@@ -75,8 +77,8 @@ list2 = ['Zebra','Bamboo','Pebbles','Mountains','Left','Right']
 
 for i in range(3):
 
-    X = df_unit_valid[f'RDI_{list1[i]}']
-    y = df_unit_valid[f'RPR_{list1[i]}']
+    X = df_unit_valid[f'RDI_{list1[i]}'].abs()
+    y = df_unit_valid[f'RPR_{list1[i]}'].abs()
     
     y=y[~X.isna()]
     X=X[~X.isna()]
@@ -94,12 +96,12 @@ for i in range(3):
     axes[i].scatter( x=X,y=y)
     axes[i].plot(X,line_fitter.predict(X.values.reshape(-1,1)),color='k')
     axes[i].annotate(f'CorrCoef={np.corrcoef(X,y)[0, 1].round(3)}',(0,0.2))
-    axes[i].set_xlabel(f'Rate Diff. Index ({list2[i*2]} vs. {list2[i*2+1]})')
-    axes[i].set_ylabel(f'Diff. Ripple Part. Rate ({list2[i*2]} - {list2[i*2+1]})')
+    axes[i].set_xlabel(f'Rate Diff. Index ({list2[i*2]} vs. {list2[i*2+1]})_abs')
+    axes[i].set_ylabel(f'Diff. Ripple Part. Rate ({list2[i*2]} - {list2[i*2+1]})_abs')
     plt.rc('font', size=15)
 
     plt.style.use('seaborn-whitegrid')
-    plt.axis([-1.25, 1.25, -0.3, 0.3])
+    plt.axis([0, 1.25, 0, 0.3])
     
     print(est2.summary())
     
