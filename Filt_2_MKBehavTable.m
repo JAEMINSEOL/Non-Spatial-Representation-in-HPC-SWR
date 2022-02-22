@@ -156,7 +156,7 @@ for clRip = 1:size(RipplesTable,1)
     RipplesTable.context(clRip) = Behav.trial_context(Idx_t);
     RipplesTable.correctness(clRip) = Behav.trial_correctness(Idx_t);
     RipplesTable.ambiguity(clRip) = Behav.trial_ambiguity(Idx_t);
-    RipplesTable.area(clRip) = trial_vector(Idx,2);
+    RipplesTable.area(clRip) = Behav.trial_vector(Idx,2);
     
     RipplesTable.PosX(clRip) = Behav.x(Idx);
     RipplesTable.PosY(clRip) = Behav.y(Idx);
