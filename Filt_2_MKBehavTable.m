@@ -44,7 +44,7 @@ for clRip = 1:size(RipplesTable,1)
         Behav.y_linearized = get_linearized_position(ROOT.Mother,ROOT.Raw.Mother,thisSID);
         Behav.diverging_point = get_divergingPoint(ROOT.Info, thisSID(1:3), thisSID(5:6), 'outbound');
         
-                
+        
         Behav.trial_vector(:,1) = interp1(Behav.trial_time(:,1),[1:size(Behav.trial_time,1)]',Behav.t, 'previous','extrap');
         [m,Behav.trial_vector(:,2)] = max(Behav.area,[],2);
         for i=1:size(Behav.trial,1)
@@ -79,7 +79,7 @@ for clRip = 1:size(RipplesTable,1)
         PosX(~InTrack) = 360;
         PosY_linearized(~InTrack) = 470;
         [PosY_linearized,TF] = fillmissing(PosY_linearized,'linear');
-
+        
         
         Behav.x = PosX; Behav.y = PosY; Behav.y_linearized = PosY_linearized;
         %% get speed
@@ -143,29 +143,37 @@ for clRip = 1:size(RipplesTable,1)
         BehavTable.reward = Behav.trial_time(:,5);
         BehavTable.end = Behav.trial_time(:,6);
         
-        writetable(BehavTable,[ROOT.Save '\behavior_mat\' thisSID '.xlsx']);
+        %         writetable(BehavTable,[ROOT.Save '\behavior_mat\' thisSID '.xlsx']);
+        save([ROOT.Behav '\' thisSID '.mat'], 'Behav')
         
-    BehavTable_all =[BehavTable_all;BehavTable];
+        BehavTable_all =[BehavTable_all;BehavTable];
     end
     
     
     %%
     Idx = knnsearch(Behav.t,RipplesTable.StartTime(clRip));
-    Idx_t = trial_vector(Idx,1);
-    RipplesTable.trial(clRip) = Idx_t;
-    RipplesTable.context(clRip) = Behav.trial_context(Idx_t);
-    RipplesTable.correctness(clRip) = Behav.trial_correctness(Idx_t);
-    RipplesTable.ambiguity(clRip) = Behav.trial_ambiguity(Idx_t);
-    RipplesTable.area(clRip) = Behav.trial_vector(Idx,2);
+    Idx_t = Behav.trial_vector(Idx,1);
     
     RipplesTable.PosX(clRip) = Behav.x(Idx);
     RipplesTable.PosY(clRip) = Behav.y(Idx);
     RipplesTable.PosY_linearized(clRip) = Behav.y_linearized(Idx);
+    RipplesTable.Vx(clRip) = Behav.velocity.Vx(Idx);
+    RipplesTable.Vy(clRip) = Behav.velocity.Vy(Idx);
+    RipplesTable.speed(clRip) = Behav.velocity.speed(Idx);
     
+    if ~isnan(Idx_t)
+        RipplesTable.trial{clRip} = [thisSID '-' jmnum2str(Idx_t,3)];
+        RipplesTable.context(clRip) = Behav.trial_context(Idx_t);
+        RipplesTable.correctness(clRip) = Behav.trial_correctness(Idx_t);
+        RipplesTable.ambiguity(clRip) = Behav.trial_ambiguity(Idx_t);
+        RipplesTable.area(clRip) = Behav.trial_vector(Idx,2);
+    else
+        RipplesTable.trial{clRip} = [thisSID '-000'];
+    end
     
     thisSID_p = thisSID;
     
 end
 
- writetable(BehavTable_all,[ROOT.Save '\BehavTable.xlsx']);
-writetable(RipplesTable_all,[ROOT.Save '\RipplesTable_Behav.xlsx']);
+writetable(BehavTable_all,[ROOT.Save '\BehavTable.xlsx']);
+writetable(RipplesTable,[ROOT.Save '\RipplesTable_Behav.xlsx']);
