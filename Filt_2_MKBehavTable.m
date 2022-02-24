@@ -22,7 +22,7 @@ for clRip = 1:size(RipplesTable,1)
     
     %%
     if ~strcmp(thisSID, thisSID_p)
-        
+        %% edit Behav structure
         Behav = load([ROOT.Raw.Mother '\rat' thisSID(1:3) '\rat' thisSID '\' 'ParsedPosition.mat']);
         
         Behav.Epoch = csvread([ROOT.Raw.Mother '\rat' thisSID(1:3) '\' ['behaviorEpoch_Rat' thisSID(1:3) '.csv']]);
@@ -53,75 +53,24 @@ for clRip = 1:size(RipplesTable,1)
             end
         end
         
-        %% interpolation
-        PosX=Behav.x; PosY=Behav.y; time=Behav.t; PosY_linearized = Behav.y_linearized;
+        %% position interpolation
         
         InTrack = Behav.trial_vector(:,2)~=0;
+        Behav.x = interp_pos(Behav.x,Intrack,360);
+        Behav.y = interp_pos(Behav.y,Intrack,470);
         
-        temp = PosX(InTrack);
-        x = find(~isnan(temp));
-        y = temp(x);
-        xq = [1:length(temp)]';
+        Behav.y_linearized(~InTrack) = 470;
+        [Behav.y_linearized,TF] = fillmissing(Behav.y_linearized,'linear');
         
-        yq = round(interp1(x,y,xq,'linear','extrap'));
-        PosX(InTrack) = yq;
-        
-        temp = PosY(InTrack);
-        x = find(~isnan(temp));
-        y = temp(x);
-        xq = [1:length(temp)]';
-        
-        yq = round(interp1(x,y,xq,'linear','extrap'));
-        PosY(InTrack) = yq;
-        
-        
-        PosY(~InTrack) = 470;
-        PosX(~InTrack) = 360;
-        PosY_linearized(~InTrack) = 470;
-        [PosY_linearized,TF] = fillmissing(PosY_linearized,'linear');
-        
-        
-        Behav.x = PosX; Behav.y = PosY; Behav.y_linearized = PosY_linearized;
-        %% get speed
-        bin_size = 5;
-        bin_range = [1:1:bin_size] - ceil(bin_size/2);
-        
-        this_speed = nan(length(time),1);
-        for t_iter = 1 : length(time)
-            temp_range = t_iter + bin_range;
-            temp_range(temp_range<1 | temp_range>length(time)) = [];
-            if length(temp_range) < ceil(bin_size/2)+1, continue; end % speed not assigned at both ends of position data
-            
-            x_range = PosX(temp_range(1):temp_range(end));
-            x_range(isnan(x_range))=[];
-            if isempty(x_range), temp_distance=0;
-            else
-                temp_distance =  x_range(end) - x_range(1);
-            end
-            temp_time = time(temp_range(end)) - time(temp_range(1));
-            
-            this_speed(t_iter,1) = (temp_distance*0.02) / temp_time; % centimeter/sec
-        end
-        for t_iter = 1 : length(time)
-            temp_range = t_iter + bin_range;
-            temp_range(temp_range<1 | temp_range>length(time)) = [];
-            if length(temp_range) < ceil(bin_size/2)+1, continue; end % speed not assigned at both ends of position data
-            
-            x_range = PosY(temp_range(1):temp_range(end));
-            x_range(isnan(x_range))=[];
-            if isempty(x_range), temp_distance=0;
-            else
-                temp_distance =  x_range(end) - x_range(1);
-            end
-            temp_time = time(temp_range(end)) - time(temp_range(1));
-            
-            this_speed(t_iter,2) = (temp_distance*0.2) / temp_time; % centimeter/sec
-        end
-        
+        %% cal speed
         Behav.velocity=table;
-        Behav.velocity.Vx=this_speed(:,1);
-        Behav.velocity.Vy=this_speed(:,2);
-        Behav.velocity.speed = sqrt(this_speed(:,1).^2+this_speed(:,2).^2);
+        bin_size = 5;
+        v = cal_speed(Behav.t, [Behav.x,Behav.y]*0.02, bin_size);
+        
+        Behav.velocity.Vx=v(:,1);
+        Behav.velocity.Vy=v(:,2);
+        Behav.velocity.speed = sqrt(v(:,1).^2+v(:,2).^2);
+
         %% Mk BehavTable
         
         BehavTable=table;
@@ -150,7 +99,7 @@ for clRip = 1:size(RipplesTable,1)
     end
     
     
-    %%
+    %% add to RipplesTable
     Idx = knnsearch(Behav.t,RipplesTable.StartTime(clRip));
     Idx_t = Behav.trial_vector(Idx,1);
     
