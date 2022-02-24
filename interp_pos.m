@@ -1,4 +1,4 @@
-function pos = f_interp_pos(pos,range,c)
+function pos = interp_pos(pos,range,c)
 
 temp = pos(range);
 x = find(~isnan(temp));
