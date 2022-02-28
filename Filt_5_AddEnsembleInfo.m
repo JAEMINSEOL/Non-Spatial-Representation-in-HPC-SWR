@@ -38,3 +38,6 @@ for clRip = 1:size(RipplesTable,1)
         RipplesTable.Ensemble_StemPC(clRip) = sum((thisUnitTable.SpaInfoScore1D(ia)>=0.5) & (thisUnitTable.PeakBin(ia)>1));
     end
 end
+
+RipplesTable_Ensemble = RipplesTable(RipplesTable.Ensemble_all>3,:);
+writetable(RipplesTable_Ensemble,[ROOT.Save '\RipplesTable_Ensemble.xlsx'])
