@@ -35,7 +35,7 @@ for clRip = 1:size(RipplesTable,1)
         RipplesTable.Spikes(clRip) = length(unit);
         RipplesTable.Ensemble_all(clRip) = length(unq_unit);
         RipplesTable.Ensemble_PC(clRip) = sum(thisUnitTable.SpaInfoScore1D(ia)>=0.5);
-        RipplesTable.Ensemble_StemPC(clRip) = sum((thisUnitTable.SpaInfoScore1D(ia)>=0.5) & (thisUnitTable.PeakBin(ia)>1));
+        RipplesTable.Ensemble_OnMazePC(clRip) = sum((thisUnitTable.SpaInfoScore1D(ia)>=0.5) & (thisUnitTable.PeakBin(ia)>1));
     end
 end
 
