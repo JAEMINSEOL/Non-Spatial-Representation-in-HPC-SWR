@@ -36,8 +36,16 @@ for clRip = 1:size(RipplesTable,1)
         RipplesTable.Ensemble_all(clRip) = length(unq_unit);
         RipplesTable.Ensemble_PC(clRip) = sum(thisUnitTable.SpaInfoScore1D(ia)>=0.5);
         RipplesTable.Ensemble_OnMazePC(clRip) = sum((thisUnitTable.SpaInfoScore1D(ia)>=0.5) & (thisUnitTable.PeakBin(ia)>1));
+        
+        ReactTable.Ensemble(id) = RipplesTable.Ensemble_all(clRip);
     end
+    
+    
 end
 
-RipplesTable_Ensemble = RipplesTable(RipplesTable.Ensemble_all>3,:);
+writetable(RipplesTable,[ROOT.Save '\RipplesTable_Behav.xlsx'])
+RipplesTable_Trial = RipplesTable(RipplesTable.context>0,:);
+
+RipplesTable_Ensemble = RipplesTable(RipplesTable.Ensemble_all>=3,:);
+
 writetable(RipplesTable_Ensemble,[ROOT.Save '\RipplesTable_Ensemble.xlsx'])
