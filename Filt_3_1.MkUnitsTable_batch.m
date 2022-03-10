@@ -10,7 +10,7 @@ ROOT.Behav = [ROOT.Save '\behavior_mat'];
 
 Recording_region = readtable([ROOT.Info '\Recording_region_SWR.csv'],'ReadRowNames',true);
 
-thisRegion = 'CA1';
+thisRegion = 'Subiculum';
 
 UnitsTable_all =table;
 
@@ -38,7 +38,7 @@ for i=1:size(fd,1)
     end
 end
 
-writetable(UnitsTable_all,[ROOT.Save '\UnitsTable.xlsx']);
+writetable(UnitsTable_all,[ROOT.Save '\UnitsTable_' thisRegion '.xlsx']);
 
 %% unit filtering
 
@@ -60,4 +60,4 @@ id = units.MeanFR>=10 & units.SpkWidth_maxAmp_<325;
 units = units(~id,:);
 
 UnitsTable_filtered = units;
-writetable(UnitsTable_filtered,[ROOT.Save '\UnitsTable_filtered.xlsx']);
+writetable(UnitsTable_filtered,[ROOT.Save '\UnitsTable_filtered_' thisRegion '.xlsx']);
