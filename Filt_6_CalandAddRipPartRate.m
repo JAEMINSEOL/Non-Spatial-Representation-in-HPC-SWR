@@ -7,14 +7,14 @@ ROOT.Save = [ROOT.Mother '\Processed Data'];
 
 Recording_region = readtable([ROOT.Info '\Recording_region_SWR.csv'],'ReadRowNames',true);
 
-thisRegion = 'CA1';
+thisRegion = 'Subiculum';
 
-RipplesTable = readtable([ROOT.Save '\RipplesTable_Ensemble.xlsx']);
-UnitsTable = readtable([ROOT.Save '\UnitsTable_filtered.xlsx']);
-ReactTable = readtable([ROOT.Save '\ReactTable.xlsx']);
-RipCountTable = readtable([ROOT.Save '\RipplesCountTable.xlsx']);
+RipplesTable = readtable([ROOT.Save '\RipplesTable_Ensemble_' 'CA1' '.xlsx']);
+UnitsTable = readtable([ROOT.Save '\UnitsTable_filtered_' thisRegion '.xlsx']);
+ReactTable = readtable([ROOT.Save '\ReactTable_' thisRegion '.xlsx']);
+RipCountTable = readtable([ROOT.Save '\RipplesCountTable_' 'CA1' '.xlsx']);
         
-
+%%
 for clUnit = 1:size(UnitsTable,1)
    UnitID= cell2mat(UnitsTable.UnitID(clUnit));
     id = find(cellfun(cellfind(UnitID),(ReactTable.UnitID)));
@@ -45,5 +45,14 @@ for clUnit = 1:size(UnitsTable,1)
     
 end
 
+writetable(UnitsTable,[ROOT.Save '\UnitsTable_RPR_' thisRegion '.xlsx'])
+%%
+figure;
+hold on
+unit = UnitsTable;
+scatter(unit.RipPartRate_P - unit.RipPartRate_M,unit.RDI_PM,'k','filled')
 
-writetable(UnitsTable,[ROOT.Save '\UnitsTable_RPR.xlsx'])
+unit = UnitsTable(max(UnitsTable.RipPartRate_Z,UnitsTable.RipPartRate_P)>0.2,:);
+% scatter(unit.RipPartRate_Z - unit.RipPartRate_B,unit.RDI_ZB,'r','filled')
+xlabel('RipPartRate_P - RipPartRate_M')
+ylabel('RDI\_PM')
