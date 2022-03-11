@@ -129,6 +129,7 @@ for clRip = 1:size(RipplesTable,1)
     thisSID_p = thisSID;
     
 end
+RipplesTable = RipplesTable(RipplesTable.StartTime_fromTrialEnd>0,:);
 
 writetable(BehavTable_all,[ROOT.Save '\BehavTable.xlsx']);
 writetable(RipplesTable,[ROOT.Save '\RipplesTable_Behav_' thisRegion '.xlsx']);
