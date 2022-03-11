@@ -44,7 +44,7 @@ for clRip = 1:size(RipplesTable,1)
     
 end
 
-writetable(RipplesTable,[ROOT.Save '\RipplesTable_Behav_' thisRegion '.xlsx'])
+
 RipplesTable_Trial = RipplesTable(RipplesTable.context>0,:);
 
 RipplesTable_Ensemble = RipplesTable(RipplesTable.Ensemble_all>=3,:);
