@@ -13,9 +13,9 @@ RipplesTable = readtable([ROOT.Save '\RipplesTable_Behav_' thisRegion '.xlsx']);
 
 crit_time = 5;
 %%
-RipplesTable = RipplesTable(RipplesTable.StartTime_fromTrialEnd>0,:);
+
 RipplesTable_filtered = RipplesTable(RipplesTable.StartTime_fromTrialEnd<crit_time,:);
 
 %%
-writetable(RipplesTable,[ROOT.Save '\RipplesTable_Behav_' thisRegion '.xlsx'])
+
 writetable(RipplesTable_filtered,[ROOT.Save '\RipplesTable_Behav_' thisRegion '_' num2str(crit_time) 's.xlsx'])
