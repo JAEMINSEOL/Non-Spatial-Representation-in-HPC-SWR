@@ -56,8 +56,8 @@ for clRip = 1:size(RipplesTable,1)
         %% position interpolation
         
         InTrack = Behav.trial_vector(:,2)~=0;
-        Behav.x = interp_pos(Behav.x,Intrack,360);
-        Behav.y = interp_pos(Behav.y,Intrack,470);
+        Behav.x = interp_pos(Behav.x,InTrack,360);
+        Behav.y = interp_pos(Behav.y,InTrack,470);
         
         Behav.y_linearized(~InTrack) = 470;
         [Behav.y_linearized,TF] = fillmissing(Behav.y_linearized,'linear');
@@ -101,7 +101,8 @@ for clRip = 1:size(RipplesTable,1)
     
     %% add to RipplesTable
     Idx = knnsearch(Behav.t,RipplesTable.StartTime(clRip));
-    Idx_t = Behav.trial_vector(Idx,1);
+    Idx_t = find(Behav.trial_time(:,1)<RipplesTable.StartTime(clRip));
+    
     
     RipplesTable.PosX(clRip) = Behav.x(Idx);
     RipplesTable.PosY(clRip) = Behav.y(Idx);
@@ -110,14 +111,19 @@ for clRip = 1:size(RipplesTable,1)
     RipplesTable.Vy(clRip) = Behav.velocity.Vy(Idx);
     RipplesTable.speed(clRip) = Behav.velocity.speed(Idx);
     
-    if ~isnan(Idx_t)
+    if ~isempty(Idx_t)
+        Idx_t = max(Idx_t);
         RipplesTable.trial{clRip} = [thisSID '-' jmnum2str(Idx_t,3)];
         RipplesTable.context(clRip) = Behav.trial_context(Idx_t);
         RipplesTable.correctness(clRip) = Behav.trial_correctness(Idx_t);
         RipplesTable.ambiguity(clRip) = Behav.trial_ambiguity(Idx_t);
         RipplesTable.area(clRip) = Behav.trial_vector(Idx,2);
+        RipplesTable.StartTime_fromTrialEnd(clRip) = RipplesTable.StartTime(clRip) - BehavTable.end(Idx_t);
+        RipplesTable.EndTime_fromTrialEnd(clRip) = RipplesTable.EndTime(clRip) - BehavTable.end(Idx_t);
     else
         RipplesTable.trial{clRip} = [thisSID '-000'];
+        RipplesTable.StartTime_fromTrialEnd(clRip) = nan;
+        RipplesTable.EndTime_fromTrialEnd(clRip) = nan;
     end
     
     thisSID_p = thisSID;
@@ -125,4 +131,4 @@ for clRip = 1:size(RipplesTable,1)
 end
 
 writetable(BehavTable_all,[ROOT.Save '\BehavTable.xlsx']);
-writetable(RipplesTable,[ROOT.Save '\RipplesTable_Behav.xlsx']);
+writetable(RipplesTable,[ROOT.Save '\RipplesTable_Behav_' thisRegion '.xlsx']);
