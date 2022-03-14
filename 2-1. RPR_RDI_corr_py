@@ -15,94 +15,68 @@ import seaborn as sns
 import Mod_SWR as swr
 from sklearn.linear_model import LinearRegression
 import statsmodels.api as sm
-from scipy import stats
+
 #%% import data
 ROOT_data = 'D:/HPC-SWR project/Processed Data'
-thisRID=561
-thisSID='all'
 thisRegion='CA1'
 
-df_rip = pd.read_excel(f'{ROOT_data}/RipplesTable_r{thisRID}_{thisSID}_{thisRegion}.xlsx')
-df_unit = pd.read_excel(f'{ROOT_data}/UnitsTable_r{thisRID}_{thisSID}_{thisRegion}.xlsx')
-df_act = pd.read_excel(f'{ROOT_data}/ActTable_r{thisRID}_{thisSID}_{thisRegion}.xlsx')
-
-df_rip_valid = pd.read_excel(f'{ROOT_data}/RipplesTable_r{thisRID}_{thisSID}_{thisRegion}_v.xlsx')
-df_unit_valid = pd.read_excel(f'{ROOT_data}/UnitsTable_r{thisRID}_{thisSID}_{thisRegion}_v.xlsx')
-df_act_valid = pd.read_excel(f'{ROOT_data}/ActTable_r{thisRID}_{thisSID}_{thisRegion}_v.xlsx')
-
+df_rip = pd.read_excel(f'{ROOT_data}/RipplesTable_Ensemble_CA1_10s.xlsx')
+df_unit = pd.read_excel(f'{ROOT_data}/UnitsTable_RPR_CA1.xlsx')
+df_act = pd.read_excel(f'{ROOT_data}/ReactTable_CA1_10s.xlsx')
 df_clust_summ = pd.read_excel('D:/HPC-SWR project/Information Sheet/ClusterSummary_SWR.xlsx')
 
-df_unit = df_unit[(df_unit.Type!=0) & ((df_unit.PeakArea==2) | (df_unit.PeakArea==3))]
-df_unit_valid = df_unit_valid[(df_unit_valid.Type!=0) & ((df_unit_valid.PeakArea==2) | (df_unit_valid.PeakArea==3))]
+df_unit['RPR_ZB'] = df_unit['RipPartRate_Z'] - df_unit['RipPartRate_B']
+df_unit['RPR_PM'] = df_unit['RipPartRate_P'] - df_unit['RipPartRate_M']
+df_unit['RPR_LR'] = df_unit['RipPartRate_L'] - df_unit['RipPartRate_R']
 
-
-# df_unit_valid = df_unit_valid[(df_unit_valid.RDI_ZB.abs()>0.2)]
 #%%
-temp=pd.DataFrame(np.zeros([5,5]))
+crit_RPR = [0.25, 0.2, 0.15, 0.1, 0.05,0]
+crit_RDI = [0.25, 0.2, 0.15, 0.1, 0.05,0]
 
-for c in range(1,6):
-    for i in range(1,6):
-        temp.iloc[i-1,c-1] = sum((df_rip_valid.Session==i) & (df_rip_valid.Context==c))
-    temp=pd.DataFrame(data=temp)
+for c1 in crit_RPR:
+    for c2 in crit_RDI:
+        df_unit_valid = df_unit[(df_unit.RipPartRate_all>=c1)]
 
 
-df_unit_valid['Rip_Part_Rate_Z']=0
-df_unit_valid['Rip_Part_Rate_P']=0
-df_unit_valid['Rip_Part_Rate_B']=0
-df_unit_valid['Rip_Part_Rate_M']=0
-df_unit_valid['Rip_Part_Rate_L']=0
-df_unit_valid['Rip_Part_Rate_R']=0
 
-for i in range(1,6):  
-    df_unit_valid['Rip_Part_Rate_Z'][df_unit_valid['Session']==i]  = df_unit_valid['NumRipples_1'][df_unit_valid['Session']==i]/temp.iloc[i-1,0]
-    df_unit_valid['Rip_Part_Rate_P'][df_unit_valid['Session']==i]  = df_unit_valid['NumRipples_2'][df_unit_valid['Session']==i]/temp.iloc[i-1,1]
-    df_unit_valid['Rip_Part_Rate_B'][df_unit_valid['Session']==i]  = df_unit_valid['NumRipples_3'][df_unit_valid['Session']==i]/temp.iloc[i-1,2]
-    df_unit_valid['Rip_Part_Rate_M'][df_unit_valid['Session']==i]  = df_unit_valid['NumRipples_4'][df_unit_valid['Session']==i]/temp.iloc[i-1,3]
-    df_unit_valid['Rip_Part_Rate_L'][df_unit_valid['Session']==i]  = (df_unit_valid['NumRipples_1'][df_unit_valid['Session']==i]+
-                                                                      df_unit_valid['NumRipples_3'][df_unit_valid['Session']==i])/(temp.iloc[i-1,0]+temp.iloc[i-1,2])
-    df_unit_valid['Rip_Part_Rate_R'][df_unit_valid['Session']==i]  = (df_unit_valid['NumRipples_2'][df_unit_valid['Session']==i]+
-                                                                      df_unit_valid['NumRipples_4'][df_unit_valid['Session']==i])/(temp.iloc[i-1,1]+temp.iloc[i-1,3])
+        f,axes=plt.subplots(1,3,figsize=(17,8))
+        plt.subplots_adjust(left=0.05, bottom=0.1, right=0.95, top=0.9, wspace=0.4, hspace=0.2)
+        plt.suptitle(f"rat 561 cells'  RDI vs. Diff.Ripple Part Rate_{c2}_RDI_{c1}_RPRall")
+        
+        list1 = ['ZB','PM','LR']
+        list2 = ['Zebra','Bamboo','Pebbles','Mountains','Left','Right']
+        
+        for i in range(3):
+            df_unit_valid = df_unit_valid[(df_unit_valid[f'RDI_{list1[i]}'].abs()>=c2)]
+            
+            X = df_unit_valid[f'RDI_{list1[i]}']
+            y = df_unit_valid[f'RPR_{list1[i]}']
+            
+            y[y.isna()] = 0
+            X[X.isna()] = 0
+            
+            
+            line_fitter = LinearRegression()
+            line_fitter.fit(X.values.reshape(-1,1), y)
+            
+            X2 = sm.add_constant(X)
+            est = sm.OLS(y, X2)
+            est2 = est.fit()
+            
+        
+            
+            axes[i].scatter( x=X,y=y)
+            axes[i].plot(X,line_fitter.predict(X.values.reshape(-1,1)),color='k')
+            axes[i].annotate(f'CorrCoef={np.corrcoef(X,y)[0, 1].round(3)}',(0,y.max()*0.95))
+            axes[i].set_xlabel(f'Rate Diff. Index ({list2[i*2]} vs. {list2[i*2+1]})')
+            axes[i].set_ylabel(f'Diff. Ripple Part. Rate ({list2[i*2]} - {list2[i*2+1]})')
+            plt.rc('font', size=15)
+        
+            plt.style.use('seaborn-whitegrid')
+            
+            plt.savefig(f'{ROOT_data}/plots/corr_rdi{c2}_rpr{c1}.png', dpi=300)
+            
+    # plt.axis([0, 1.25, 0, 0.3])
     
-
-df_unit_valid['RPR_ZB'] = df_unit_valid['Rip_Part_Rate_Z'] - df_unit_valid['Rip_Part_Rate_B']
-df_unit_valid['RPR_PM'] = df_unit_valid['Rip_Part_Rate_P'] - df_unit_valid['Rip_Part_Rate_M']
-df_unit_valid['RPR_LR'] = df_unit_valid['Rip_Part_Rate_L'] - df_unit_valid['Rip_Part_Rate_R']
-
-f,axes=plt.subplots(1,3,figsize=(17,8))
-plt.subplots_adjust(left=0.05, bottom=0.1, right=0.95, top=0.9, wspace=0.4, hspace=0.2)
-plt.suptitle("rat 561 cells'  RDI vs. Diff.Ripple Part Rate")
-
-list1 = ['ZB','PM','LR']
-list2 = ['Zebra','Bamboo','Pebbles','Mountains','Left','Right']
-
-for i in range(3):
-
-    X = df_unit_valid[f'RDI_{list1[i]}'].abs()
-    y = df_unit_valid[f'RPR_{list1[i]}'].abs()
-    
-    y=y[~X.isna()]
-    X=X[~X.isna()]
-    
-    
-    line_fitter = LinearRegression()
-    line_fitter.fit(X.values.reshape(-1,1), y)
-    
-    X2 = sm.add_constant(X)
-    est = sm.OLS(y, X2)
-    est2 = est.fit()
-    
-
-    
-    axes[i].scatter( x=X,y=y)
-    axes[i].plot(X,line_fitter.predict(X.values.reshape(-1,1)),color='k')
-    axes[i].annotate(f'CorrCoef={np.corrcoef(X,y)[0, 1].round(3)}',(0,0.2))
-    axes[i].set_xlabel(f'Rate Diff. Index ({list2[i*2]} vs. {list2[i*2+1]})_abs')
-    axes[i].set_ylabel(f'Diff. Ripple Part. Rate ({list2[i*2]} - {list2[i*2+1]})_abs')
-    plt.rc('font', size=15)
-
-    plt.style.use('seaborn-whitegrid')
-    plt.axis([0, 1.25, 0, 0.3])
-    
-    print(est2.summary())
-    
+plt.close('all')  
     
