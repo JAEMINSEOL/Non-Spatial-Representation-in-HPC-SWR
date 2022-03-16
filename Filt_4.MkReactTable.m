@@ -7,15 +7,21 @@ ROOT.Save = [ROOT.Mother '\Processed Data'];
 
 Recording_region = readtable([ROOT.Info '\Recording_region_SWR.csv'],'ReadRowNames',true);
 
-thisRegion = 'Subiculum';
+thisRegion = 'CA1';
+filt_time = 20;
 
-RipplesTable = readtable([ROOT.Save '\RipplesTable_Behav.xlsx']);
+if filt_time==0, suff = ''; else, suff = ['_' num2str(filt_time) 's']; end
+
+RipplesTable = readtable([ROOT.Save '\RipplesTable_Behav_' thisRegion suff '.xlsx']);
 UnitsTable = readtable([ROOT.Save '\UnitsTable_filtered_' thisRegion '.xlsx']);
 
 thisSID_p='';
 
 BehavTable_all=table;
         ReactTable=table;
+        
+
+%%
 for clRip = 1:size(RipplesTable,1)
     
     RipID = cell2mat(RipplesTable.RippleID(clRip));
@@ -62,4 +68,4 @@ for clRip = 1:size(RipplesTable,1)
     thisSID_p = thisSID;
 end
 
-writetable(ReactTable,[ROOT.Save '\ReactTable_' thisRegion '.xlsx']);
+writetable(ReactTable,[ROOT.Save '\ReactTable_' thisRegion suff '.xlsx']);
