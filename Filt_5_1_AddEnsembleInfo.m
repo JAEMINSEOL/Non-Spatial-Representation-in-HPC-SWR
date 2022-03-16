@@ -8,10 +8,13 @@ ROOT.Save = [ROOT.Mother '\Processed Data'];
 Recording_region = readtable([ROOT.Info '\Recording_region_SWR.csv'],'ReadRowNames',true);
 
 thisRegion = 'CA1';
+filt_time = 20;
 
-RipplesTable = readtable([ROOT.Save '\RipplesTable_Behav_' thisRegion '.xlsx']);
+if filt_time==0, suff = ''; else, suff = ['_' num2str(filt_time) 's']; end
+
+RipplesTable = readtable([ROOT.Save '\RipplesTable_Behav_' thisRegion suff '.xlsx']);
 UnitsTable = readtable([ROOT.Save '\UnitsTable_filtered_' thisRegion '.xlsx']);
-ReactTable = readtable([ROOT.Save '\ReactTable_' thisRegion '.xlsx']);
+ReactTable = readtable([ROOT.Save '\ReactTable_' thisRegion suff '.xlsx']);
 
 
 
@@ -49,4 +52,4 @@ RipplesTable_Trial = RipplesTable(RipplesTable.context>0,:);
 
 RipplesTable_Ensemble = RipplesTable(RipplesTable.Ensemble_all>=3,:);
 
-writetable(RipplesTable_Ensemble,[ROOT.Save '\RipplesTable_Ensemble_' thisRegion '.xlsx'])
+writetable(RipplesTable_Ensemble,[ROOT.Save '\RipplesTable_Ensemble_' thisRegion suff '.xlsx'])
