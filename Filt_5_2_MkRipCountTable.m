@@ -8,6 +8,8 @@ ROOT.Save = [ROOT.Mother '\Processed Data'];
 Recording_region = readtable([ROOT.Info '\Recording_region_SWR.csv'],'ReadRowNames',true);
 
 thisRegion = 'CA1';
+filt_time = 20;
+
 if filt_time==0, suff = ''; else, suff = ['_' num2str(filt_time) 's']; end
 
 RipplesTable = readtable([ROOT.Save '\RipplesTable_Ensemble_' thisRegion  suff '.xlsx']);
