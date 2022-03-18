@@ -1,6 +1,6 @@
 Initial_SWRFilter_common;
 warning off
-ROOT.Old = [ROOT.Mother '\Processed Data\ripples_mat'];
+ROOT.Old = [ROOT.Mother '\Processed Data\ripples_mat\R0'];
 ROOT.Save = [ROOT.Mother '\Processed Data'];
 
 Recording_region = readtable([ROOT.Info '\Recording_region_SWR.csv'],'ReadRowNames',true);
