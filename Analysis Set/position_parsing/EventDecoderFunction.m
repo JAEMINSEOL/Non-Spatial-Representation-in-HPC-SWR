@@ -358,10 +358,8 @@ while ischar(tline)
         % 0x8211 = sensor 1(stbox) 0x8201-0x9201
         % sensor 2 이후 : 0x1201-0x5201
         port = token(41);
-        a = token(44:45);
-        p = dec2binvec( hex2dec(a), 8);
-        
-        p_array(end+1,index) = p;
+        a = token(42:43);
+
         
         %         p_diff = xor(p_old,p);
         %         p_old = p;

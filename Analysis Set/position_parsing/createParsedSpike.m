@@ -28,15 +28,17 @@ if exist(['TT' thisTTID '_beh_SS_' thisCLID '.ntt'],'file')
     spkN = length(thisEpochCLTS);
     area=[];
     %Load position parsing result
-    load([mother_root '\rat' thisRID '\rat' thisRID '-' thisSID '\ParsedPosition.mat']);
+    load([mother_root '\rat' thisRID '\rat' thisRID '-' thisSID '\Behavior\ParsedPosition.mat']);
     areaN = 5;
     posN = length(x);
+    if ~exist('ambiguity'), ambiguity = ones(posN,1); end
+    if ~exist('cont'), cont = side; end
     
     a_spk = zeros(spkN, 1);
     t_spk = zeros(spkN, 1);
     x_spk = zeros(spkN, 1);
     y_spk = zeros(spkN, 1);
-    trial_spk = logical(zeros(spkN, 100));
+    trial_spk = logical(zeros(spkN, size(trial,2)));
     area_spk = logical(zeros(spkN, areaN));
     correctness_spk = logical(zeros(spkN, 2));
     cont_spk = logical(zeros(spkN, 6));
@@ -48,46 +50,46 @@ if exist(['TT' thisTTID '_beh_SS_' thisCLID '.ntt'],'file')
     posRUN = 1;
     while posRUN <= posN
         if t(posRUN,1) >= thisEpochCLTS(clRUN) && posRUN == 1
-%             a_spk(clRUN) = a(posRUN);
+            a_spk(clRUN) = a(posRUN);
             %         t_spk(clRUN) = t(posRUN);
             t_spk(clRUN) = thisEpochCLTS(clRUN);
             x_spk(clRUN) = x(posRUN);
             y_spk(clRUN) = y(posRUN);
-%             trial_spk(clRUN,:) = trial(posRUN,:);
-%             area_spk(clRUN,:) = area(posRUN,:);
-%             correctness_spk(clRUN,:) = correctness(posRUN,:);
-%             cont_spk(clRUN,:) = cont(posRUN,:);
-%             side_spk(clRUN,:) = side(posRUN,:);
-%             ambiguity_spk(clRUN,:) = ambiguity(posRUN,:);
+            trial_spk(clRUN,:) = trial(posRUN,:);
+            area_spk(clRUN,:) = area(posRUN,:);
+            correctness_spk(clRUN,:) = correctness(posRUN,:);
+            cont_spk(clRUN,:) = cont(posRUN,:);
+            side_spk(clRUN,:) = side(posRUN,:);
+            ambiguity_spk(clRUN,:) = ambiguity(posRUN,:);
             %         void_spk(clRUN) = void(posRUN);
             clRUN = clRUN + 1;
         elseif t(posRUN,1) >= thisEpochCLTS(clRUN)
             if t(posRUN,1)-thisEpochCLTS(clRUN) < thisEpochCLTS(clRUN)-t(posRUN-1,1)
-%                 a_spk(clRUN) = a(posRUN);
+                 a_spk(clRUN) = a(posRUN);
                 %             t_spk(clRUN) = t(posRUN);
                 t_spk(clRUN) = thisEpochCLTS(clRUN);
                 x_spk(clRUN) = x(posRUN);
                 y_spk(clRUN) = y(posRUN);
-%                 trial_spk(clRUN,:) = trial(posRUN,:);
-%                 area_spk(clRUN,:) = area(posRUN,:);
-%                 correctness_spk(clRUN,:) = correctness(posRUN,:);
-%                 cont_spk(clRUN,:) = cont(posRUN,:);
-%                 side_spk(clRUN,:) = side(posRUN,:);
-%                 ambiguity_spk(clRUN,:) = ambiguity(posRUN,:);
+                trial_spk(clRUN,:) = trial(posRUN,:);
+                area_spk(clRUN,:) = area(posRUN,:);
+                correctness_spk(clRUN,:) = correctness(posRUN,:);
+                cont_spk(clRUN,:) = cont(posRUN,:);
+                side_spk(clRUN,:) = side(posRUN,:);
+                ambiguity_spk(clRUN,:) = ambiguity(posRUN,:);
                 %             void_spk(clRUN) = void(posRUN);
                 posRUN = posRUN - 1; clRUN = clRUN + 1;
             else
-%                 a_spk(clRUN) = a(posRUN-1);
+                a_spk(clRUN) = a(posRUN-1);
                 %             t_spk(clRUN) = t(posRUN-1);
                 t_spk(clRUN) = thisEpochCLTS(clRUN);
                 x_spk(clRUN) = x(posRUN-1);
                 y_spk(clRUN) = y(posRUN-1);
-%                 trial_spk(clRUN,:) = trial(posRUN-1,:);
-%                 area_spk(clRUN,:) = area(posRUN-1,:);
-%                 correctness_spk(clRUN,:) = correctness(posRUN-1,:);
-%                 cont_spk(clRUN,:) = cont(posRUN-1,:);
-%                 side_spk(clRUN,:) = side(posRUN-1,:);
-%                 ambiguity_spk(clRUN,:) = ambiguity(posRUN-1,:);
+                trial_spk(clRUN,:) = trial(posRUN-1,:);
+                area_spk(clRUN,:) = area(posRUN-1,:);
+                correctness_spk(clRUN,:) = correctness(posRUN-1,:);
+                cont_spk(clRUN,:) = cont(posRUN-1,:);
+                side_spk(clRUN,:) = side(posRUN-1,:);
+                ambiguity_spk(clRUN,:) = ambiguity(posRUN-1,:);
                 %             void_spk(clRUN) = void(posRUN-1);
                 posRUN = posRUN - 1; clRUN = clRUN + 1;
             end
@@ -109,12 +111,12 @@ if exist(['TT' thisTTID '_beh_SS_' thisCLID '.ntt'],'file')
             t_spk(iter) = thisEpochCLTS(iter);
             x_spk(iter) = x(posRUN);
             y_spk(iter) = y(posRUN);
-%             trial_spk(iter,:) = trial(posRUN,:);
-%             area_spk(iter,:) = area(posRUN,:);
-%             correctness_spk(iter,:) = correctness(posRUN,:);
-%             cont_spk(iter,:) = cont(posRUN,:);
-%             side_spk(iter,:) = side(posRUN,:);
-%             ambiguity_spk(iter,:) = ambiguity(posRUN,:);
+            trial_spk(iter,:) = trial(posRUN,:);
+            area_spk(iter,:) = area(posRUN,:);
+            correctness_spk(iter,:) = correctness(posRUN,:);
+            cont_spk(iter,:) = cont(posRUN,:);
+            side_spk(iter,:) = side(posRUN,:);
+            ambiguity_spk(iter,:) = ambiguity(posRUN,:);
             %         void_spk(clRUN) = void(posRUN);
             
         end

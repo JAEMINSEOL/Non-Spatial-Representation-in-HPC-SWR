@@ -7,7 +7,7 @@ fclose all;
 mother_root = 'F:\EPhysRawData\RawData';
 addpath(genpath('D:\HPC-SWR project\Analysis program'))
 
-sessionID = {'027-01','027-02','027-03','027-04','027-05'};
+sessionID = {'052-01'};
 % sessionID = {'232-04', '232-05', '232-06', '232-07', '234-01', '234-02', '234-03', '234-04'};
 % sessionID = {'295-01','295-02','295-03','295-04'};
 % sessionID = {'232-13','234-09','295-10','415-18'};
