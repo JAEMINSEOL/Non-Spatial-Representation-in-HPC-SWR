@@ -27,14 +27,16 @@ Cluster_List_CA1 = readtable([ROOT.Info '\ClusterList_SWR_CA1.xlsx']);
 for cid = 1:size(Cluster_List_CA1,1)
     thisCLID = Cluster_List_CA1.ID{cid};
     cid2 = find(strcmp(thisCLID,Cluster_List.ID));
-    Cluster_List_CA1.nSpks(cid) = Cluster_List.nSpks(cid2);
-    Cluster_List_CA1.AvgPeaktoValley(cid) = Cluster_List.avgPeaktoValley(cid2);
-    Cluster_List_CA1.PeakfromBaseline(cid) = Cluster_List.PeakfromBaseline(cid2);
-    Cluster_List_CA1.PeakRatio(cid) = Cluster_List.PeakRatio(cid2);
-    Cluster_List_CA1.SpkWidth(cid) = Cluster_List.SpkWidth(cid2);
-    Cluster_List_CA1.withinRef(cid) = Cluster_List.withinRef(cid2);
-    Cluster_List_CA1.LogISIPeakTime(cid) = Cluster_List.LogISIPeakTime(cid2);
-    Cluster_List_CA1.onMazeAvgFR(cid) = Cluster_List.onMazeAvgFR(cid2);
+    if ~isempty(cid2)
+        Cluster_List_CA1.nSpks(cid) = Cluster_List.nSpks(cid2);
+        Cluster_List_CA1.AvgPeaktoValley(cid) = Cluster_List.avgPeaktoValley(cid2);
+        Cluster_List_CA1.PeakfromBaseline(cid) = Cluster_List.PeakfromBaseline(cid2);
+        Cluster_List_CA1.PeakRatio(cid) = Cluster_List.PeakRatio(cid2);
+        Cluster_List_CA1.SpkWidth(cid) = Cluster_List.SpkWidth(cid2);
+        Cluster_List_CA1.withinRef(cid) = Cluster_List.withinRef(cid2);
+        Cluster_List_CA1.LogISIPeakTime(cid) = Cluster_List.LogISIPeakTime(cid2);
+        Cluster_List_CA1.onMazeAvgFR(cid) = Cluster_List.onMazeAvgFR(cid2);
+    end
 end
 writetable(Cluster_List_CA1,[ROOT.Info '\ClusterList_SWR_CA1.xlsx'])
 
