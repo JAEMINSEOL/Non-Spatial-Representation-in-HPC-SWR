@@ -28,6 +28,7 @@ for cid = 1:size(Cluster_List_CA1,1)
     thisCLID = Cluster_List_CA1.ID{cid};
     cid2 = find(strcmp(thisCLID,Cluster_List.ID));
     if ~isempty(cid2)
+        cid2 = min(cid2)
         Cluster_List_CA1.nSpks(cid) = Cluster_List.nSpks(cid2);
         Cluster_List_CA1.AvgPeaktoValley(cid) = Cluster_List.avgPeaktoValley(cid2);
         Cluster_List_CA1.PeakfromBaseline(cid) = Cluster_List.PeakfromBaseline(cid2);
