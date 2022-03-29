@@ -202,7 +202,7 @@ saveImage(sheet, ['rat' clusterID '.png'], 'centimeters', sheetPOS);
 
 %%
 function DrawRawSpkMap(Pos,Spk,Title,num,xlim,ylim,in,inspk,exper)
-
+if ~isempty(Title{num})
 
 scatter(Pos.x(in) - xlim(1), Pos.y(in)  - ylim(1)+1,10,[.8 .8 .8],'filled')
 hold on
@@ -214,5 +214,7 @@ set(gca,'XLim', [0 xlim(2)-xlim(1)], 'YLim', [0 ylim(2)-ylim(1)],'xtick',[],'yti
 else
    set(gca, 'YDir', 'rev','XLim', [0 xlim(2)-xlim(1)], 'YLim', [0 ylim(2)-ylim(1)],'xtick',[],'ytick',[]); 
 end
+end
 axis off;
+
 end
