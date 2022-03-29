@@ -164,9 +164,14 @@ end
 if ~isfield(Spk,'trial_context')
     Spk.trial_context = Spk.cont_spk;
 end
-
+if isfield(Pos,'cont')
     [r,c] = find(Pos.cont);
-    cxt = zeros(size(Pos.cont,1),1);
+        cxt = zeros(size(Pos.cont,1),1);
+else
+    [r,c] = find(Pos.sc);
+        cxt = zeros(size(Pos.sc,1),1);
+end
+
     cxt (r) = c;
         [r,c] = find(Spk.cont_spk);
     cxt_spk = zeros(size(Spk.cont_spk,1),1);
@@ -235,6 +240,8 @@ if strcmp(sessiontype,'std4zpbm')
     Title = {'Zebra(L)','Pebbles(R)','Bamboo(L)','Mountain(R)'};
 elseif strcmp(sessiontype,'std2zp')
     Title = {'Zebra(L)','Pebbles(R)'};
+    Pos.trial_context = 2;
+    Pos.sc(:,1:2) = Pos.sc(:,3:4);
 elseif strcmp(sessiontype,'std2ds')
     Title = {'Dot(L)','Square(R)'};
 elseif strcmp(sessiontype,'std4dszp')
