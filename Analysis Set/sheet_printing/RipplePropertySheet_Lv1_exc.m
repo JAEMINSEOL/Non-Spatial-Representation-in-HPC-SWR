@@ -1,4 +1,4 @@
-function sheet = RipplePropertySheet_Lv1_exc(ROOT,ID,ripples,EEG,TargetTT,Spike,clusters)
+function RipplePropertySheet_Lv1_exc(ROOT,ID,ripples,EEG,TargetTT,Spike,clusters)
 unit = 5.0000e-04;
 EEGpos = [.05 .95 .9 .03]; 
 microSEC = 1e-06;
@@ -32,8 +32,9 @@ ti = 2;
 for epoc = 1: size(thisEPOCH,1)-1
     sheet = figure;
     subplot('position', [.0 .96 .95 .03]);
+    D = datetime;
     text(0.02, 0.5, ['Rat' RID '-S' SID ],'FontSize',14);
-    text(0.85, 0.5, ['printed on 25-Mar-2022'],'FontSize',10);
+    text(0.85, 0.5, ['printed on ' datestr(D,'mmm-dd-yyyy')],'FontSize',10);
     axis off
     
     sheetPOS = [2 2 29.7 21.0];
@@ -75,7 +76,7 @@ for epoc = 1: size(thisEPOCH,1)-1
             Units = [Units; ['TT' thisTTID '-' thisCLID]];
         end
     end
-    subplot('position',Spkpos -[0 .25 0 -.2])
+    subplot('position',Spkpos -[0 .2 0 -.15])
     hold on
     for s=1:size(spks_all,1)
         x = (spks_all(s,1) - thisEPOCH(epoc,2))/unit;
@@ -89,11 +90,12 @@ for epoc = 1: size(thisEPOCH,1)-1
     end
     xlim([0 size(y,1)])
     xticks([0:1000:len])
-    xticklabels([thisEPOCH(epoc,2):1000*unit:thisEPOCH(epoc+1,2)])
+    xticklabels([thisEPOCH(epoc,2)-epochST:1000*unit:thisEPOCH(epoc+1,2)-epochST])
     xlabel('time(s)')
     
     yticks([0.5:1:u-0.5])
     yticklabels(Units)
+    set(gca,'fontsize',5)
     
    cd(ROOT.Save)
 saveImage(sheet, ['rat' ID '_' num2str(epoc) '.png'], 'centimeters', sheetPOS); 
