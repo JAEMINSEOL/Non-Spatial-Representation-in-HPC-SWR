@@ -50,68 +50,49 @@ for sid=1:size(SessionList,1)
             Params_Ripple.envelope_stat(2) = nanstd(envelope_smoothed_noiseRemoved,1);
             
             Params_Ripple.threshold(2) = Params_Ripple.envelope_stat(1) + Params_Ripple.thresholdSTD * Params_Ripple.envelope_stat(2);
-            
+            Params_Ripple.threshold(3) = Params_Ripple.envelope_stat(1) + Params_Ripple.beginthresholdSTD * Params_Ripple.envelope_stat(2);
             %% ripple detection
             ripples = []; ripples_index = []; % ripples_index is required for 3TToverlap
             
-            aboveThreshold = find((envelope_smoothed<Params_Ripple.threshold(1))&(envelope_smoothed > Params_Ripple.threshold(2)));
+            aboveThreshold = (envelope_smoothed<Params_Ripple.threshold(1))&(envelope_smoothed > Params_Ripple.threshold(2));
+            beginThreshold =(envelope_smoothed > Params_Ripple.threshold(3));
+            
             
             if ~isempty(aboveThreshold)
-                ripples_index(end+1, 1) = aboveThreshold(1,1);
-                for i = 2 : length(aboveThreshold)
-                    if aboveThreshold(i,1) - aboveThreshold(i-1,1) > 1
-                        ripples_index(end, 2) = aboveThreshold(i-1,1);
-                        ripples_index(end+1, 1) = aboveThreshold(i,1);
-                    end
-                end
-                ripples_index(end,2) = aboveThreshold(end,1);
+                ripples_index = zeros(length(aboveThreshold),1);
                 
-                % index to timestamp
-                ripples(:,1) = Timestamps_expand(ripples_index(:,1));
-                ripples(:,2) = Timestamps_expand(ripples_index(:,2));
-
-                
-                % grouping
-                temp = []; % contain row indices to be deleted
-                ripples2=[]; ripples_index2=[]; 
-                i=1;
-                while i<size(ripples,1)
-                    j=i+1;
-                        while ripples(j,1) - ripples(j-1,2) <= Params_Ripple.groupingInterval
-                            j=j+1;
-                            if j>size(ripples,1), continue; end
+                for i=1:length(aboveThreshold)-1
+                        if aboveThreshold(i)==0 
+                            if aboveThreshold(i+1)==1
+                                j=i;
+                                while beginThreshold(j)==1
+                                    aboveThreshold(j)=1;
+                                    ripples_index(j)=1;
+                                    j=j-1;
+                                    if j<1, break; end
+                                end
+                            elseif aboveThreshold(i+1)==0
+                                ripples_index(i)=0;
+                            end
+                        elseif aboveThreshold(i)==1
+                            if aboveThreshold(i+1)==0
+                                j=i;
+                                while beginThreshold(j)==1
+                                    aboveThreshold(j)=1;
+                                    ripples_index(j)=1;
+                                    j=j+1;
+                                    if j>length(aboveThreshold), break; end
+                                end
+                            elseif aboveThreshold(i+1)==1
+                                ripples_index(i)=1;
+                            end
                         end
-                    ripples2 = [ripples2;[ripples(i,1),ripples(j-1,2)]];
-                    ripples_index2 = [ripples_index2;[ripples_index(i,1),ripples_index(j-1,2)]];
-                    i=j;
                 end
-                if ripples_index(end,2)~=ripples_index2(end,2)
-                    ripples_index2 = [ripples_index2 ; ripples_index(end,1:2)];
-                    ripples2 = [ripples2 ; ripples(end,1:2)];
-                end
-                ripples_index= ripples_index2;
-                ripples = ripples2;
-                
-                                
-                
-                % ripples more than minimum duration
-                ripples(:,3) = ripples(:,2) - ripples(:,1);
-                ripples_index(ripples(:,3) < Params_Ripple.minDuration, :) = [];
-                ripples(ripples(:,3) < Params_Ripple.minDuration, :) = [];
-                ripples(:,3)=[];
-                % remove noise ripples
-%                 for i = 1 : size(ripples,1)
-%                     if and(envelope_smoothed(ripples_index(i,1))>envelope_smoothed(ripples_index(i,1)-1), envelope_smoothed(ripples_index(i,2))<envelope_smoothed(ripples_index(i,2)+1))
-%                         ripples_index(i,1) = NaN; ripples_index(i,2) = NaN;
-%                         ripples(i,1) = NaN; ripples(i,2) = NaN;
-%                     elseif and(envelope_smoothed(ripples_index(i,1))<envelope_smoothed(ripples_index(i,1)-1), envelope_smoothed(ripples_index(i,2))>envelope_smoothed(ripples_index(i,2)+1))
-%                         ripples_index(i,1) = NaN; ripples_index(i,2) = NaN;
-%                         ripples(i,1) = NaN; ripples(i,2) = NaN;
-%                     end
-%                 end
-                
-                ripples_index(isnan(ripples_index(:,:)))=[];
-                ripples(isnan(ripples(:,:)))=[];
+                                              
+                ripples = zeros(1,1);
+                ripples(:,1) = Timestamps_expand(end);
+                ripples(:,2) = EEG.(['TT' num2str(thisTTID)]).Raw(end);
+                ripples(:,3) = envelope_smoothed_noiseRemoved(end);
 
                 Ripples.(['TT' num2str(thisTTID)]).ripples = ripples;
                 Ripples.(['TT' num2str(thisTTID)]).index = ripples_index;
