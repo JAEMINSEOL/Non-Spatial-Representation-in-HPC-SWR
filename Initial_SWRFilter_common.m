@@ -54,11 +54,11 @@ function Params_Ripple = SetRippleParams(Params)
 Params_Ripple.Fs = 2000;                                   % sampling frequency
 Params_Ripple.gaussianSTD = 40;                            % gaussianSTD / Fs = moving window size for gaussian smoothing (sec) 0.5ms=1idx
 Params_Ripple.thresholdSTD = 4;                            % SD
-Params_Ripple.beginthresholdSTD = 1;                           % begin & end SD
+Params_Ripple.beginthresholdSTD = 2;                           % begin & end SD
 Params_Ripple.noiseSTD = 100;                               % 11 SD
 Params_Ripple.minDuration = 0.02;                          % sec
 Params_Ripple.maxDuration = 0.1;                           % sec
-Params_Ripple.groupingInterval = 0.02;                     % sec
+Params_Ripple.groupingInterval = 0.01;                     % sec
 Params_Ripple.boundarySTD = 1;                             % SD
 
 
