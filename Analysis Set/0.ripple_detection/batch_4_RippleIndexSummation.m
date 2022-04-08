@@ -2,7 +2,7 @@
 Initial_SWRFilter_common;
 warning off
 ROOT.Old = [ROOT.Mother '\Processed Data\ripples_mat\R0'];
-ROOT.Save = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R0_5'];
+ROOT.Save = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R0_6'];
 %%
 Recording_region = readtable([ROOT.Info '\Recording_region_SWR.csv'],'ReadRowNames',true);
 SessionList = readtable([ROOT.Info '\SessionList_SWR.xlsx'],'ReadRowNames',false);
@@ -15,9 +15,9 @@ Experimenter = {'LSM','SEB','JS'};
 fd = dir(ROOT.Save);
 
 RipplesTable_all = table;
-RipplesTable_all = readtable([ROOT.Info '\RipplesList_' thisRegion '.xlsx']);
+% RipplesTable_all = readtable([ROOT.Info '\RipplesList_' thisRegion '.xlsx']);
 %%
-for sid=32:size(SessionList,1)
+for sid=1:size(SessionList,1)
     if SessionList.include(sid) & ismember(SessionList.experimenter{sid},Experimenter) 
         ID = [jmnum2str(SessionList.rat(sid),3) '-' jmnum2str(SessionList.session(sid),2)];
     Recording_region_TT = Recording_region({ID},:);
@@ -53,7 +53,8 @@ for sid=32:size(SessionList,1)
     RippleVector = sum(RippleArray,2);
     %%
     
-    n=1;ripples_index=[]; Params.NumTTthreshold=max(3,floor(length(TargetTT)/2));
+    n=1;ripples_index=[];
+    Params.NumTTthreshold=max(min(3,length(TargetTT)),floor(length(TargetTT)/2));
     for i=2:size(RippleVector,1)
         if RippleVector(i-1)<Params.NumTTthreshold && RippleVector(i)>=Params.NumTTthreshold
             ripples_index(n,1)=i;
@@ -87,6 +88,8 @@ for sid=32:size(SessionList,1)
     
         % duration check
     ripples_index(ripples_index(:,2)-ripples_index(:,1) < Params_Ripple.minDuration*Params_Ripple.Fs*2, :) = [];
+%     ripples_index(ripples_index(:,2)-ripples_index(:,1) > Params_Ripple.maxDuration*Params_Ripple.Fs, :) = [];
+    
     if ripples_index(end,2)<ripples_index(end,1), ripples_index(end,2) = size(RippleVector,1); end
     ripples_index(ripples_index==0) = 1;
     
@@ -116,6 +119,7 @@ for sid=32:size(SessionList,1)
         Ripple_List.ID{rid} = [jmnum2str(thisRID,3) '-' jmnum2str(thisSID,2) '-' thisRegion '-' jmnum2str(rid,4)];
         Ripple_List.rat(rid) = thisRID;
         Ripple_List.session(rid) = thisSID;
+        Ripple_List.experimenter{rid} = SessionList.experimenter{sid};
         Ripple_List.region{rid} = thisRegion;
         Ripple_List.ripple(rid) = rid;
         
@@ -146,6 +150,6 @@ for sid=32:size(SessionList,1)
     end
 end
 %%
-% writetable(RipplesTable_all,[ROOT.Info '\RipplesList_' thisRegion '.xlsx'],'writemode','overwrite')
-% RipplesTable_all = RipplesTable_all(RipplesTable_all.ensemble>=3,:);
-% writetable(RipplesTable_all,[ROOT.Info '\RipplesList_' thisRegion '_filtered.xlsx'],'writemode','overwrite')
+writetable(RipplesTable_all,[ROOT.Info '\RipplesList_' thisRegion '.xlsx'],'writemode','overwrite')
+RipplesTable_all = RipplesTable_all(RipplesTable_all.ensemble>=3,:);
+writetable(RipplesTable_all,[ROOT.Info '\RipplesList_' thisRegion '_filtered.xlsx'],'writemode','overwrite')
