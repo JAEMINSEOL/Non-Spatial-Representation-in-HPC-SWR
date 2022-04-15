@@ -119,6 +119,6 @@ for sid = 1:size(SessionList,1)
     end
 end   
 
-writetable(BehavTable_all,[ROOT.Save '\BehavTable.xlsx']);
+writetable(BehavTable_all,[ROOT.Save '\BehavTable.xlsx'],'writemode','overwrite');
 
   
