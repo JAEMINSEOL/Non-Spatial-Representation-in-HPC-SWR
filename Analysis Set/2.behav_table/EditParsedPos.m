@@ -9,7 +9,7 @@ Recording_region = readtable([ROOT.Info '\Recording_region_SWR.csv'],'ReadRowNam
 SessionList = readtable([ROOT.Info '\SessionList_SWR.xlsx'],'ReadRowNames',false);
 Cluster_List = readtable([ROOT.Unit '\ClusterList_SWR_CA1_filtered.xlsx'],'ReadVariableNames',true);
 
-Experimenter = {'JS','LSM','SEB'};
+Experimenter = {'JS'};
 thisRegion = 'CA1';
 
 for sid = 1:size(SessionList,1)
@@ -57,8 +57,15 @@ for sid = 1:size(SessionList,1)
             end
         elseif strcmp(SessionList.experimenter{sid},'JS')
             cx=1000; cy =1;
-            elseif strcmp(SessionList.experimenter{sid},'LSM')
+            if median(Behav.t(2:end) - Behav.t(1:end-1))<0.01
+                Behav.t = Behav.t * 10^6;
+            elseif median(Behav.t(2:end) - Behav.t(1:end-1)) >10000
+                Behav.t = Behav.t * 10^-6;
+            end
+        elseif strcmp(SessionList.experimenter{sid},'LSM')
             cx=360; cy =470;
+            Behav.x(Behav.x==0) = cx;
+            Behav.y(Behav.y==0) = cy;
         end
         if ~isfield(Behav,'area')
             Behav.area(:,1) = sum(Behav.trial,2);
@@ -66,6 +73,17 @@ for sid = 1:size(SessionList,1)
         elseif isempty(Behav.area)
             Behav.area(:,1) = sum(Behav.trial,2);
             Behav.area(:,5) = sum(Behav.trial,2)==0;
+        elseif strcmp(SessionList.experimenter{sid},'JS')
+            if sum(Behav.area(:,5))>1000
+                Behav.area(:,5) = 0;
+                for i=2:size(Behav.area,1)
+                    if Behav.area(i-1,1)==1 && Behav.area(i,1)==0
+                        Behav.area(i-1,5)=1;
+                    end
+                end
+                Behav.area(Behav.area(:,5)==1,1)=0;
+            end
+            
         end
         if ~isfield(Behav,'trial_context')
             Behav.trial_context=[];
@@ -149,11 +167,20 @@ for sid = 1:size(SessionList,1)
         %% cal speed
         Behav.velocity=table;
         bin_size = 5;
-        v = cal_speed(Behav.t, [Behav.x,Behav.y]*0.02, bin_size);
+        if strcmp(SessionList.experimenter{sid},'JS')
+            px2cm = 300/10000;
+        else
+            px2cm = 0.23;
+        end
+        v = cal_speed(Behav.t, [Behav.x,Behav.y]*px2cm, bin_size);
+        if strcmp(SessionList.experimenter{sid},'JS')
+            v(v(:,1)<0,1) = 0;
+        end
         
         Behav.velocity.Vx=v(:,1);
         Behav.velocity.Vy=v(:,2);
         Behav.velocity.speed = sqrt(v(:,1).^2+v(:,2).^2);
+        
         
         save([ROOT.Raw.Mother '\rat' thisSID(1:3) '\rat' thisSID '\' 'ParsedPosition.mat'],'-struct','Behav');
         disp([thisSID ' is finished!'])
