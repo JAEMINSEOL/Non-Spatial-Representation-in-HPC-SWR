@@ -2,6 +2,7 @@
 
 clear all; clc; fclose all;
 
+ROOT.Module = 'D:\Modules';
 ROOT.Mother = 'D:\HPC-SWR project';
 ROOT.Raw.Mother = 'F:\EPhysRawData\RawData';
 
@@ -11,6 +12,7 @@ ROOT.Program = [ROOT.Mother '\Analysis Program'];
 ROOT.Info = [ROOT.Mother '\Information Sheet'];
 ROOT.Save = [ROOT.Mother '\Processed Data'];
 addpath(genpath(ROOT.Program))
+addpath(genpath(ROOT.Module))
 %% set initial parameters
 % cell criterions
 Params.crit.frlow=1;
@@ -56,9 +58,9 @@ Params_Ripple.gaussianSTD = 40;                            % gaussianSTD / Fs = 
 Params_Ripple.thresholdSTD = 4;                            % SD
 Params_Ripple.beginthresholdSTD = 2;                           % begin & end SD
 Params_Ripple.noiseSTD = 100;                               % 11 SD
-Params_Ripple.minDuration = 0.02;                          % sec
-Params_Ripple.maxDuration = 0.1;                           % sec
-Params_Ripple.groupingInterval = 0.01;                     % sec
+Params_Ripple.minDuration = 0.04;                          % sec
+Params_Ripple.maxDuration = 0.4;                           % sec
+Params_Ripple.groupingInterval = 0.04;                     % sec
 Params_Ripple.boundarySTD = 1;                             % SD
 
 
