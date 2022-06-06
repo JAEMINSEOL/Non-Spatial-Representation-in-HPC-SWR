@@ -3,10 +3,12 @@ warning off
 ROOT.Old = [ROOT.Mother '\Processed Data\ripples_mat\R2'];
 ROOT.Fig1 = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R1'];
 ROOT.Fig2 = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R2'];
+ROOT.Fig3 = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R3'];
 ROOT.Units = [ROOT.Mother '\Processed Data\units_mat\U0'];
 ROOT.Behav = [ROOT.Mother '\Processed Data\behavior_mat'];
 if ~exist(ROOT.Fig1), mkdir(ROOT.Fig1); end
 if ~exist(ROOT.Fig2), mkdir(ROOT.Fig2); end
+if ~exist(ROOT.Fig2), mkdir(ROOT.Fig3); end
 
 Recording_region = readtable([ROOT.Info '\Recording_region_SWR.csv'],'ReadRowNames',true);
 SessionList = readtable([ROOT.Info '\SessionList_SWR.xlsx'],'ReadRowNames',false);
@@ -30,7 +32,8 @@ thisSID_old = '';
 for sid=1:size(RipplesTable,1)
     try
         thisRip = RipplesTable(sid,:);
-        if ~ismember(thisRip.experimenter,Experimenter), continue; end
+        Exper = cell2mat(thisRip.experimenter);
+        if ~ismember(Exper,Experimenter), continue; end
         thisSID = [jmnum2str(thisRip.rat,3) '-' jmnum2str(thisRip.session,2)];
         
         if ~strcmp(thisSID, thisSID_old)
@@ -53,13 +56,19 @@ for sid=1:size(RipplesTable,1)
         axis off
         
         subplot(4+fix(NumTT/6),6,7)
-        title(['trial ' (thisRip.trial{1}(end-2:end)) ', context ' num2str(thisRip.context)],'fontsize',15)
+        if strcmp(Exper,'LSM'), CxtList = {'Zebra','Pebbles','Bamboo','Mountains'};
+        elseif strcmp(Exper, 'SEB'), CxtList = {'Dot','Square','Zebra','Pebbles'};
+        elseif strcmp(Exper, 'JS'), CxtList = {'Forest','City'};
+        end
+        cxt = CxtList{thisRip.context};
+        if thisRip.correctness, corr='Correct'; else, corr='Wrong'; end
+        title(['trial ' (thisRip.trial{1}(end-2:end)) ', ' cxt ', ' corr],'fontsize',15)
         axis off
         
         % position
         subplot(4+fix(NumTT/6),6,[5 6 17 18])
         if thisRip.speed>5 || thisRip.area~=0, cl='k'; else, cl='r'; end
-        if strcmp(cell2mat(thisRip.experimenter),'JS'),x=Pos.y; y=Pos.x; else, x=Pos.x; y=Pos.y; end
+        if strcmp(cell2mat(thisRip.experimenter),'JS'),x=Pos.y; y=Pos.x; else, x=smooth(Pos.x); y=smooth(Pos.y); end
         scatter(x,y,5,[.7 .7 .7],'filled')
         hold on
         if strcmp(cell2mat(thisRip.experimenter),'JS'),x=thisRip.PosY; y=thisRip.PosX; else, x=thisRip.PosX; y=thisRip.PosY; end
@@ -143,6 +152,11 @@ for sid=1:size(RipplesTable,1)
         fd = [ROOT.Fig2 '\' ['rat' jmnum2str(thisRip.rat,3)] '\rat' thisSID];
         if ~exist(fd), mkdir(fd); end
         saveas(gca,[fd '\' cell2mat(thisRip.ID) '.png'])
+        if strcmp(cl,'r')
+            fd = [ROOT.Fig3 '\' ['rat' jmnum2str(thisRip.rat,3)]];
+        if ~exist(fd), mkdir(fd); end
+        saveas(gca,[fd '\' cell2mat(thisRip.ID) '.png'])
+        end
         close all
     end
 end
