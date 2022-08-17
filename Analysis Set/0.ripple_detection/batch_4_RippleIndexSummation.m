@@ -1,16 +1,18 @@
 
 Initial_SWRFilter_common;
 warning off
-ROOT.Old = [ROOT.Mother '\Processed Data\ripples_mat\R0'];
+ROOT.Old = [ROOT.Mother '\Processed Data\ripples_mat\R0_200'];
 ROOT.Unit = [ROOT.Mother '\Processed Data\units_mat\U0'];
-ROOT.Save = [ROOT.Mother '\Processed Data\ripples_mat\R0'];
-ROOT.Fig = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R0_7'];
+ROOT.Save = [ROOT.Mother '\Processed Data\ripples_mat\R0_300'];
+ROOT.Fig = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R0'];
+if ~exist(ROOT.Save), mkdir(ROOT.Save); end
+if ~exist(ROOT.Fig), mkdir(ROOT.Fig); end
 %%
 Recording_region = readtable([ROOT.Info '\Recording_region_SWR.csv'],'ReadRowNames',true);
 SessionList = readtable([ROOT.Info '\SessionList_SWR.xlsx'],'ReadRowNames',false);
 Cluster_List = readtable([ROOT.Unit '\ClusterList_SWR_CA1_filtered.xlsx'],'ReadVariableNames',true);
 thisRegion = 'CA1';
-Experimenter = {'LSM','SEB','JS'};
+Experimenter = {'JS','LSM','SEB'};
 
 
 
@@ -21,19 +23,23 @@ RipplesTable_all = table;
 %%
 for sid=1:size(SessionList,1)
     if SessionList.include(sid) & ismember(SessionList.experimenter{sid},Experimenter)
+            
         ID = [jmnum2str(SessionList.rat(sid),3) '-' jmnum2str(SessionList.session(sid),2)];
         Recording_region_TT = Recording_region({ID},:);
         thisRID = SessionList.rat(sid);
         thisSID = SessionList.session(sid);
+        thisRSID = [jmnum2str(thisRID,3) '-' jmnum2str(thisSID,2)];
         
-        TargetTT = find(cellfun(cellfindn2(thisRegion),table2array(Recording_region_TT)'));
-        if size(TargetTT,1)<2, continue; end
+        TargetTT_r = GetTargetTT(ROOT,thisRSID,thisRegion,Params,0.03);
+        TargetTT_c = GetTargetTT(ROOT,thisRSID,thisRegion,Params,0);
+        if size(TargetTT_r,1)<2, continue; end
+        if ~exist([ROOT.Old '\' ID '.mat']), continue; end
         load([ROOT.Old '\' ID '.mat']);
-        %%
+         %%
         L=1;
-        for t1=1:length(TargetTT)
+        for t1=1:length(TargetTT_r)
             try
-                thisTTID=TargetTT(t1);
+                thisTTID=TargetTT_r(t1);
                 L = max(L,length(Ripples.(['TT' num2str(thisTTID)]).index(end,2)));
                 cscID = [jmnum2str(thisRID,3) '-' jmnum2str(thisSID,2) '-' num2str(thisTTID)];
                 % load CSC data
@@ -42,55 +48,63 @@ for sid=1:size(SessionList,1)
                 break;
             end
         end
-        
+   
         time_ori = Timestamps_expand(1);
-        
-        RippleArray = zeros(L,size(TargetTT,1));
-        %%
-        for t1=1:length(TargetTT)
+%%         
+        RippleArray = zeros(L,24);
+
+        for t1=1:length(TargetTT_r)
             try
-                t=TargetTT(t1);
-                RippleArray(1:Ripples.(['TT' num2str(t)]).index(end,2),t1) =...
+                t=TargetTT_r(t1);
+                RippleArray(1:Ripples.(['TT' num2str(t)]).index(end,2),t) =...
                     jmIndex2Bin(Ripples.(['TT' num2str(t)]).index,Ripples.(['TT' num2str(t)]).index(end,2));
             end
         end
         RippleVector = sum(RippleArray,2);
+%         %%
+%         
+%         n=1;ripples_index=[];
+%         Params.NumTTthreshold=min(3,(round(length(TargetTT_r)/2)));
+%         ripples_index = jmBin2Index(RippleVector,Params.NumTTthreshold);
+%         
+%         if isempty(ripples_index), disp([ID ' has no ripple!']); continue; end
+%         
+%         % duration check
+% %         ripples_index(ripples_index(:,2)-ripples_index(:,1) < Params_Ripple.minDuration*Params_Ripple.Fs, :) = [];
+%         
+%         % grouping
+%         ripples2=[]; ripples_index2=[];
+%         i=1;
+%         while i<size(ripples_index,1)
+%             j=i+1;
+%             while ripples_index(j,1) - ripples_index(j-1,2) <= Params_Ripple.groupingInterval*Params_Ripple.Fs
+%                 j=j+1;
+%                 if j>size(ripples_index,1), break; end
+%             end
+%             ripples_index2 = [ripples_index2;[ripples_index(i,1),ripples_index(j-1,2)]];
+%             i=j;
+%         end
+%         if ripples_index(end,2)~=ripples_index2(end,2)
+%             ripples_index2 = [ripples_index2 ; ripples_index(end,1:2)];
+%         end
+%         ripples_index= ripples_index2;
+%         
         %%
+        TT_table = readtable([ROOT.Info '\TT_table.xlsx']);
+         thisTT_table = TT_table(TT_table.rat==thisRID & TT_table.session==thisSID,:);
+         thisTT_table= thisTT_table(TargetTT_r,:);
+          [~,t] = max(thisTT_table.RippleBandMean);
+         TargetTT_p = thisTT_table.TT(t);
         
-        n=1;ripples_index=[];
-        Params.NumTTthreshold=min(3,length(TargetTT));
-        ripples_index = jmBin2Index(RippleVector,Params.NumTTthreshold);
-        
-        if isempty(ripples_index), disp([ID ' has no ripple!']); continue; end
-        
-        % duration check
-%         ripples_index(ripples_index(:,2)-ripples_index(:,1) < Params_Ripple.minDuration*Params_Ripple.Fs, :) = [];
-        
-        % grouping
-        ripples2=[]; ripples_index2=[];
-        i=1;
-        while i<size(ripples_index,1)
-            j=i+1;
-            while ripples_index(j,1) - ripples_index(j-1,2) <= Params_Ripple.groupingInterval*Params_Ripple.Fs
-                j=j+1;
-                if j>size(ripples_index,1), break; end
-            end
-            ripples_index2 = [ripples_index2;[ripples_index(i,1),ripples_index(j-1,2)]];
-            i=j;
-        end
-        if ripples_index(end,2)~=ripples_index2(end,2)
-            ripples_index2 = [ripples_index2 ; ripples_index(end,1:2)];
-        end
-        ripples_index= ripples_index2;
-        
-        % duration check
-        ripples_index(ripples_index(:,2)-ripples_index(:,1) < Params_Ripple.minDuration*Params_Ripple.Fs*2, :) = [];
-               ripples_index(ripples_index(:,2)-ripples_index(:,1) > Params_Ripple.maxDuration*Params_Ripple.Fs, :) = [];
-        
+         ripples_index = Ripples.(['TT' num2str(TargetTT_p)]).index;
+         %%
+         % duration check
+         ripples_index(ripples_index(:,2)-ripples_index(:,1) < Params_Ripple.minDuration*Params_Ripple.Fs, :) = [];
+                ripples_index(ripples_index(:,2)-ripples_index(:,1) > Params_Ripple.maxDuration*Params_Ripple.Fs, :) = [];
+         
         if ripples_index(end,2)<ripples_index(end,1), ripples_index(end,2) = size(RippleVector,1); end
-        ripples_index(ripples_index==0) = 1;
-        
-        %%
+         ripples_index(ripples_index==0) = 1;
+%%
         ripples_index(:,3) = time_ori + ripples_index(:,1)/Params_Ripple.Fs;
         ripples_index(:,4) = time_ori + ripples_index(:,2)/Params_Ripple.Fs;
         for i=1:size(ripples_index,1), ripples_index(i,5) = max(RippleVector(ripples_index(i,1):ripples_index(i,2))); end
@@ -99,8 +113,8 @@ for sid=1:size(SessionList,1)
         disp([ID '_' thisRegion '.csv is saved!'])
         
         
-        ripples = readtable([ROOT.Old '\' ID '_' thisRegion '.csv']);
-        Spike=LoadSpikeData(ROOT, ID, TargetTT, cellfindn);
+        ripples = readtable([ROOT.Save '\' ID '_' thisRegion '.csv']);
+        Spike=LoadSpikeData(ROOT, ID, TargetTT_c, Params.cellfindn);
         clusters = Cluster_List(Cluster_List.rat==thisRID & Cluster_List.session==thisSID,:);
         %%
         Ripple_List=table;
@@ -120,9 +134,13 @@ for sid=1:size(SessionList,1)
             Ripple_List.region{rid} = thisRegion;
             Ripple_List.ripple(rid) = rid;
             
-            Ripple_List.NumAllTT(rid) = size(TargetTT,1);
-            Ripple_List.NumTT(rid) = max(RippleVector(ripples.Var1(rid):ripples.Var2(rid)));
-            
+            Ripple_List.NumAllTT(rid) = size(TargetTT_r,1);
+            temp_r = RippleArray(ripples.Var1(rid):ripples.Var2(rid),:);
+           [m,t]  = max(RippleVector(ripples.Var1(rid):ripples.Var2(rid)));
+             Ripple_List.NumTT(rid) = m;
+            Ripple_List.TTs(rid) = binaryVectorToDecimal(flip(temp_r(t,:)));
+      
+
             Ripple_List.STindex(rid) = ripples.Var1(rid);
             Ripple_List.EDindex(rid) = ripples.Var2(rid);
             Ripple_List.STtime(rid) = ripples.Var3(rid);
@@ -143,13 +161,13 @@ for sid=1:size(SessionList,1)
         %%
         ripples.ensemble = Ripple_List.ensemble;
         ID = [jmnum2str(thisRID,3) '-' jmnum2str(thisSID,2)];
-        EEG = LoadEEGData(ROOT, ID, TargetTT,Params,Params_Ripple);
-        RipplePropertySheet_Lv1_exc(ROOT,SessionList(sid,:),ripples,EEG,TargetTT,Spike,clusters,Params_Ripple);
-        
+%         EEG = LoadEEGData(ROOT, ID, TargetTT_r,Params,Params_Ripple);
+%         RipplePropertySheet_Lv1_exc(ROOT,SessionList(sid,:),ripples,EEG,TargetTT_r,Spike,clusters,Params_Ripple);
+   
         disp([ID ' profile sheet is finished!'])
     end
 end
 %%
-writetable(RipplesTable_all,[ROOT.Save '\RipplesList_' thisRegion '.xlsx'],'writemode','overwrite')
+writetable(RipplesTable_all,[ROOT.Save '\RipplesList_' thisRegion '.xlsx'],'WriteMode', 'overwrite')
 RipplesTable_filt = RipplesTable_all(RipplesTable_all.ensemble>=3,:);
-writetable(RipplesTable_filt,[ROOT.Save '\RipplesList_' thisRegion '_filtered.xlsx'],'writemode','overwrite')
+writetable(RipplesTable_filt,[ROOT.Save '\RipplesList_' thisRegion '_filtered.xlsx'],'WriteMode', 'overwrite')
