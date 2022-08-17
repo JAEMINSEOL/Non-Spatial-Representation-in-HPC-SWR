@@ -4,7 +4,7 @@ warning off
 ROOT.Old = [ROOT.Mother '\Processed Data\ripples_mat\R0_200'];
 ROOT.Unit = [ROOT.Mother '\Processed Data\units_mat\U0'];
 ROOT.Save = [ROOT.Mother '\Processed Data\ripples_mat\R0_300'];
-ROOT.Fig = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R0'];
+ROOT.Fig = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R0_300'];
 if ~exist(ROOT.Save), mkdir(ROOT.Save); end
 if ~exist(ROOT.Fig), mkdir(ROOT.Fig); end
 %%
@@ -92,7 +92,12 @@ for sid=1:size(SessionList,1)
         %%
         TT_table = readtable([ROOT.Info '\TT_table.xlsx']);
          thisTT_table = TT_table(TT_table.rat==thisRID & TT_table.session==thisSID,:);
-         thisTT_table= thisTT_table(TargetTT_r,:);
+         for t=1:size(thisTT_table,1)
+             if ~ismember(thisTT_table.TT(t),TargetTT_r)
+                 thisTT_table.TT(t)=0;
+             end
+         end
+         thisTT_table= thisTT_table(thisTT_table.TT~=0,:);
           [~,t] = max(thisTT_table.RippleBandMean);
          TargetTT_p = thisTT_table.TT(t);
         
