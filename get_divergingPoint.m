@@ -1,5 +1,6 @@
 
 % 2015-Jun-18.
+% 2022-Sep-13 (SJM). Add "return 0" in line 32
 
 function diverging_point = get_divergingPoint(mother_root, thisRID, thisSID, opt)
 
@@ -27,7 +28,8 @@ end
 fclose(fid);
 
 if size(diverging_point) == 0
-    error('This session has no diverging point!');
+    disp('This session has no diverging point!');
+    diverging_point = 0;
 end
 
 end
