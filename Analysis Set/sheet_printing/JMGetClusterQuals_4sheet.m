@@ -30,29 +30,6 @@ thisSID = jmnum2str(str2double(clusterID(1, findHYPHEN(1) + 1:findHYPHEN(2) - 1)
 thisTTID = num2str(str2double(clusterID(1, findHYPHEN(2) + 1:findHYPHEN(3) - 1)));
 thisCLID = jmnum2str(str2double(clusterID(1, findHYPHEN(3) + 1:end)),2);
 
-if ~strcmp(exper, 'JS')
-    if num2str(thisRID) < 400, track_type = 2;
-    elseif num2str(thisRID) > 400 && num2str(thisRID) > 500, track_type = 4;
-    elseif num2str(thisRID) > 500, track_type = 3;
-    end
-    
-    if track_type == 1
-        xEdge = [330 420 420 490 490 260 260 330 330];
-        yEdge = [480 480 270 270 180 180 270 270 480];
-    elseif track_type == 2
-        xEdge = [330 400 400 480 480 250 250 330 330];
-        yEdge = [480 480 160 160 70 70 160 160 480];
-    elseif track_type == 4 % for rat415
-        xEdge = [325 395 395 475 475 245 245 325 325];
-        yEdge = [480 480 190 190 100 100 190 190 480];
-    elseif track_type == 3 % for rat561
-        xEdge = [325 395 395 475 475 245 245 325 325];
-        yEdge = [480 480 200 200 110 110 200 200 490];
-    end
-else
-    
-end
-
 
 %Load Epoch information
 cd([ROOT.Raw.Mother '\rat' thisRID]);
@@ -177,47 +154,12 @@ end
     cxt_spk = zeros(size(Spk.cont_spk,1),1);
     cxt_spk (r) = c;
     
-switch exper
-    case 'LSM'
-        if num2str(thisRID) < 400, track_type = 2;
-        elseif num2str(thisRID) > 400 && num2str(thisRID) <= 500, track_type = 4;
-        elseif num2str(thisRID) > 500, track_type = 3;
-        end
-        
-        if track_type == 1
-            xEdge = [330 420 420 490 490 260 260 330 330];
-            yEdge = [480 480 270 270 180 180 270 270 480];
-        elseif track_type == 2
-            xEdge = [330 400 400 480 480 250 250 330 330];
-            yEdge = [480 480 160 160 70 70 160 160 480];
-        elseif track_type == 4 % for rat415
-            xEdge = [325 395 395 475 475 245 245 325 325];
-            yEdge = [480 480 190 190 100 100 190 190 480];
-        elseif track_type == 3 % for rat561
-            xEdge = [325 395 395 475 475 245 245 325 325];
-            yEdge = [480 480 200 200 110 110 200 200 490];
-        end
-        
-        imROW = 500;
-        imCOL = 650;
-    case 'JS'
-        xEdge = [0 2 2 0 ];
-        yEdge = [1000 1000 0 0];
-        Pos.x1 = Pos.x;
-        Pos.x = Pos.y+ rand(length(Pos.y),1);
-        Pos.y=Pos.x1/10;
-        Spk.x1 = Spk.x_spk;
-        Spk.x_spk = Spk.y_spk + rand(length(Spk.y_spk),1);
-        Spk.y_spk = Spk.x1/10;
-        imROW = 800;
-        imCOL = 200;
-    case 'SEB'
-        imROW = 500;
-        imCOL = 650;
-        xEdge = [300 380 380 430 430 250 250 300 300];
-        yEdge = [400 400 200 200 150 150 200 200 400];
-        
-end
+    %%
+    [x,y,x_spk,y_spk] = deal(Pos.x,Pos.y,Spk.x_spk,Spk.y_spk);
+diverging_point = get_divergingPoint(ROOT.Info, thisRID, thisSID);
+Boundaries;
+[Pos.x,Pos.y,Spk.x_spk,Spk.y_spk] = deal(x,y,x_spk,y_spk);
+
 thisPos = [Pos.t,Pos.x,Pos.y];
 thisCLTSforSpatialInfo = [Spk.t_spk,Spk.x_spk,Spk.y_spk];
 
@@ -228,7 +170,7 @@ thisCLTSforSpatialInfo = thisCLTSforSpatialInfo(inspk,:);
 FRRate = nSPKS / length(thisPos(:,1)) * videoSamplingRate; % mean firing rate
 nSPKS_in = sum(inspk);
 
-thisFRMapSCALE = 10;
+thisFRMapSCALE = 2;
 [occMap spkMap rawMap skaggsMap] = abmFiringRateMap([thisCLTSforSpatialInfo(:, 1) thisCLTSforSpatialInfo(:, 2) thisCLTSforSpatialInfo(:, 3)], thisPos(:, 1:3), imROW / thisFRMapSCALE, imCOL / thisFRMapSCALE, thisFRMapSCALE, videoSamplingRate);
 
 SpaInfoScore = GetSpaInfo(occMap, skaggsMap);
