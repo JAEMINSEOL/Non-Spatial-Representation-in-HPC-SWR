@@ -71,7 +71,7 @@ units = units(id,:);
 id = ismember(units.experimenter,exper2);
 units = units(id,:);
 
-id = nanmin(units.ReMap_LScene,units.ReMap_RScene,units.ReMap_LR)==0;
+id = strcmp(units.experimenter,'LSM') | abs(units.ReMap_LScene)>.5;
 units = units(id,:);
 
 UnitsTable_anal = units;
