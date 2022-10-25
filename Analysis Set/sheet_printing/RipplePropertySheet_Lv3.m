@@ -64,8 +64,8 @@ for sid=1:size(RipplesTable,1)
             disp([thisRSID ' plotting...'])
             thisRSID_old = thisRSID;
         end
-        
-        figure('position',[317,63,923,915]);
+        %%
+        figure('position',[317,63,923,915],'color','w');
         % title
         subplot(9,6,1)
         title([cell2mat(thisRip.ID) ', ' Exper],'fontsize',15)
@@ -75,7 +75,7 @@ for sid=1:size(RipplesTable,1)
         subplot(9,6,4)
         if strcmp(Exper,'LSM'), CxtList = {'Zebra','Pebbles','Bamboo','Mountains'};
         elseif strcmp(Exper, 'SEB'), CxtList = {'Dot','Square','Zebra','Pebbles'};
-        elseif strcmp(Exper, 'JS'), CxtList = {'Forest','City'};
+        elseif strcmp(Exper, 'JS'), CxtList = {'Forest','','City'};
             if thisRip.area==5, thisRip.area=0; end
         end
         cxt = CxtList{thisRip.context};
@@ -87,7 +87,7 @@ for sid=1:size(RipplesTable,1)
         subplot(9,6,6)
         title([jjnum2str(thisRip.speed,2) 'cm/s'],'fontsize',15)
         axis off
-        
+        %%
         % reactivated cells
         %         [~,m] = max(abs(RP1));
         subplot(9,6,[7,8,13,14])
@@ -102,17 +102,7 @@ for sid=1:size(RipplesTable,1)
         line([x1 x1], [min(thisEEG) max(thisEEG)+50], 'color','k','linestyle','--')
         line([x2 x2], [min(thisEEG) max(thisEEG)+50], 'color','k','linestyle','--')
         axis off
-        
-        subplot(5+fix(NumTT/6),6,[13,14])
-        x1=0; x2=thisRip.RippleDuration*2e3;
-        thisEEG = EEG.(['TT' num2str(TargetTT_p)]).Filtered(Ist:Ied);
-        plot(thisEEG ,'b')
-        x1=mar; x2=mar+thisRip.RippleDuration*Params.Fs;
-        xlim([0 dur])
-        line([x1 x1], [min(thisEEG) max(thisEEG)+50], 'color','k','linestyle','--')
-        line([x2 x2], [min(thisEEG) max(thisEEG)+50], 'color','k','linestyle','--')
-        axis off
-        
+                
         
         %%
         spks_epoch=[];u=0; Units={};
@@ -124,7 +114,8 @@ for sid=1:size(RipplesTable,1)
             Spk = Spike.(['TT' (thisTTID)]).(['Unit' thisCLID]);
             
             thisSpks = Spk.t_spk(Spk.t_spk>=thisRip.STtime-mar/Params.Fs & Spk.t_spk<=thisRip.EDtime+mar/Params.Fs);
-            if ~isempty(thisSpks)
+            thisSpks_in = Spk.t_spk(Spk.t_spk>=thisRip.STtime & Spk.t_spk<=thisRip.EDtime);
+            if ~isempty(thisSpks_in)
                 spks_epoch = [spks_epoch;[thisSpks,ones(size(thisSpks,1),1)*un,ones(size(thisSpks,1),1)*u,ones(size(thisSpks,1),1)*clusters.SI(un),...
                     ones(size(thisSpks,1),1)*clusters.RDI_LScene(un), ones(size(thisSpks,1),1)*clusters.RDI_RScene(un), ones(size(thisSpks,1),1)*clusters.RDI_LR(un)]];
                 u=u+1;
@@ -142,7 +133,9 @@ for sid=1:size(RipplesTable,1)
             Spk = Spike.(['TT' (thisTTID)]).(['Unit' thisCLID]);
             
             thisSpks = Spk.t_spk(Spk.t_spk>=thisRip.STtime-mar/Params.Fs & Spk.t_spk<=thisRip.EDtime+mar/Params.Fs);
-            if ~isempty(thisSpks)
+            thisSpks_in = Spk.t_spk(Spk.t_spk>=thisRip.STtime & Spk.t_spk<=thisRip.EDtime);
+            if ~isempty(thisSpks_in)
+
                 spks_epochA = [spks_epochA;[thisSpks,ones(size(thisSpks,1),1)*un,ones(size(thisSpks,1),1)*u ,ones(size(thisSpks,1),1)*clusters_A.SI(un),...
                     ones(size(thisSpks,1),1)*clusters_A.RDI_LScene(un), ones(size(thisSpks,1),1)*clusters_A.RDI_RScene(un), ones(size(thisSpks,1),1)*clusters_A.RDI_LR(un)]];
                 u=u+1;
@@ -153,11 +146,13 @@ for sid=1:size(RipplesTable,1)
         subplot(9,6,[19,20,25,26])
         hold on
         for s=1:size(spks_epoch,1)
-            if ismember(spks_epoch(s,1),spks_epochA(:,1))
+            if ismember(spks_epoch(s,1),spks_epochA)
                 if spks_epoch(s,5)>0, cl='r';
                 elseif spks_epoch(s,5)<0, cl='b';
+                    else, cl='k';
                 end
             else, cl='k'; end
+
             x = (spks_epoch(s,1) - thisRip.STtime)*1e3+100;
             patch([x-ti x+ti x+ti x-ti], [spks_epoch(s,3)+.2 spks_epoch(s,3)+.2 spks_epoch(s,3)+.8 spks_epoch(s,3)+.8],...
                 cl,'edgecolor',cl)
@@ -173,9 +168,10 @@ for sid=1:size(RipplesTable,1)
         subplot(9,6,[31 32 37 38])
         hold on
         for s=1:size(spks_epoch,1)
-            if ismember(spks_epoch(s,1),spks_epochA(:,1))
+            if ismember(spks_epoch(s,1),spks_epochA)
                 if spks_epoch(s,6)>0, cl='r';
                 elseif spks_epoch(s,6)<0, cl='b';
+                else, cl='k';
                 end
             else, cl='k'; end
             x = (spks_epoch(s,1) - thisRip.STtime)*1e3+100;
@@ -194,9 +190,10 @@ for sid=1:size(RipplesTable,1)
         subplot(9,6,[43 44 49 50])
         hold on
         for s=1:size(spks_epoch,1)
-            if ismember(spks_epoch(s,1),spks_epochA(:,1))
+            if ismember(spks_epoch(s,1),spks_epochA)
                 if spks_epoch(s,7)>0, cl='r';
                 elseif spks_epoch(s,7)<0, cl='b';
+                    else, cl='k';
                 end
             else, cl='k'; end
             x = (spks_epoch(s,1) - thisRip.STtime)*1e3+100;
@@ -224,8 +221,11 @@ for sid=1:size(RipplesTable,1)
         line([x1 x1], [min(spks_epoch(:,3)) max(spks_epoch(:,3))+1], 'color','k','linestyle','--')
         line([x2 x2], [min(spks_epoch(:,3)) max(spks_epoch(:,3))+1], 'color','k','linestyle','--')
         axis off
+       [~,ia,~] = unique(spks_epoch(:,2:3),'rows');
+       spks_epoch_u = spks_epoch(ia,:);
+%        spks_epoch_u(isnan(spks_epoch_u))='';
         for cl=1:size(Units,1)
-            text(400,-0.5+cl,Units{cl})
+            text(400,-0.5+cl,[Units{cl} '  ' jjnum2str(spks_epoch_u(cl,5),2) '  ' jjnum2str(spks_epoch_u(cl,6),2) '  ' jjnum2str(spks_epoch_u(cl,7),2)])
         end
         
         %%
@@ -251,37 +251,43 @@ for sid=1:size(RipplesTable,1)
             
             FRMap(6,:,cl) = thisMap.thisFieldMap1D.skaggsMap_left1D;
             FRMap(7,:,cl) = thisMap.thisFieldMap1D.skaggsMap_right1D;
+            
+            FRMap(:,:,cl) =1- FRMap(:,:,cl) / max(max(FRMap(:,:,cl)));
             catch
             end
         end
+        FRMap(isnan(FRMap))=1;
         %%
         subplot(9,6,[21 22 27 28])
         imagesc(squeeze(FRMap(2,:,:))')
-        colormap(jet)
+      
         caxis([0 max(max(max(FRMap)))])
         axis off
-        title('Left-1','color','r')
+            title(CxtList{1},'color','r')
+      
         
         subplot(9,6,[23 24 29 30])
         imagesc(squeeze(FRMap(3,:,:))')
         colormap(jet)
         caxis([0 max(max(max(FRMap)))])
         axis off
-        title('Left-2','color','b')
+        title(CxtList{3},'color','b')
         
+        if ~strcmp(Exper,'JS')
+            
         subplot(9,6,[33 34 39 40])
         imagesc(squeeze(FRMap(4,:,:))')
         colormap(jet)
         caxis([0 max(max(max(FRMap)))])
         axis off
-        title('Right-1','color','r')
+        title('Pebbles','color','r')
         
         subplot(9,6,[35 36 41 42])
         imagesc(squeeze(FRMap(5,:,:))')
         colormap(jet)
         caxis([0 max(max(max(FRMap)))])
         axis off
-        title('Right-2','color','b')
+        title('Mountains','color','b')
         
         subplot(9,6,[45 46 51 52])
         imagesc(squeeze(FRMap(6,:,:))')
@@ -296,6 +302,9 @@ for sid=1:size(RipplesTable,1)
         caxis([0 max(max(max(FRMap)))])
         axis off
         title('Right','color','b')
+        end
+        
+          colormap(gray)
         %%
 
 %         fd = [ROOT.Fig3 '\' ['rat' jmnum2str(thisRip.rat,3)] '\rat' thisRSID];
