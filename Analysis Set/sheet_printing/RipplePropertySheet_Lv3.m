@@ -105,7 +105,7 @@ for sid=1:size(RipplesTable,1)
                 
         
         %%
-        spks_epoch=[];u=0; Units={};
+        spks_epoch=[];u=0; Units={};UnitsA={};
         Clist=jet(256);
         cls = size(clusters,1);
         for un = 1:cls
@@ -119,12 +119,13 @@ for sid=1:size(RipplesTable,1)
                 spks_epoch = [spks_epoch;[thisSpks,ones(size(thisSpks,1),1)*un,ones(size(thisSpks,1),1)*u,ones(size(thisSpks,1),1)*clusters.SI(un),...
                     ones(size(thisSpks,1),1)*clusters.RDI_LScene(un), ones(size(thisSpks,1),1)*clusters.RDI_RScene(un), ones(size(thisSpks,1),1)*clusters.RDI_LR(un)]];
                 u=u+1;
-                Units = [Units; [clusters.ID(un)]];
+                Units = [Units; [thisTTID '-' thisCLID]];
+                UnitsA = [UnitsA; [clusters.ID(un)]];
             end
             
         end
         %%
-        spks_epochA=[];u=0; UnitsA={};
+        spks_epochA=[];u=0; 
         cls = size(clusters_A,1);
         
         for un = 1:cls
@@ -139,7 +140,6 @@ for sid=1:size(RipplesTable,1)
                 spks_epochA = [spks_epochA;[thisSpks,ones(size(thisSpks,1),1)*un,ones(size(thisSpks,1),1)*u ,ones(size(thisSpks,1),1)*clusters_A.SI(un),...
                     ones(size(thisSpks,1),1)*clusters_A.RDI_LScene(un), ones(size(thisSpks,1),1)*clusters_A.RDI_RScene(un), ones(size(thisSpks,1),1)*clusters_A.RDI_LR(un)]];
                 u=u+1;
-                UnitsA = [UnitsA; [clusters_A.ID(un)]];
             end
         end
         %%
@@ -225,24 +225,24 @@ for sid=1:size(RipplesTable,1)
        spks_epoch_u = spks_epoch(ia,:);
 %        spks_epoch_u(isnan(spks_epoch_u))='';
         for cl=1:size(Units,1)
-            text(400,-0.5+cl,[Units{cl} '  ' jjnum2str(spks_epoch_u(cl,5),2) '  ' jjnum2str(spks_epoch_u(cl,6),2) '  ' jjnum2str(spks_epoch_u(cl,7),2)])
+            text(400,-0.5+cl,[Units{cl} '    ' jjnum2str(spks_epoch_u(cl,5),2) '    ' jjnum2str(spks_epoch_u(cl,6),2) '    ' jjnum2str(spks_epoch_u(cl,7),2)])
         end
         
         %%
         
         FRMap = [];
-        for cl=1:size(Units)
+        for cl=1:size(UnitsA)
             try
             thisField = table;
             temp=[];
-            thisTTID = num2str(str2double(Units{cl}(8:9)));
-            thisCLID = num2str(str2double(Units{cl}(11:12)));
+            thisTTID = num2str(str2double(UnitsA{cl}(8:9)));
+            thisCLID = num2str(str2double(UnitsA{cl}(11:12)));
             Spk = Spike.(['TT' (thisTTID)]).(['Unit' thisCLID]);
             temp = Spk.t_spk(~Spk.area_spk(:,5) & Spk.correctness_spk(:,1));
             temp = sortrows(temp,1);
             
             thisField.ts = temp(:,1);
-            thisMap.thisFieldMap1D = getFieldMaps(Units{cl},thisField,'session',ROOT.Raw.Mother,ROOT.Info);
+            thisMap.thisFieldMap1D = getFieldMaps(UnitsA{cl},thisField,'session',ROOT.Raw.Mother,ROOT.Info);
             
             
             for i=1:numel(thisMap.thisFieldMap1D.skaggsMap1D)
@@ -254,57 +254,72 @@ for sid=1:size(RipplesTable,1)
             
             FRMap(:,:,cl) =1- FRMap(:,:,cl) / max(max(FRMap(:,:,cl)));
             catch
+                FRMap(:,:,cl) =nan;
             end
         end
         FRMap(isnan(FRMap))=1;
         %%
         subplot(9,6,[21 22 27 28])
-        imagesc(squeeze(FRMap(2,:,:))')
-      
+        imagesc(flip(squeeze(FRMap(2,:,:))'))
+        
         caxis([0 max(max(max(FRMap)))])
         axis off
-            title(CxtList{1},'color','r')
-      
+        for i=1:size(FRMap,3)
+            text(-8,i,Units{size(FRMap,3)-i+1})
+        end
+        title(CxtList{1},'color','r')
+        
         
         subplot(9,6,[23 24 29 30])
-        imagesc(squeeze(FRMap(3,:,:))')
-        colormap(jet)
+        imagesc(flip(squeeze(FRMap(3,:,:))'))
         caxis([0 max(max(max(FRMap)))])
         axis off
+        axis off
+        for i=1:size(FRMap,3)
+            text(size(FRMap,2),i,jjnum2str(spks_epoch_u(size(FRMap,3)-i+1,5),2))
+        end
         title(CxtList{3},'color','b')
         
         if ~strcmp(Exper,'JS')
             
-        subplot(9,6,[33 34 39 40])
-        imagesc(squeeze(FRMap(4,:,:))')
-        colormap(jet)
-        caxis([0 max(max(max(FRMap)))])
-        axis off
-        title('Pebbles','color','r')
-        
-        subplot(9,6,[35 36 41 42])
-        imagesc(squeeze(FRMap(5,:,:))')
-        colormap(jet)
-        caxis([0 max(max(max(FRMap)))])
-        axis off
-        title('Mountains','color','b')
-        
-        subplot(9,6,[45 46 51 52])
-        imagesc(squeeze(FRMap(6,:,:))')
-        colormap(jet)
-        caxis([0 max(max(max(FRMap)))])
-        axis off
-        title('Left','color','r')
-        
-        subplot(9,6,[47 48 53 54])
-        imagesc(squeeze(FRMap(7,:,:))')
-        colormap(jet)
-        caxis([0 max(max(max(FRMap)))])
-        axis off
-        title('Right','color','b')
+            subplot(9,6,[33 34 39 40])
+            imagesc(flip(squeeze(FRMap(4,:,:))'))
+            caxis([0 max(max(max(FRMap)))])
+            axis off
+            for i=1:size(FRMap,3)
+                text(-8,i,Units{size(FRMap,3)-i+1})
+            end
+            title('Pebbles','color','r')
+            
+            subplot(9,6,[35 36 41 42])
+            imagesc(flip(squeeze(FRMap(5,:,:))'))
+            caxis([0 max(max(max(FRMap)))])
+            axis off
+            for i=1:size(FRMap,3)
+                text(size(FRMap,2),i,jjnum2str(spks_epoch_u(size(FRMap,3)-i+1,6),2))
+            end
+            title('Mountains','color','b')
+            
+            subplot(9,6,[45 46 51 52])
+            imagesc(flip(squeeze(FRMap(6,:,:))'))
+            caxis([0 max(max(max(FRMap)))])
+            axis off
+            for i=1:size(FRMap,3)
+                text(-8,i,Units{size(FRMap,3)-i+1})
+            end
+            title('Left','color','r')
+            
+            subplot(9,6,[47 48 53 54])
+            imagesc(flip(squeeze(FRMap(7,:,:))'))
+            caxis([0 max(max(max(FRMap)))])
+            axis off
+            for i=1:size(FRMap,3)
+               text(size(FRMap,2),i,jjnum2str(spks_epoch_u(size(FRMap,3)-i+1,7),2))
+            end
+            title('Right','color','b')
         end
         
-          colormap(gray)
+        colormap(gray)
         %%
 
 %         fd = [ROOT.Fig3 '\' ['rat' jmnum2str(thisRip.rat,3)] '\rat' thisRSID];
