@@ -151,12 +151,13 @@ for sid=1:size(RipplesTable,1)
             for i=1:size(UnitsC)
                 o2(i,1)=find(strcmp(UnitsA,UnitsC(i)));
             end
-            ord = [setdiff([1:size(FRMap,3)],o2)'];
+            ord = [o2];
         else
             ord = [1:size(FRMap,3)];
-            continue
+           continue;
         end
-        
+        if isempty(ord), continue; end
+        if length(ord)<=1, continue; end
         FRMap(isnan(FRMap))=0;
         
         spks_epoch_pc=[];
