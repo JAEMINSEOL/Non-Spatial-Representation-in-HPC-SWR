@@ -159,8 +159,13 @@ for sid=1:size(RipplesTable,1)
         
         FRMap(isnan(FRMap))=0;
         
+        spks_epoch_pc=[];
+        for i=1:size(ord,1)
+            spks_epoch_pc = [spks_epoch_pc; spks_epoch(find(ord(i)==spks_epoch(:,3)+1),:)];
+        end
+        spks_epoch = spks_epoch_pc;
         for s=1:size(spks_epoch,1)
-spks_epoch(s,3) = find(ord==spks_epoch(s,3)+1)-1;
+            spks_epoch(s,3) = find(ord==spks_epoch(s,3)+1)-1;
         end
         [~,ia] = sort(spks_epoch(:,3));
         spks_epoch = spks_epoch(ia,:);
