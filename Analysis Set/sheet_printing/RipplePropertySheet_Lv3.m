@@ -151,9 +151,10 @@ for sid=1:size(RipplesTable,1)
             for i=1:size(UnitsC)
                 o2(i,1)=find(strcmp(UnitsA,UnitsC(i)));
             end
-            ord = [setdiff([1:size(FRMap,3)],o2)'; o2];
+            ord = [setdiff([1:size(FRMap,3)],o2)'];
         else
             ord = [1:size(FRMap,3)];
+            continue
         end
         
         FRMap(isnan(FRMap))=0;
