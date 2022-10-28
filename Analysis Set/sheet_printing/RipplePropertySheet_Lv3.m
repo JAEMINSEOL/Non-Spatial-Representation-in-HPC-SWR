@@ -425,9 +425,6 @@ for sid=1:size(RipplesTable,1)
         
         colormap(jet)
         %%
-
-%         fd = [ROOT.Fig3 '\' ['rat' jmnum2str(thisRip.rat,3)] '\rat' thisRSID];
-%         if ~exist(fd), mkdir(fd); end
         saveas(gca,[ROOT.Fig3 '\' cell2mat(thisRip.ID) '.png'])
 
         close all
@@ -435,5 +432,4 @@ for sid=1:size(RipplesTable,1)
         saveas(gca,[ROOT.Fig3 '\' cell2mat(thisRip.ID) '.png'])
         close all
     end
-    
 end
