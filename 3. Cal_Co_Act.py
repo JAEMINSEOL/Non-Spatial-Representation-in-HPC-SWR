@@ -14,110 +14,75 @@ import seaborn as sns
 import itertools as ite
 import Mod_SWR as swr
 from matplotlib.colors import ListedColormap
+import re
 #%% import data
 ROOT_data = 'D:/HPC-SWR project/Processed Data'
 thisRID=561
 thisSID='all'
 thisRegion='CA1'
    
-df_rip_valid = pd.read_excel(f'{ROOT_data}/RipplesTable_r{thisRID}_{thisSID}_{thisRegion}_v.xlsx')
-df_unit_valid = pd.read_excel(f'{ROOT_data}/UnitsTable_r{thisRID}_{thisSID}_{thisRegion}_v.xlsx')
-df_act_valid = pd.read_excel(f'{ROOT_data}/ActTable_r{thisRID}_{thisSID}_{thisRegion}_v.xlsx')
-dat = pd.read_excel(f'{ROOT_data}/ReactTable_r{thisRID}_all_{thisRegion}_2.xlsx')
+df_rip_valid = pd.read_excel(f'{ROOT_data}/RipplesTable_{thisRegion}_ForAnalysis.xlsx')
+df_unit_valid = pd.read_excel(f'{ROOT_data}/UnitsTable_{thisRegion}_ForAnalysis.xlsx')
+df_act_valid = pd.read_excel(f'{ROOT_data}/ReactTable_{thisRegion}.xlsx')
+
 
 #%%
 pivot_overlap_dict={}
-for c in range(1,6):
         
-    df_unit_valid_stem = df_unit_valid[(df_unit_valid.Session==c) & ((df_unit_valid.PeakArea==3) | (df_unit_valid.PeakArea==2))]
     
-    df_act_valid_stem = df_act_valid[df_act_valid['TT-Unit'].isin(df_unit_valid_stem['TT-Unit'])]
+    df_act_comb = pd.DataFrame(columns=[0,1])
+    for thisRipID in df_act_valid['RippleID'].unique():
+        temp = df_act_valid[df_act_valid['RippleID']==thisRipID] 
+        if len(temp)>1:
+            for subset in ite.combinations(temp['UnitID'],2):       
+                df_act_comb=df_act_comb.append(pd.DataFrame(list(subset)).T)
+    df_act_comb.columns=['u1','u2']
     
-    df_act_pivot_stem = pd.pivot_table(df_act_valid_stem, index='TT-Unit', columns = 'RipID',values='Region',aggfunc='count')
-    df_act_pivot_stem = ~df_act_pivot_stem.isna()*1
-    df_act_pivot_stem[df_act_pivot_stem==0]=np.nan
-    
-    df_act_pivot_stem_rdi =df_act_pivot_stem.mul(df_unit_valid_stem.RDI_ZB.values,axis=0)
-    
-    
-    
-    # df_act_comb = pd.DataFrame(columns=[0,1])
-    # for thisRipID in df_act_valid['RipID'].unique():
-    #     temp = df_act_valid[df_act_valid['RipID']==thisRipID] 
-    #     for subset in ite.combinations(temp['TT-Unit'],2):       
-    #         df_act_comb=df_act_comb.append(pd.DataFrame(list(subset)).T)
-    
-    # typ = ['RDI_ZB','RDI_PM']
-    # for i in range(len(df_act_comb)):
-    #     u1 = df_act_comb.iloc[i,0]
-    #     u2 = df_act_comb.iloc[i,1]
-    #     x = [df_unit_valid.loc[df_unit_valid['TT-Unit']==u1,typ[0]].iloc[0], 
-    #             df_unit_valid.loc[df_unit_valid['TT-Unit']==u2,typ[0]].iloc[0]]
-    #     y= [df_unit_valid.loc[df_unit_valid['TT-Unit']==u1,typ[1]].iloc[0],
-    #         df_unit_valid.loc[df_unit_valid['TT-Unit']==u2,typ[1]].iloc[0]]
-    #     plt.plot(x, y, marker = 'o',color='k',alpha=0.03)
-    # plt.xlabel("RDI_ZB")
-    # plt.ylabel("RDI_PM")
-    # plt.show()
-    
-    
-    #
-    unit=list()
-    for i in range(df_act_pivot_stem.shape[0]):
-        temp = df_act_pivot_stem.iloc[i,:]
-        u = np.where(~np.isnan(temp))
-        unit.append(u)
-    #
-    pivot_overlap=pd.DataFrame(index = df_act_pivot_stem.index, columns=df_act_pivot_stem.index)
-    pivot_max=pd.DataFrame(index = df_act_pivot_stem.index, columns=df_act_pivot_stem.index)
-    for i in range(len(unit)):
-        for j in range(len(unit)):
-            pivot_overlap.iat[i,j] = len(np.intersect1d(unit[i],unit[j]))
-            pivot_overlap.iat[j,i] = len(np.intersect1d(unit[i],unit[j]))
+    df_unit_comb = pd.DataFrame(columns=[0,1])
+    sessions = df_rip_valid['rat'].astype(str).str.cat(df_rip_valid['session'].astype(str),sep='-').unique()
+
+    for thisRSID in sessions:
+        thisRSIDn = re.findall(r'\d+',thisRSID)
+        df_unit_now = df_unit_valid[(df_unit_valid.rat==int(thisRSIDn[0])) & (df_unit_valid.session==int(thisRSIDn[1]))]
+        for subset in ite.combinations(df_unit_now['ID'],2):       
+            df_unit_comb=df_unit_comb.append(pd.DataFrame(list(subset)).T)
             
-    for i in range(len(unit)):
-         for j in range(len(unit)):       
-            m1 = max(pivot_overlap.iloc[i,:])
-            m2 = max(pivot_overlap.iloc[:,j])
-            pivot_max.iat[j,i] =complex(m1,m2)
-    # pivot_overlap.iat[i,i] = 0
+    df_unit_comb.reset_index(drop=True,inplace=True)
+    df_unit_comb.columns=['u1','u2']
+    df_unit_comb['n']=0
+    df_unit_comb['n1']=0
+    df_unit_comb['n2']=0
+    df_unit_comb['n12']=0
+    df_unit_comb['rl1']=0
+    df_unit_comb['rr1']=0
+    df_unit_comb['rc1']=0
+    df_unit_comb['rl2']=0
+    df_unit_comb['rr2']=0
+    df_unit_comb['rc2']=0
+    for index,UnitComb in df_unit_comb.iterrows():
+        thisSID = re.findall(r'\d+',UnitComb[1])
+        df_unit_comb.n[index]  = len(df_rip_valid[(df_rip_valid.rat==int(thisSID[0])) & (df_rip_valid.session==int(thisSID[1]))])
+        df_unit_comb.n1[index]=len(df_act_valid[UnitComb.u1==df_act_valid.UnitID])
+        df_unit_comb.n2[index]=len(df_act_valid[UnitComb.u2==df_act_valid.UnitID])
+        df_unit_comb.n12[index]=len(df_act_comb[(UnitComb.u2==df_act_comb.u1) & (UnitComb.u1==df_act_comb.u2)])+len(df_act_comb[(UnitComb.u2==df_act_comb.u2) & (UnitComb.u1==df_act_comb.u1)])
+        df_unit_comb.rl1[index] = df_unit_valid[df_unit_valid.ID==UnitComb.u1]['RDI_LScene']
+        df_unit_comb.rr1[index] = df_unit_valid[df_unit_valid.ID==UnitComb.u1]['RDI_RScene']
+        df_unit_comb.rc1[index] = df_unit_valid[df_unit_valid.ID==UnitComb.u1]['RDI_LR']
+        df_unit_comb.rl2[index] = df_unit_valid[df_unit_valid.ID==UnitComb.u2]['RDI_LScene']
+        df_unit_comb.rr2[index] = df_unit_valid[df_unit_valid.ID==UnitComb.u2]['RDI_RScene']
+        df_unit_comb.rc2[index] = df_unit_valid[df_unit_valid.ID==UnitComb.u2]['RDI_LR']
     
-    pivot_overlap_dict[f's{c}'] = pivot_overlap.astype('int64')
-    pivot_overlap_dict[f's{c}m'] = pivot_max
-#%% data plotting
-# sns.scatterplot(df_unit_valid_dv.RDI_ZB,df_unit_valid_dv.RDI_PM, hue = df_unit_valid.NumRipples_1,legend=0)
-# sns.color_palette("tab10")
-# plt.show()
+    
+    df_unit_comb['p1']=df_unit_comb.n1/df_unit_comb.n
+    df_unit_comb['p2']=df_unit_comb.n2/df_unit_comb.n
+    df_unit_comb['p12']=df_unit_comb.n12/df_unit_comb.n
+   
+    
+   
+    temp = df_unit_comb[(df_unit_comb.rl1>0) & (df_unit_comb.rl2>0)]
+    temp2 = df_unit_comb[(df_unit_comb.rl1<0) & (df_unit_comb.rl2>0)]
+    temp3 = df_unit_comb[(df_unit_comb.rl1<0) & (df_unit_comb.rl2<0)]
 
-# unit co-reactivate heatmap
-for c in range(1,6):
-    plt.figure(figsize=(10,9))
-    pivot_overlap = pivot_overlap_dict[f's{c}']
-    mask = np.triu(np.ones_like(pivot_overlap, dtype=np.bool),k=0)
-    mask2 = np.tril(mask,k=0)
+fig, ax=plt.subplots()
+ax.boxplot([temp.p12,temp2.p12,temp3.p12])
     
-    cbar_kws = {'label': '# of co-activation'}
-    sns.heatmap(pivot_overlap, cmap ='Greys', linewidths = 0.30, annot =True, mask=mask,
-                        cbar_kws=cbar_kws)
-    sns.heatmap(pivot_overlap, cmap=ListedColormap(['white']), linewidths = 0.30, annot =True, mask=~mask2,cbar=False, fmt='g')
-
-
-# unit co-reactivation rate heatmap
-for c in range(1,6):
-    plt.figure(figsize=(11,9))
-    pivot_overlap = pivot_overlap_dict[f's{c}']
-    mask = np.triu(np.ones_like(pivot_overlap, dtype=np.bool),k=0)
-    m1 = pivot_overlap_dict[f's{c}m'].applymap(lambda r: r.real)
-    m2 = pivot_overlap_dict[f's{c}m'].applymap(lambda r: r.imag)
-    
-    pp1 = pivot_overlap/m1
-    pp2 = pivot_overlap/m2
-    pivot_plt = pd.concat((pp1,pp2)).groupby(level=0).mean()
-    
-    pivot_plt = pivot_overlap/pd.concat((m1,m2)).groupby(level=0).mean()
-    cbar_kws = {'label': 'Co-activation rate'}
-    sns.heatmap(pivot_plt, cmap ='RdYlBu_r', linewidths = 0.30, annot =False, mask=mask,
-                        cbar_kws=cbar_kws, vmin=0, vmax=1)
-    # sns.heatmap(pivot_overlap, cmap=ListedColormap(['white']), linewidths = 0.30, annot =True, mask=~mask2,cbar=False, fmt='g')
-    
-    plt.title('Co-activation rate btw units, devided by the maximum')
