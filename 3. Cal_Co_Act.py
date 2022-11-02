@@ -25,9 +25,9 @@ thisRegion='CA1'
 df_rip_valid = pd.read_excel(f'{ROOT_data}/RipplesTable_{thisRegion}_ForAnalysis.xlsx')
 df_unit_valid = pd.read_excel(f'{ROOT_data}/UnitsTable_{thisRegion}_ForAnalysis.xlsx')
 df_act_valid = pd.read_excel(f'{ROOT_data}/ReactTable_{thisRegion}.xlsx')
+df_unit_comb=pd.read_excel(f'{ROOT_data}/ReactPair.xlsx')
 
-
-#%%
+#%% make unit combination pair table
 pivot_overlap_dict={}
         
     
@@ -79,14 +79,14 @@ for index,UnitComb in df_unit_comb.iterrows():
 df_unit_comb['p1']=df_unit_comb.n1/df_unit_comb.n
 df_unit_comb['p2']=df_unit_comb.n2/df_unit_comb.n
 df_unit_comb['p12I']=df_unit_comb.n12I/df_unit_comb.n
-df_unit_comb['p12U']=df_unit_comb.n12U/df_unit_comb.n 
+df_unit_comb['p12U']=df_unit_comb.n12I/df_unit_comb.n12U 
 
     
 df_unit_comb.to_excel(f'{ROOT_data}/ReactPair.xlsx')
 
-#%%
+#%% add rpr for each unit
 df_unit_valid['NR']=np.nan
-df_unit_valid['RPR']=np.nan
+df_unit_valid['RPR']=0
 for index,Unit in df_unit_valid.iterrows():
     df_unit_valid['NR'][index]=len(df_act_valid[Unit.ID==df_act_valid.UnitID])
     df_unit_valid['RPR'][index] = df_unit_valid['NR'][index]/len(df_rip_valid[(df_rip_valid.rat==Unit.rat) & (df_rip_valid.session==Unit.session)])
@@ -113,7 +113,6 @@ ax.boxplot([temp.p12U,temp2.p12U,temp3.p12U])
 #%% scatterplot with connected line
 df=df_unit_valid
 df2=df_unit_comb
-
 for index, unitpair in df2.iterrows():
     plt.plot([unitpair.rl1, unitpair.rl2],[unitpair.p1, unitpair.p2],c=cm.gray(1-unitpair.p12U))
     
@@ -122,7 +121,63 @@ plt.show()
 
 for index, unitpair in df2.iterrows():
     if unitpair.p12U>0.3:
-        plt.plot([unitpair.rr1, unitpair.rr2],[unitpair.p1, unitpair.p2],c=cm.jet(unitpair.p12U))
+        plt.plot([unitpair.rl1, unitpair.rl2],[unitpair.rr1, unitpair.rr2],c=cm.jet(unitpair.p12U))
     
-plt.scatter(df['RDI_RScene'],df['RPR'],c='k')
+plt.scatter(df['RDI_LScene'],df['RDI_RScene'],c=cm.gray(df.RPR))
+plt.show()
+
+#%% reactivation rasterplot
+df=df_act_valid.copy()
+df1=df_rip_valid.copy()
+df2 = df_unit_valid.copy()
+df_rip_valid['mRDI_L']=np.nan
+df_rip_valid['mRDI_R']=np.nan
+df_rip_valid['mRDI_C']=np.nan
+#%%
+df['RipNum']=np.nan
+i=1
+for index, Units in df.iterrows():
+    df['RipNum'][index]=i
+    if index<len(df)-1:
+        if df.RippleID[index] != df.RippleID[index+1]:
+            i=i+1
+
+          
+df1['npRDI_L'] = np.nan
+df1['nnRDI_L'] = np.nan
+df1['npRDI_R']= np.nan
+df1['nnRDI_R']= np.nan
+df1['npRDI_C'] = np.nan
+df1['nnRDI_C'] = np.nan
+
+for index, Rips in df1.iterrows():
+    df0=pd.merge(df[df['RippleID']==Rips['ID']],df2,how='left', left_on='UnitID', right_on='ID')
+    df1['npRDI_L'][index] = sum(df0.RDI_LScene>0)
+    df1['nnRDI_L'][index] = sum(df0.RDI_LScene<0)
+    df1['npRDI_R'][index] = sum(df0.RDI_RScene>0)
+    df1['nnRDI_R'][index] = sum(df0.RDI_RScene<0)
+    df1['npRDI_C'][index] = sum(df0.RDI_LR>0)
+    df1['nnRDI_C'][index] = sum(df0.RDI_LR<0)
+
+
+df3 = pd.merge(df,df2, how='left', left_on='UnitID', right_on='ID')
+
+df3 = pd.merge(df3,df1, how='left', left_on='RippleID', right_on='ID')
+
+#%%
+thisParm='RDI_LScene'
+thisP='RDI_L'
+
+df3_r = df3.loc[:,[f'np{thisP}',f'nn{thisP}','RipNum']].sort_values(by=[f'np{thisP}',f'nn{thisP}','RipNum'],
+                                                              ascending=[True,False,False]).apply(tuple, axis=1)
+f, i = pd.factorize(df3_r)
+factorized = pd.Series(f + 1, df3_r.index)
+
+df3['rank']=factorized
+
+plt.scatter(df3[thisParm][df3[thisParm]>0],df3['rank'][df3[thisParm]>0],marker='|',s=1,c='r')
+plt.scatter(df3[thisParm][df3[thisParm]<0],df3['rank'][df3[thisParm]<0],marker='|',s=1,c='b')
+plt.plot([0,0],[0,max(f)],c='k',ls='--')
+plt.xlim([-2, 2])
+plt.ylim([0,max(f)])
 plt.show()
