@@ -14,6 +14,7 @@ import seaborn as sns
 import itertools as ite
 import Mod_SWR as swr
 from matplotlib.colors import ListedColormap
+from matplotlib import cm
 import re
 #%% import data
 ROOT_data = 'D:/HPC-SWR project/Processed Data'
@@ -30,59 +31,98 @@ df_act_valid = pd.read_excel(f'{ROOT_data}/ReactTable_{thisRegion}.xlsx')
 pivot_overlap_dict={}
         
     
-    df_act_comb = pd.DataFrame(columns=[0,1])
-    for thisRipID in df_act_valid['RippleID'].unique():
-        temp = df_act_valid[df_act_valid['RippleID']==thisRipID] 
-        if len(temp)>1:
-            for subset in ite.combinations(temp['UnitID'],2):       
-                df_act_comb=df_act_comb.append(pd.DataFrame(list(subset)).T)
-    df_act_comb.columns=['u1','u2']
-    
-    df_unit_comb = pd.DataFrame(columns=[0,1])
-    sessions = df_rip_valid['rat'].astype(str).str.cat(df_rip_valid['session'].astype(str),sep='-').unique()
+df_act_comb = pd.DataFrame(columns=[0,1])
+for thisRipID in df_act_valid['RippleID'].unique():
+    temp = df_act_valid[df_act_valid['RippleID']==thisRipID] 
+    if len(temp)>1:
+        for subset in ite.combinations(temp['UnitID'],2):       
+            df_act_comb=df_act_comb.append(pd.DataFrame(list(subset)).T)
+df_act_comb.columns=['u1','u2']
 
-    for thisRSID in sessions:
-        thisRSIDn = re.findall(r'\d+',thisRSID)
-        df_unit_now = df_unit_valid[(df_unit_valid.rat==int(thisRSIDn[0])) & (df_unit_valid.session==int(thisRSIDn[1]))]
-        for subset in ite.combinations(df_unit_now['ID'],2):       
-            df_unit_comb=df_unit_comb.append(pd.DataFrame(list(subset)).T)
-            
-    df_unit_comb.reset_index(drop=True,inplace=True)
-    df_unit_comb.columns=['u1','u2']
-    df_unit_comb['n']=0
-    df_unit_comb['n1']=0
-    df_unit_comb['n2']=0
-    df_unit_comb['n12']=0
-    df_unit_comb['rl1']=0
-    df_unit_comb['rr1']=0
-    df_unit_comb['rc1']=0
-    df_unit_comb['rl2']=0
-    df_unit_comb['rr2']=0
-    df_unit_comb['rc2']=0
-    for index,UnitComb in df_unit_comb.iterrows():
-        thisSID = re.findall(r'\d+',UnitComb[1])
-        df_unit_comb.n[index]  = len(df_rip_valid[(df_rip_valid.rat==int(thisSID[0])) & (df_rip_valid.session==int(thisSID[1]))])
-        df_unit_comb.n1[index]=len(df_act_valid[UnitComb.u1==df_act_valid.UnitID])
-        df_unit_comb.n2[index]=len(df_act_valid[UnitComb.u2==df_act_valid.UnitID])
-        df_unit_comb.n12[index]=len(df_act_comb[(UnitComb.u2==df_act_comb.u1) & (UnitComb.u1==df_act_comb.u2)])+len(df_act_comb[(UnitComb.u2==df_act_comb.u2) & (UnitComb.u1==df_act_comb.u1)])
-        df_unit_comb.rl1[index] = df_unit_valid[df_unit_valid.ID==UnitComb.u1]['RDI_LScene']
-        df_unit_comb.rr1[index] = df_unit_valid[df_unit_valid.ID==UnitComb.u1]['RDI_RScene']
-        df_unit_comb.rc1[index] = df_unit_valid[df_unit_valid.ID==UnitComb.u1]['RDI_LR']
-        df_unit_comb.rl2[index] = df_unit_valid[df_unit_valid.ID==UnitComb.u2]['RDI_LScene']
-        df_unit_comb.rr2[index] = df_unit_valid[df_unit_valid.ID==UnitComb.u2]['RDI_RScene']
-        df_unit_comb.rc2[index] = df_unit_valid[df_unit_valid.ID==UnitComb.u2]['RDI_LR']
+df_unit_comb = pd.DataFrame(columns=[0,1])
+sessions = df_rip_valid['rat'].astype(str).str.cat(df_rip_valid['session'].astype(str),sep='-').unique()
+
+for thisRSID in sessions:
+    thisRSIDn = re.findall(r'\d+',thisRSID)
+    df_unit_now = df_unit_valid[(df_unit_valid.rat==int(thisRSIDn[0])) & (df_unit_valid.session==int(thisRSIDn[1]))]
+    for subset in ite.combinations(df_unit_now['ID'],2):       
+        df_unit_comb=df_unit_comb.append(pd.DataFrame(list(subset)).T)
+        
+df_unit_comb.reset_index(drop=True,inplace=True)
+df_unit_comb.columns=['u1','u2']
+df_unit_comb['n']=0
+df_unit_comb['n1']=0
+df_unit_comb['n2']=0
+df_unit_comb['n12I']=0
+df_unit_comb['n12U']=0
+df_unit_comb['rl1']=0
+df_unit_comb['rr1']=0
+df_unit_comb['rc1']=0
+df_unit_comb['rl2']=0
+df_unit_comb['rr2']=0
+df_unit_comb['rc2']=0
+for index,UnitComb in df_unit_comb.iterrows():
+    thisSID = re.findall(r'\d+',UnitComb[1])
+    df_unit_comb.n[index]  = len(df_rip_valid[(df_rip_valid.rat==int(thisSID[0])) & (df_rip_valid.session==int(thisSID[1]))])
+    df_unit_comb.n1[index]=len(df_act_valid[UnitComb.u1==df_act_valid.UnitID])
+    df_unit_comb.n2[index]=len(df_act_valid[UnitComb.u2==df_act_valid.UnitID])
+    df_unit_comb.n12I[index]=len(df_act_comb[(UnitComb.u2==df_act_comb.u1) & (UnitComb.u1==df_act_comb.u2)])+len(df_act_comb[(UnitComb.u2==df_act_comb.u2) & (UnitComb.u1==df_act_comb.u1)])
+    df_unit_comb.n12U[index]= df_unit_comb.n1[index]+df_unit_comb.n2[index]-df_unit_comb.n12I[index]
+    df_unit_comb.rl1[index] = df_unit_valid[df_unit_valid.ID==UnitComb.u1]['RDI_LScene']
+    df_unit_comb.rr1[index] = df_unit_valid[df_unit_valid.ID==UnitComb.u1]['RDI_RScene']
+    df_unit_comb.rc1[index] = df_unit_valid[df_unit_valid.ID==UnitComb.u1]['RDI_LR']
+    df_unit_comb.rl2[index] = df_unit_valid[df_unit_valid.ID==UnitComb.u2]['RDI_LScene']
+    df_unit_comb.rr2[index] = df_unit_valid[df_unit_valid.ID==UnitComb.u2]['RDI_RScene']
+    df_unit_comb.rc2[index] = df_unit_valid[df_unit_valid.ID==UnitComb.u2]['RDI_LR']
+
+
+df_unit_comb['p1']=df_unit_comb.n1/df_unit_comb.n
+df_unit_comb['p2']=df_unit_comb.n2/df_unit_comb.n
+df_unit_comb['p12I']=df_unit_comb.n12I/df_unit_comb.n
+df_unit_comb['p12U']=df_unit_comb.n12U/df_unit_comb.n 
+
     
-    
-    df_unit_comb['p1']=df_unit_comb.n1/df_unit_comb.n
-    df_unit_comb['p2']=df_unit_comb.n2/df_unit_comb.n
-    df_unit_comb['p12']=df_unit_comb.n12/df_unit_comb.n
-   
-    
-   
-    temp = df_unit_comb[(df_unit_comb.rl1>0) & (df_unit_comb.rl2>0)]
-    temp2 = df_unit_comb[(df_unit_comb.rl1<0) & (df_unit_comb.rl2>0)]
-    temp3 = df_unit_comb[(df_unit_comb.rl1<0) & (df_unit_comb.rl2<0)]
+df_unit_comb.to_excel(f'{ROOT_data}/ReactPair.xlsx')
+
+#%%
+df_unit_valid['NR']=np.nan
+df_unit_valid['RPR']=np.nan
+for index,Unit in df_unit_valid.iterrows():
+    df_unit_valid['NR'][index]=len(df_act_valid[Unit.ID==df_act_valid.UnitID])
+    df_unit_valid['RPR'][index] = df_unit_valid['NR'][index]/len(df_rip_valid[(df_rip_valid.rat==Unit.rat) & (df_rip_valid.session==Unit.session)])
+#%%
+
+temp = df_unit_comb[(df_unit_comb.rl1>0) & (df_unit_comb.rl2>0)]
+temp2 = df_unit_comb[(df_unit_comb.rl1<0) & (df_unit_comb.rl2>0)]
+temp3 = df_unit_comb[(df_unit_comb.rl1<0) & (df_unit_comb.rl2<0)]
 
 fig, ax=plt.subplots()
-ax.boxplot([temp.p12,temp2.p12,temp3.p12])
+
+df = pd.DataFrame(temp.p12U)
+df['cdf'] = df.rank(method = 'average', pct = True)
+plt.plot(df.sort_values('p12U').p12U,df.sort_values('p12U').cdf)
+
+df = pd.DataFrame(temp3.p12U)
+df['cdf'] = df.rank(method = 'average', pct = True)
+plt.plot(df.sort_values('p12U').p12U,df.sort_values('p12U').cdf)
+
+
+
+ax.boxplot([temp.p12U,temp2.p12U,temp3.p12U])
+
+#%% scatterplot with connected line
+df=df_unit_valid
+df2=df_unit_comb
+
+for index, unitpair in df2.iterrows():
+    plt.plot([unitpair.rl1, unitpair.rl2],[unitpair.p1, unitpair.p2],c=cm.gray(1-unitpair.p12U))
     
+plt.scatter(df['RDI_LScene'],df['RPR'],c='r')
+plt.show()
+
+for index, unitpair in df2.iterrows():
+    if unitpair.p12U>0.3:
+        plt.plot([unitpair.rr1, unitpair.rr2],[unitpair.p1, unitpair.p2],c=cm.jet(unitpair.p12U))
+    
+plt.scatter(df['RDI_RScene'],df['RPR'],c='k')
+plt.show()
