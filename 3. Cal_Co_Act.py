@@ -18,6 +18,7 @@ from matplotlib import cm
 import re
 #%% import data
 ROOT_data = 'D:/HPC-SWR project/Processed Data'
+ROOT_info = 'D:/HPC-SWR project/Information Sheet'
 thisRID=561
 thisSID='all'
 thisRegion='CA1'
@@ -26,6 +27,7 @@ df_rip_valid = pd.read_excel(f'{ROOT_data}/RipplesTable_{thisRegion}_ForAnalysis
 df_unit_valid = pd.read_excel(f'{ROOT_data}/UnitsTable_{thisRegion}_ForAnalysis.xlsx')
 df_act_valid = pd.read_excel(f'{ROOT_data}/ReactTable_{thisRegion}.xlsx')
 df_unit_comb=pd.read_excel(f'{ROOT_data}/ReactPair.xlsx')
+df_session_list = pd.read_excel(f'{ROOT_info}/SessionList_SWR.xlsx')
 
 #%% make unit combination pair table
 pivot_overlap_dict={}
@@ -133,7 +135,7 @@ df2 = df_unit_valid.copy()
 df_rip_valid['mRDI_L']=np.nan
 df_rip_valid['mRDI_R']=np.nan
 df_rip_valid['mRDI_C']=np.nan
-#%%
+#%% count ensemble scene/choice selectivity for react. rasterplot
 df['RipNum']=np.nan
 i=1
 for index, Units in df.iterrows():
@@ -167,17 +169,24 @@ df3 = pd.merge(df3,df1, how='left', left_on='RippleID', right_on='ID')
 #%%
 thisParm='RDI_LScene'
 thisP='RDI_L'
+for index,Session in df_session_list.iterrows():
+    df4=df3[(Session['rat']==df3['rat_x']) & (Session['session']==df3['session_x'])]
+    df4_r = df4.loc[:,[f'np{thisP}',f'nn{thisP}','RipNum']].sort_values(by=[f'np{thisP}',f'nn{thisP}','RipNum'],                                                          ascending=[True,False,False]).apply(tuple, axis=1)
+    f, i = pd.factorize(df4_r)
+    factorized = pd.Series(f + 1, df4_r.index)
 
-df3_r = df3.loc[:,[f'np{thisP}',f'nn{thisP}','RipNum']].sort_values(by=[f'np{thisP}',f'nn{thisP}','RipNum'],
-                                                              ascending=[True,False,False]).apply(tuple, axis=1)
-f, i = pd.factorize(df3_r)
-factorized = pd.Series(f + 1, df3_r.index)
+    df4['rank']=factorized
 
-df3['rank']=factorized
 
-plt.scatter(df3[thisParm][df3[thisParm]>0],df3['rank'][df3[thisParm]>0],marker='|',s=1,c='r')
-plt.scatter(df3[thisParm][df3[thisParm]<0],df3['rank'][df3[thisParm]<0],marker='|',s=1,c='b')
-plt.plot([0,0],[0,max(f)],c='k',ls='--')
-plt.xlim([-2, 2])
-plt.ylim([0,max(f)])
-plt.show()
+    if not(df4.empty):
+        plt.figure(figsize=(6,8))
+        plt.scatter(df4[thisParm][df4[thisParm]>0],df4['rank'][df4[thisParm]>0],marker='|',s=5,c='r')
+        plt.scatter(df4[thisParm][df4[thisParm]<0],df4['rank'][df4[thisParm]<0],marker='|',s=5,c='b')
+        plt.plot([0,0],[0,max(f)],c='k',ls='--')
+        plt.xlim([-2, 2])
+        plt.xlabel(f'{thisParm}')
+        plt.ylim([0,max(f)])
+        plt.ylabel('Ripple')
+        plt.title(f'{Session.rat} - {Session.session}')
+        plt.savefig(f'{ROOT_data}/plots/Reactivated Ensemble_raw/{Session.rat}-{Session.session}.png')
+        plt.close()
