@@ -188,5 +188,36 @@ for index,Session in df_session_list.iterrows():
         plt.ylim([0,max(f)])
         plt.ylabel('Ripple')
         plt.title(f'{Session.rat} - {Session.session}')
-        plt.savefig(f'{ROOT_data}/plots/Reactivated Ensemble_raw/{Session.rat}-{Session.session}.png')
+        plt.savefig(f'{ROOT_data}/plots/Reactivated Ensemble_raw/{thisP}_{Session.rat}-{Session.session}.png')
+        plt.close()
+        
+#%%
+thisParm='RDI_LR'
+thisP='RDI_C'
+for index in ['Zebra','Pebbles','Bamboo','Mountains','Forest','City']:
+    if index in ['Zebra','Pebbles','Bamboo','Mountains']:
+        Exper='LSM'
+        CxtNum=['Zebra','Pebbles','Bamboo','Mountains'].index(index)+1
+    else:
+        Exper='JS'
+        CxtNum=['Forest','City'].index(index)+1
+    df4=df3[(CxtNum==df3['RipCxt']) & (Exper==df3['experimenter_x'])]
+    df4_r = df4.loc[:,[f'np{thisP}',f'nn{thisP}','RipNum']].sort_values(by=[f'np{thisP}',f'nn{thisP}','RipNum'],                                                          ascending=[True,False,False]).apply(tuple, axis=1)
+    f, i = pd.factorize(df4_r)
+    factorized = pd.Series(f + 1, df4_r.index)
+
+    df4['rank']=factorized
+
+
+    if not(df4.empty):
+        plt.figure(figsize=(6,8))
+        plt.scatter(df4[thisParm][df4[thisParm]>0],df4['rank'][df4[thisParm]>0],marker='|',s=5,c='r')
+        plt.scatter(df4[thisParm][df4[thisParm]<0],df4['rank'][df4[thisParm]<0],marker='|',s=5,c='b')
+        plt.plot([0,0],[0,max(f)],c='k',ls='--')
+        plt.xlim([-2, 2])
+        plt.xlabel(f'{thisParm}')
+        plt.ylim([0,max(f)])
+        plt.ylabel('Ripple')
+        plt.title(f'{Exper}-{index}')
+        plt.savefig(f'{ROOT_data}/plots/Reactivated Ensemble_raw/{thisP}_{Exper}-{index}.png')
         plt.close()
