@@ -16,6 +16,7 @@ import Mod_SWR as swr
 from matplotlib.colors import ListedColormap
 from matplotlib import cm
 import re
+from PIL import ImageColor as imgC
 #%% import data
 ROOT_data = 'D:/HPC-SWR project/Processed Data'
 ROOT_info = 'D:/HPC-SWR project/Information Sheet'
@@ -29,6 +30,8 @@ df_act_valid = pd.read_excel(f'{ROOT_data}/ReactTable_{thisRegion}.xlsx')
 df_unit_comb=pd.read_excel(f'{ROOT_data}/ReactPair.xlsx')
 df_session_list = pd.read_excel(f'{ROOT_info}/SessionList_SWR.xlsx')
 
+Color_List = {"Zebra" : '#CF404D', 'Bamboo' : '#D06000', 'Pebbles' : '#00846D', 'Mountains' : '#404F78',
+              'Left' : "#872300", 'Right' : '#005500', 'Forest' : '#009834', 'City' : '#008644'}
 #%% make unit combination pair table
 pivot_overlap_dict={}
         
@@ -193,7 +196,7 @@ for index,Session in df_session_list.iterrows():
         
 #%%
 thisParm='RDI_LR'
-thisP='RDI_C'
+
 for index in ['Zebra','Pebbles','Bamboo','Mountains','Forest','City']:
     if index in ['Zebra','Pebbles','Bamboo','Mountains']:
         Exper='LSM'
@@ -201,8 +204,21 @@ for index in ['Zebra','Pebbles','Bamboo','Mountains','Forest','City']:
     else:
         Exper='JS'
         CxtNum=['Forest','City'].index(index)+1
+        
+    if thisParm =='RDI_LScene':
+        thisP='RDI_L'
+        if Exper=='LSM':
+            c1=Color_List['Zebra']; c2 = Color_List['Bamboo'];
+        elif Exper=='JS':
+            c1=Color_List['Forest']; c2 = Color_List['City'];
+    elif thisParm=='RDI_RScene':
+        thisP='RDI_R'; c1=Color_List['Pebbles']; c2 = Color_List['Mountains'];
+    elif thisParm=='RDI_LR':
+        thisP='RDI_C'; c1=Color_List['Left']; c2 = Color_List['Right'];
+        
     df4=df3[(CxtNum==df3['RipCxt']) & (Exper==df3['experimenter_x'])]
-    df4_r = df4.loc[:,[f'np{thisP}',f'nn{thisP}','RipNum']].sort_values(by=[f'np{thisP}',f'nn{thisP}','RipNum'],                                                          ascending=[True,False,False]).apply(tuple, axis=1)
+    df4['pp']=df4[f'np{thisP}']/(df4[f'np{thisP}']+df4[f'nn{thisP}'])
+    df4_r = df4.loc[:,['pp',f'np{thisP}',f'nn{thisP}','RipNum']].sort_values(by=['pp',f'np{thisP}',f'nn{thisP}','RipNum'],ascending=[True,True,False,False]).apply(tuple, axis=1)
     f, i = pd.factorize(df4_r)
     factorized = pd.Series(f + 1, df4_r.index)
 
@@ -211,8 +227,8 @@ for index in ['Zebra','Pebbles','Bamboo','Mountains','Forest','City']:
 
     if not(df4.empty):
         plt.figure(figsize=(6,8))
-        plt.scatter(df4[thisParm][df4[thisParm]>0],df4['rank'][df4[thisParm]>0],marker='|',s=5,c='r')
-        plt.scatter(df4[thisParm][df4[thisParm]<0],df4['rank'][df4[thisParm]<0],marker='|',s=5,c='b')
+        plt.scatter(df4[thisParm][df4[thisParm]>0],df4['rank'][df4[thisParm]>0],marker='|',s=5,c=c1)
+        plt.scatter(df4[thisParm][df4[thisParm]<0],df4['rank'][df4[thisParm]<0],marker='|',s=5,c=c2)
         plt.plot([0,0],[0,max(f)],c='k',ls='--')
         plt.xlim([-2, 2])
         plt.xlabel(f'{thisParm}')
