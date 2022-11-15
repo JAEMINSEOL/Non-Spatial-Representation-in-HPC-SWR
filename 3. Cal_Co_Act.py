@@ -131,13 +131,50 @@ for index, unitpair in df2.iterrows():
 plt.scatter(df['RDI_LScene'],df['RDI_RScene'],c=cm.gray(df.RPR))
 plt.show()
 
+
+        
+
+#%%
+df_session_list['mean_RDI_LScene']=np.nan
+df_session_list['std_RDI_LScene']=np.nan
+df_session_list['mean_RDI_RScene']=np.nan
+df_session_list['std_RDI_RScene']=np.nan
+df_session_list['mean_RDI_LR']=np.nan
+df_session_list['std_RDI_LR']=np.nan
+
+for index, thisSession in df_session_list.iterrows():
+    df=df_unit_valid[(thisSession['rat']==df_unit_valid['rat']) & (thisSession['session']==df_unit_valid['session'])]
+    df_session_list['mean_RDI_LScene'][index] = np.nanmean(df['RDI_LScene'])
+    df_session_list['std_RDI_LScene'][index] = np.nanstd(df['RDI_LScene'])
+    df_session_list['mean_RDI_RScene'][index] = np.nanmean(df['RDI_RScene'])
+    df_session_list['std_RDI_RScene'][index] = np.nanstd(df['RDI_RScene'])
+    df_session_list['mean_RDI_LR'][index] = np.nanmean(df['RDI_LR'])
+    df_session_list['std_RDI_LR'][index] = np.nanstd(df['RDI_LR'])
+    
+df_rip_valid['mRDI_L']=np.nan
+df_rip_valid['mRDI_R']=np.nan
+df_rip_valid['mRDI_C']=np.nan
+df_rip_valid['zRDI_L']=np.nan
+df_rip_valid['zRDI_R']=np.nan
+df_rip_valid['zRDI_C']=np.nan
+
+for index, thisRip in df_rip_valid.iterrows():
+    df=df_act_valid[(thisRip['ID']==df_act_valid['RippleID'])]
+    thisUnit = df_unit_valid[df_unit_valid['ID'].isin(df['UnitID'])]
+    thisSession = df_session_list[(thisRip['rat']==df_session_list['rat']) & (thisRip['session']==df_session_list['session'])]
+    df_rip_valid['mRDI_L'][index] = np.nanmean(thisUnit['RDI_LScene'])
+    df_rip_valid['mRDI_R'][index] = np.nanmean(thisUnit['RDI_RScene'])
+    df_rip_valid['mRDI_C'][index] = np.nanmean(thisUnit['RDI_LR'])
+    
+    df_rip_valid['zRDI_L'][index] = (df_rip_valid['mRDI_L'][index]-thisSession['mean_RDI_LScene'])/thisSession['std_RDI_LScene']
+    df_rip_valid['zRDI_R'][index] = (df_rip_valid['mRDI_R'][index]-thisSession['mean_RDI_RScene'])/thisSession['std_RDI_RScene']
+    df_rip_valid['zRDI_C'][index] = (df_rip_valid['mRDI_C'][index]-thisSession['mean_RDI_LR'])/thisSession['std_RDI_LR']
+    
 #%% reactivation rasterplot
 df=df_act_valid.copy()
 df1=df_rip_valid.copy()
 df2 = df_unit_valid.copy()
-df_rip_valid['mRDI_L']=np.nan
-df_rip_valid['mRDI_R']=np.nan
-df_rip_valid['mRDI_C']=np.nan
+
 #%% count ensemble scene/choice selectivity for react. rasterplot
 df['RipNum']=np.nan
 i=1
@@ -193,11 +230,11 @@ for index,Session in df_session_list.iterrows():
         plt.title(f'{Session.rat} - {Session.session}')
         plt.savefig(f'{ROOT_data}/plots/Reactivated Ensemble_raw/{thisP}_{Session.rat}-{Session.session}.png')
         plt.close()
-        
-#%%
-thisParm='RDI_LR'
 
-for index in ['Zebra','Pebbles','Bamboo','Mountains','Forest','City']:
+#%%
+thisParm='RDI_LScene'
+
+for index in ['Zebra','Pebbles','Bamboo','Mountains']:
     if index in ['Zebra','Pebbles','Bamboo','Mountains']:
         Exper='LSM'
         CxtNum=['Zebra','Pebbles','Bamboo','Mountains'].index(index)+1
@@ -226,14 +263,30 @@ for index in ['Zebra','Pebbles','Bamboo','Mountains','Forest','City']:
 
 
     if not(df4.empty):
+        df4=df4.iloc[1:200]
+        
+        df4_r = df4.sort_values(by=['rank'],ascending=[True])
+
+        df4_r['rank2'] = df4_r['rank'].rank(method='dense')
+        
+        df4 = df4_r
+        
         plt.figure(figsize=(6,8))
-        plt.scatter(df4[thisParm][df4[thisParm]>0],df4['rank'][df4[thisParm]>0],marker='|',s=5,c=c1)
-        plt.scatter(df4[thisParm][df4[thisParm]<0],df4['rank'][df4[thisParm]<0],marker='|',s=5,c=c2)
+        plt.scatter(df4[thisParm][df4[thisParm]>0],df4['rank2'][df4[thisParm]>0],marker='|',s=5,c='k')
+        plt.scatter(df4[thisParm][df4[thisParm]<0],df4['rank2'][df4[thisParm]<0],marker='|',s=5,c='k')
         plt.plot([0,0],[0,max(f)],c='k',ls='--')
         plt.xlim([-2, 2])
         plt.xlabel(f'{thisParm}')
-        plt.ylim([0,max(f)])
+        plt.ylim([0,max(df4['rank2'])])
         plt.ylabel('Ripple')
         plt.title(f'{Exper}-{index}')
-        plt.savefig(f'{ROOT_data}/plots/Reactivated Ensemble_raw/{thisP}_{Exper}-{index}.png')
-        plt.close()
+        # plt.scatter(df4['mRDI_C'], df4['rank'])
+        
+        plt.scatter(df4['zRDI_C'], df4['rank2'],marker='o',s=5,c='r')
+        plt.scatter(df4['mRDI_C'], df4['rank2'],marker='o',s=5,c='b')
+        # plt.savefig(f'{ROOT_data}/plots/Reactivated Ensemble_raw/{thisP}_{Exper}-{index}.png')
+        # plt.close()
+        
+plt.hist(df4['zRDI_C'])
+plt.hist(df4['zRDI_L'])
+plt.hist(df4['zRDI_R'])
