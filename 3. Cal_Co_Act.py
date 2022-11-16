@@ -253,7 +253,7 @@ for index in ['Zebra','Pebbles','Bamboo','Mountains']:
     elif thisParm=='RDI_LR':
         thisP='RDI_C'; c1=Color_List['Left']; c2 = Color_List['Right'];
         
-    df4=df3[(CxtNum==df3['RipCxt']) & (Exper==df3['experimenter_x'])]
+    df4=df3[(Exper==df3['experimenter_x'])]
     df4['pp']=df4[f'np{thisP}']/(df4[f'np{thisP}']+df4[f'nn{thisP}'])
     df4_r = df4.loc[:,['pp',f'np{thisP}',f'nn{thisP}','RipNum']].sort_values(by=['pp',f'np{thisP}',f'nn{thisP}','RipNum'],ascending=[True,True,False,False]).apply(tuple, axis=1)
     f, i = pd.factorize(df4_r)
@@ -263,30 +263,34 @@ for index in ['Zebra','Pebbles','Bamboo','Mountains']:
 
 
     if not(df4.empty):
-        df4=df4.iloc[1:200]
+        df4=df4[abs(df4[f'z{thisP}'])>1]
         
-        df4_r = df4.sort_values(by=['rank'],ascending=[True])
+        df4_r = df4.loc[:,[f'z{thisP}','RipNum']].sort_values(by=[f'z{thisP}','RipNum'],ascending=[True,True]).apply(tuple, axis=1)
 
-        df4_r['rank2'] = df4_r['rank'].rank(method='dense')
-        
-        df4 = df4_r
+        f, i = pd.factorize(df4_r)
+        factorized = pd.Series(f + 1, df4_r.index)
+
+        df4['rank2']=factorized
+    
         
         plt.figure(figsize=(6,8))
-        plt.scatter(df4[thisParm][df4[thisParm]>0],df4['rank2'][df4[thisParm]>0],marker='|',s=5,c='k')
-        plt.scatter(df4[thisParm][df4[thisParm]<0],df4['rank2'][df4[thisParm]<0],marker='|',s=5,c='k')
+        plt.scatter(df4[thisParm][df4[thisParm]>0],df4['rank2'][df4[thisParm]>0],marker='|',s=10,c='k')
+        plt.scatter(df4[thisParm][df4[thisParm]<0],df4['rank2'][df4[thisParm]<0],marker='|',s=10,c='k')
         plt.plot([0,0],[0,max(f)],c='k',ls='--')
-        plt.xlim([-2, 2])
+        plt.xlim([-3.5, 3.5])
         plt.xlabel(f'{thisParm}')
-        plt.ylim([0,max(df4['rank2'])])
+        plt.ylim([0,max(df4['rank2'])+1])
         plt.ylabel('Ripple')
-        plt.title(f'{Exper}-{index}')
+        plt.title(f'{Exper}')
         # plt.scatter(df4['mRDI_C'], df4['rank'])
+        plt.plot([1,1],[0,max(f)],c='r',ls='--')
+        plt.plot([-1,-1],[0,max(f)],c='r',ls='--')
         
-        plt.scatter(df4['zRDI_C'], df4['rank2'],marker='o',s=5,c='r')
-        plt.scatter(df4['mRDI_C'], df4['rank2'],marker='o',s=5,c='b')
+        plt.scatter(df4[f'm{thisP}'], df4['rank2'],marker='o',s=5,c='b')
+        plt.scatter(df4[f'z{thisP}'], df4['rank2'],marker='o',s=10,c='r')
         # plt.savefig(f'{ROOT_data}/plots/Reactivated Ensemble_raw/{thisP}_{Exper}-{index}.png')
         # plt.close()
         
-plt.hist(df4['zRDI_C'])
+plt.hist(df4['mRDI_C'])
 plt.hist(df4['zRDI_L'])
 plt.hist(df4['zRDI_R'])
