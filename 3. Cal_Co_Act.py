@@ -8,6 +8,7 @@ Created on Tue Jan 11 17:00:11 2022
 #%% import libraries
 import numpy as np 
 import scipy as sp
+from scipy import stats
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -133,43 +134,6 @@ plt.show()
 
 
         
-
-#%%
-df_session_list['mean_RDI_LScene']=np.nan
-df_session_list['std_RDI_LScene']=np.nan
-df_session_list['mean_RDI_RScene']=np.nan
-df_session_list['std_RDI_RScene']=np.nan
-df_session_list['mean_RDI_LR']=np.nan
-df_session_list['std_RDI_LR']=np.nan
-
-for index, thisSession in df_session_list.iterrows():
-    df=df_unit_valid[(thisSession['rat']==df_unit_valid['rat']) & (thisSession['session']==df_unit_valid['session'])]
-    df_session_list['mean_RDI_LScene'][index] = np.nanmean(df['RDI_LScene'])
-    df_session_list['std_RDI_LScene'][index] = np.nanstd(df['RDI_LScene'])
-    df_session_list['mean_RDI_RScene'][index] = np.nanmean(df['RDI_RScene'])
-    df_session_list['std_RDI_RScene'][index] = np.nanstd(df['RDI_RScene'])
-    df_session_list['mean_RDI_LR'][index] = np.nanmean(df['RDI_LR'])
-    df_session_list['std_RDI_LR'][index] = np.nanstd(df['RDI_LR'])
-    
-df_rip_valid['mRDI_L']=np.nan
-df_rip_valid['mRDI_R']=np.nan
-df_rip_valid['mRDI_C']=np.nan
-df_rip_valid['zRDI_L']=np.nan
-df_rip_valid['zRDI_R']=np.nan
-df_rip_valid['zRDI_C']=np.nan
-
-for index, thisRip in df_rip_valid.iterrows():
-    df=df_act_valid[(thisRip['ID']==df_act_valid['RippleID'])]
-    thisUnit = df_unit_valid[df_unit_valid['ID'].isin(df['UnitID'])]
-    thisSession = df_session_list[(thisRip['rat']==df_session_list['rat']) & (thisRip['session']==df_session_list['session'])]
-    df_rip_valid['mRDI_L'][index] = np.nanmean(thisUnit['RDI_LScene'])
-    df_rip_valid['mRDI_R'][index] = np.nanmean(thisUnit['RDI_RScene'])
-    df_rip_valid['mRDI_C'][index] = np.nanmean(thisUnit['RDI_LR'])
-    
-    df_rip_valid['zRDI_L'][index] = (df_rip_valid['mRDI_L'][index]-thisSession['mean_RDI_LScene'])/thisSession['std_RDI_LScene']
-    df_rip_valid['zRDI_R'][index] = (df_rip_valid['mRDI_R'][index]-thisSession['mean_RDI_RScene'])/thisSession['std_RDI_RScene']
-    df_rip_valid['zRDI_C'][index] = (df_rip_valid['mRDI_C'][index]-thisSession['mean_RDI_LR'])/thisSession['std_RDI_LR']
-    
 #%% reactivation rasterplot
 df=df_act_valid.copy()
 df1=df_rip_valid.copy()
@@ -184,7 +148,7 @@ for index, Units in df.iterrows():
         if df.RippleID[index] != df.RippleID[index+1]:
             i=i+1
 
-          
+df1['nPCs'] = np.nan      
 df1['npRDI_L'] = np.nan
 df1['nnRDI_L'] = np.nan
 df1['npRDI_R']= np.nan
@@ -194,6 +158,7 @@ df1['nnRDI_C'] = np.nan
 
 for index, Rips in df1.iterrows():
     df0=pd.merge(df[df['RippleID']==Rips['ID']],df2,how='left', left_on='UnitID', right_on='ID')
+    df1['nPCs'][index]=df0['UnitID'].nunique()
     df1['npRDI_L'][index] = sum(df0.RDI_LScene>0)
     df1['nnRDI_L'][index] = sum(df0.RDI_LScene<0)
     df1['npRDI_R'][index] = sum(df0.RDI_RScene>0)
@@ -210,7 +175,10 @@ df3 = pd.merge(df3,df1, how='left', left_on='RippleID', right_on='ID')
 thisParm='RDI_LScene'
 thisP='RDI_L'
 for index,Session in df_session_list.iterrows():
-    df4=df3[(Session['rat']==df3['rat_x']) & (Session['session']==df3['session_x'])]
+    df4=df3[(Session['rat']==df3['rat_x']) & (Session['session']==df3['session_x'])  & (df3['nPCs'])>=3]
+    
+    
+    df4=df3.copy()
     df4_r = df4.loc[:,[f'np{thisP}',f'nn{thisP}','RipNum']].sort_values(by=[f'np{thisP}',f'nn{thisP}','RipNum'],                                                          ascending=[True,False,False]).apply(tuple, axis=1)
     f, i = pd.factorize(df4_r)
     factorized = pd.Series(f + 1, df4_r.index)
@@ -245,7 +213,7 @@ for index in ['Zebra','Pebbles','Bamboo','Mountains']:
     if thisParm =='RDI_LScene':
         thisP='RDI_L'
         if Exper=='LSM':
-            c1=Color_List['Zebra']; c2 = Color_List['Bamboo'];
+            c1=Color_List['Zebra']; c2 = Color_List['Bamboo']; 
         elif Exper=='JS':
             c1=Color_List['Forest']; c2 = Color_List['City'];
     elif thisParm=='RDI_RScene':
@@ -253,7 +221,7 @@ for index in ['Zebra','Pebbles','Bamboo','Mountains']:
     elif thisParm=='RDI_LR':
         thisP='RDI_C'; c1=Color_List['Left']; c2 = Color_List['Right'];
         
-    df4=df3[(Exper==df3['experimenter_x'])]
+    df4=df3[(Exper==df3['experimenter_x']) & (df3['nPCs']>=3)]
     df4['pp']=df4[f'np{thisP}']/(df4[f'np{thisP}']+df4[f'nn{thisP}'])
     df4_r = df4.loc[:,['pp',f'np{thisP}',f'nn{thisP}','RipNum']].sort_values(by=['pp',f'np{thisP}',f'nn{thisP}','RipNum'],ascending=[True,True,False,False]).apply(tuple, axis=1)
     f, i = pd.factorize(df4_r)
@@ -286,7 +254,7 @@ for index in ['Zebra','Pebbles','Bamboo','Mountains']:
         plt.plot([1,1],[0,max(f)],c='r',ls='--')
         plt.plot([-1,-1],[0,max(f)],c='r',ls='--')
         
-        plt.scatter(df4[f'm{thisP}'], df4['rank2'],marker='o',s=5,c='b')
+        # plt.scatter(df4[f'm{thisP}'], df4['rank2'],marker='o',s=5,c='b')
         plt.scatter(df4[f'z{thisP}'], df4['rank2'],marker='o',s=10,c='r')
         # plt.savefig(f'{ROOT_data}/plots/Reactivated Ensemble_raw/{thisP}_{Exper}-{index}.png')
         # plt.close()
