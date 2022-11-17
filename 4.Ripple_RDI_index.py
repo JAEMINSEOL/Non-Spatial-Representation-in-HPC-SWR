@@ -51,7 +51,7 @@ for index, thisSession in df_session_list.iterrows():
     df_session_list['std_RDI_LR'][index] = np.nanstd(df['RDI_LR'])
 
     
-
+#%%
 df_rip_valid['mRDI_L']=np.nan
 df_rip_valid['mRDI_R']=np.nan
 df_rip_valid['mRDI_C']=np.nan
