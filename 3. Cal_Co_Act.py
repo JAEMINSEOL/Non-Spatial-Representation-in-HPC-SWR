@@ -200,7 +200,8 @@ for index,Session in df_session_list.iterrows():
         plt.close()
 
 #%%
-thisParm='RDI_LScene'
+thisParm='RDI_LR'
+prefix='p'
 
 for index in ['Zebra','Pebbles','Bamboo','Mountains']:
     if index in ['Zebra','Pebbles','Bamboo','Mountains']:
@@ -231,9 +232,9 @@ for index in ['Zebra','Pebbles','Bamboo','Mountains']:
 
 
     if not(df4.empty):
-        df4=df4[abs(df4[f'z{thisP}'])>1]
+        # df4=df4[abs(df4[f't{thisP}'])>1]
         
-        df4_r = df4.loc[:,[f'z{thisP}','RipNum']].sort_values(by=[f'z{thisP}','RipNum'],ascending=[True,True]).apply(tuple, axis=1)
+        df4_r = df4.loc[:,[f'{prefix}{thisP}','RipNum']].sort_values(by=[f'{prefix}{thisP}','RipNum'],ascending=[True,True]).apply(tuple, axis=1)
 
         f, i = pd.factorize(df4_r)
         factorized = pd.Series(f + 1, df4_r.index)
@@ -242,20 +243,20 @@ for index in ['Zebra','Pebbles','Bamboo','Mountains']:
     
         
         plt.figure(figsize=(6,8))
-        plt.scatter(df4[thisParm][df4[thisParm]>0],df4['rank2'][df4[thisParm]>0],marker='|',s=10,c='k')
-        plt.scatter(df4[thisParm][df4[thisParm]<0],df4['rank2'][df4[thisParm]<0],marker='|',s=10,c='k')
+        # plt.scatter(df4[thisParm][df4[thisParm]>0],df4['rank2'][df4[thisParm]>0],marker='|',s=5,c='k')
+        # plt.scatter(df4[thisParm][df4[thisParm]<0],df4['rank2'][df4[thisParm]<0],marker='|',s=5,c='k')
         plt.plot([0,0],[0,max(f)],c='k',ls='--')
-        plt.xlim([-3.5, 3.5])
-        plt.xlabel(f'{thisParm}')
+        plt.xlim([0, 1])
+        plt.xlabel(f'{thisParm}_{prefix}')
         plt.ylim([0,max(df4['rank2'])+1])
         plt.ylabel('Ripple')
-        plt.title(f'{Exper}')
+        plt.title(f'{Exper} dataset')
         # plt.scatter(df4['mRDI_C'], df4['rank'])
-        plt.plot([1,1],[0,max(f)],c='r',ls='--')
-        plt.plot([-1,-1],[0,max(f)],c='r',ls='--')
+        plt.plot([0.05, 0.05],[0,max(f)],c='r',ls='--')
+        # plt.plot([-1,-1],[0,max(f)],c='r',ls='--')
         
         # plt.scatter(df4[f'm{thisP}'], df4['rank2'],marker='o',s=5,c='b')
-        plt.scatter(df4[f'z{thisP}'], df4['rank2'],marker='o',s=10,c='r')
+        plt.scatter(df4[f'{prefix}{thisP}'], df4['rank2'],marker='o',s=5,c='r')
         # plt.savefig(f'{ROOT_data}/plots/Reactivated Ensemble_raw/{thisP}_{Exper}-{index}.png')
         # plt.close()
         
