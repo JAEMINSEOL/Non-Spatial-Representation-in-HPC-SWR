@@ -175,11 +175,15 @@ df3 = pd.merge(df3,df1, how='left', left_on='RippleID', right_on='ID')
 thisParm='RDI_LScene'
 thisP='RDI_L'
 for index,Session in df_session_list.iterrows():
-    df4=df3[(Session['rat']==df3['rat_x']) & (Session['session']==df3['session_x'])  & (df3['nPCs'])>=3]
     
     
     df4=df3.copy()
-    df4_r = df4.loc[:,[f'np{thisP}',f'nn{thisP}','RipNum']].sort_values(by=[f'np{thisP}',f'nn{thisP}','RipNum'],                                                          ascending=[True,False,False]).apply(tuple, axis=1)
+    df4=df4[(Session['rat']==df4['rat_x']) & (Session['session']==df4['session_x'])]
+    df4=df4[(df3['nPCs'])>=3]
+    
+    
+    
+    df4_r = df4.loc[:,['RipNum']].sort_values(by=['RipNum'],ascending=[True]).apply(tuple, axis=1)
     f, i = pd.factorize(df4_r)
     factorized = pd.Series(f + 1, df4_r.index)
 
@@ -196,8 +200,8 @@ for index,Session in df_session_list.iterrows():
         plt.ylim([0,max(f)])
         plt.ylabel('Ripple')
         plt.title(f'{Session.rat} - {Session.session}')
-        plt.savefig(f'{ROOT_data}/plots/Reactivated Ensemble_raw/{thisP}_{Session.rat}-{Session.session}.png')
-        plt.close()
+        # plt.savefig(f'{ROOT_data}/plots/Reactivated Ensemble_raw/{thisP}_{Session.rat}-{Session.session}.png')
+        # plt.close()
 
 #%%
 thisParm='RDI_LR'
