@@ -87,5 +87,5 @@ for index, thisRip in df_rip_valid.iterrows():
     [df_rip_valid['tRDI_R'][index],df_rip_valid['pRDI_R'][index]] = stats.ttest_ind(df_unit_ripple['RDI_RScene'], df_unit_session['RDI_RScene'], equal_var=True, alternative='two-sided',nan_policy='omit')
     [df_rip_valid['tRDI_C'][index],df_rip_valid['pRDI_C'][index]] = stats.ttest_ind(df_unit_ripple['RDI_LR'], df_unit_session['RDI_LR'], equal_var=True, alternative='two-sided',nan_policy='omit')
     
-    
+df_rip_valid.to_excel(f'{ROOT_data}/RipplesTable_{thisRegion}_ForAnalysis.xlsx')    
     
