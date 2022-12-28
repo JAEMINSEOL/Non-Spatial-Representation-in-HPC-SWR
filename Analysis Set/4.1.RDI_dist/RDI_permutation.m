@@ -38,22 +38,38 @@ for r=1:size(RipplesTable_p,1)
     thisUnits =[thisUnits;UnitsTable_A(find(cellfun(Params.cellfind(thisReact.UnitID(u)),UnitsTable_A.ID)),:)];
     end
 
+    thisUnits_L = thisUnits(~isnan(thisUnits.RDI_LScene),:);
+    thisUnits_R = thisUnits(~isnan(thisUnits.RDI_RScene),:);
+    thisUnits_C = thisUnits(~isnan(thisUnits.RDI_LR),:);
+
     thisPool = UnitsTable(UnitsTable.rat==RipplesTable_p.rat(r) & UnitsTable.session==RipplesTable_p.session(r),:);
+
+         thisPool_L =  thisPool(~isnan(thisPool.RDI_LScene),:);
+    thisPool_R =  thisPool(~isnan(thisPool.RDI_RScene),:);
+    thisPool_C =  thisPool(~isnan(thisPool.RDI_LR),:);
+
 
     RDI_L.dist=table;
     RDI_R.dist=table;
     RDI_C.dist=table;
+
+    try
 for i=1:randN
-    samp = datasample(thisPool,size(thisUnits,1),1);
+    samp = datasample(thisPool_L,size(thisUnits_L,1),1);
     RDI_L.dist.mean(i) = nanmean(samp.RDI_LScene);
+    samp = datasample(thisPool_R,size(thisUnits_R,1),1);
     RDI_R.dist.mean(i) = nanmean(samp.RDI_RScene);
+    samp = datasample(thisPool_C,size(thisUnits_C,1),1);
     RDI_C.dist.mean(i) = nanmean(samp.RDI_LR);
 
         RDI_L.dist.median(i) = nanmedian(samp.RDI_LScene);
     RDI_R.dist.median(i) = nanmedian(samp.RDI_RScene);
     RDI_C.dist.median(i) = nanmedian(samp.RDI_LR);
 end
-
+    catch
+        disp([RipID ' perm fail'])
+    end
+    
     RDI_L.act_mean = nanmean(thisUnits.RDI_LScene);
     RDI_R.act_mean = nanmean(thisUnits.RDI_RScene);
     RDI_C.act_mean = nanmean(thisUnits.RDI_LR);
@@ -74,6 +90,7 @@ end
         sum(~isnan(RDI_C.dist.median));
 
     save([ROOT.Rip ['\R-' RipID '.mat']],'thisUnits','RDI_L','RDI_R','RDI_C')
+    disp([RipID ' is finished!'])
 end
 
     
