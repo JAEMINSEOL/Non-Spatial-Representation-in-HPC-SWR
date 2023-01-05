@@ -3,7 +3,7 @@ warning off
 ROOT.Save = [ROOT.Mother '\Processed Data'];
 ROOT.Rip0 = [ROOT.Mother '\Processed Data\ripples_mat\R0'];
 ROOT.Rip = [ROOT.Mother '\Processed Data\ripples_mat\R5'];
-ROOT.Fig = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R7_nRDIs'];
+ROOT.Fig = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R7_nRDIs_1.5sd'];
 ROOT.Fig4 = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R4'];
 ROOT.Fig5 = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R5'];
 ROOT.Units = [ROOT.Mother '\Processed Data\units_mat\U1'];
@@ -77,47 +77,16 @@ for r=1:size(RipplesTable_p,1)
         subplot('position',[.79 .02 .25 .8])
         imshow(replay(120:end,120:445,:))
         %
-        PoolL = sort(thisPool.RDI_LScene); PoolL=PoolL(~isnan(PoolL));
+        
         subplot('position', [.45 .5 .15 .14]); hold on
-        thisUnits = sortrows(thisUnits,{'RDI_LScene'});
-        scatter(PoolL,[1:size(PoolL,1)],40,'k','filled','MarkerFaceAlpha',.2,'MarkerEdgeAlpha',.2)
-        scatter(thisUnits.RDI_LScene,knnsearch(PoolL,thisUnits.RDI_LScene),40,'k','filled')
-        xlim([-1.5 1.5]); ylim([.5,size(PoolL,1)+.5])
-        line([0 0],[.5,size(PoolL,1)+.5],'color','k')
-        line([RDI_L.act_mean RDI_L.act_mean],[.5,size(PoolL,1)+.5],'color','r')
-        line([RDI_L.act_median RDI_L.act_median],[.5,size(PoolL,1)+.5],'color','b')
-        title(['Left scene selectivity stdev: ' jjnum2str(nanstd(thisUnits.RDI_LScene),3) '/'...
-            jjnum2str(nanstd(thisPool.RDI_LScene),3) '=' jjnum2str(nanstd(thisUnits.RDI_LScene)/nanstd(thisPool.RDI_LScene),3)])
-        axis ij
-
-
-        PoolR = sort(thisPool.RDI_RScene); PoolR=PoolR(~isnan(PoolR));
+        RDI_L = scatter_RDI(RDI_L,thisUnits,thisPool,'RDI_LScene',1.5);
+        
         subplot('position', [.45 .3 .15 .14]); hold on
-        thisUnits = sortrows(thisUnits,{'RDI_RScene'});
-        scatter(PoolR,[1:size(PoolR,1)],40,'k','filled','MarkerFaceAlpha',.2,'MarkerEdgeAlpha',.2)
-        scatter(thisUnits.RDI_RScene,knnsearch(PoolR,thisUnits.RDI_RScene),40,'k','filled')
-        xlim([-1.5 1.5]); ylim([.5, size(PoolR,1)+.5])
-        line([0 0],[.5, size(PoolR,1)+.5],'color','k')
-        line([RDI_R.act_mean RDI_R.act_mean],[.5, size(PoolR,1)+.5],'color','r')
-        line([RDI_R.act_median RDI_R.act_median],[.5, size(PoolR,1)+.5],'color','b')
-        title(['Right scene selectivity stdev: ' jjnum2str(nanstd(thisUnits.RDI_RScene),3) '/'...
-            jjnum2str(nanstd(thisPool.RDI_RScene),3) '=' jjnum2str(nanstd(thisUnits.RDI_RScene)/nanstd(thisPool.RDI_RScene),3)])
-        axis ij
+     RDI_R = scatter_RDI(RDI_R, thisUnits,thisPool,'RDI_RScene',1.5);
 
 
-        PoolC = sort(thisPool.RDI_LR); PoolC=PoolC(~isnan(PoolC));
         subplot('position', [.45 .1 .15 .14]); hold on
-        thisUnits = sortrows(thisUnits,{'RDI_LR'});
-        scatter(PoolC,[1:size(PoolC,1)],40,'k','filled','MarkerFaceAlpha',.2,'MarkerEdgeAlpha',.2)
-        scatter(thisUnits.RDI_LR,knnsearch(PoolC,thisUnits.RDI_LR),40,'k','filled')
-        xlim([-1.5 1.5]); ylim([.5, size(PoolC,1)+.5])
-        line([0 0],[.5, size(PoolC,1)+.5],'color','k')
-        line([RDI_C.act_mean RDI_C.act_mean],[.5, size(PoolC,1)+.5],'color','r')
-        line([RDI_C.act_median RDI_C.act_median],[.5, size(PoolC,1)+.5],'color','b')
-          title(['Choice selectivity stdev: ' jjnum2str(nanstd(thisUnits.RDI_LR),3) '/'...
-            jjnum2str(nanstd(thisPool.RDI_LR),3) '=' jjnum2str(nanstd(thisUnits.RDI_LR)/nanstd(thisPool.RDI_LR),3)])
-    
-        axis ij
+  RDI_C = scatter_RDI(RDI_C,thisUnits,thisPool,'RDI_LR',1.5);
         %
 
         subplot('position', [.63 .66 .06 .01])
@@ -126,14 +95,14 @@ for r=1:size(RipplesTable_p,1)
         title('median RDI','FontSize',15); axis off
 
         subplot('position', [.63 .5 .06 .15])
-        perm_hist(RDI_L,'mean')
+        RDI_L = perm_hist(RDI_L,'mean')
 
 
         subplot('position', [.63 .3 .06 .15])
-        perm_hist(RDI_R,'mean')
+        RDI_R = perm_hist(RDI_R,'mean')
 
         subplot('position', [.63 .1 .06 .15])
-        perm_hist(RDI_C,'mean')
+        RDI_C = perm_hist(RDI_C,'mean')
 
         subplot('position', [.72 .5 .06 .15])
         perm_hist(RDI_L,'median')
@@ -145,6 +114,8 @@ for r=1:size(RipplesTable_p,1)
         saveas(gca,[ROOT.Fig '\' thisRip.ID{1} '.png'])
         close all
 
+        RipplesTable_p.M_m(r) = max([abs(RDI_L.act_mean-RDI_L.act_median),abs(RDI_R.act_mean-RDI_R.act_median),abs(RDI_C.act_mean-RDI_C.act_median)]);
+
 
     catch
         close all
@@ -152,9 +123,13 @@ for r=1:size(RipplesTable_p,1)
 
 end
 
-RipplesTable_c = RipplesTable_p(RipplesTable_p.nRDIsMin>=5,:);
+RipplesTable_c = RipplesTable_p(RipplesTable_p.nRDIsMax>=5,:);
+writetable(RipplesTable_c,[ROOT.Save '\RipplesTable_' thisRegion '_forAnalysis_RDI.xlsx'])
 
 function perm_hist(RDI,perm)
+RDI.dist.(perm)=RDI.dist.(perm)(~isnan(RDI.dist.(perm)));
+RDI.(['p_' perm]) = min(sum(RDI.(['act_' perm])<RDI.dist.(perm)),sum(RDI.(['act_' perm])>RDI.dist.(perm)))/length(RDI.dist.(perm));
+
 if RDI.(['p_' perm])<0.05 && ~isnan(RDI.(['act_' perm])), cl='r'; else, cl='k'; end
 if strcmp(perm,'mean'), m='m'; cl2='r'; else, m='M'; cl2='b'; end
 
@@ -165,4 +140,35 @@ end
 
 title(['p= ' jjnum2str(RDI.(['p_' perm]),3) ', ' m '= ' jjnum2str(RDI.(['act_' perm]),3)],'color',cl)
 xlim([-.7 .7])
+end
+
+function RDI = scatter_RDI(RDI,thisUnits,thisPool,field,n)
+switch field
+    case 'RDI_LScene', titp = 'Left scene';
+    case 'RDI_RScene', titp = 'Right scene';
+    case 'RDI_LR', titp = 'Choice';
+end
+
+PoolL = sort(thisPool.(field)); PoolL=PoolL(~isnan(PoolL));
+        thisUnits = sortrows(thisUnits,{field});
+        id = (thisUnits.(field)<nanmean(thisUnits.(field))+n*nanstd(thisUnits.(field))) &...
+            (thisUnits.(field)>nanmean(thisUnits.(field))-n*nanstd(thisUnits.(field)));
+        thisUnits_in = thisUnits(id,:);
+        thisUnits_out = thisUnits(~id,:);
+        scatter(PoolL,[1:size(PoolL,1)],40,'k','filled','MarkerFaceAlpha',.2,'MarkerEdgeAlpha',.2)
+        scatter(thisUnits_in.(field),knnsearch(PoolL,thisUnits_in.(field)),40,'k','filled')
+        scatter(thisUnits_out.(field),knnsearch(PoolL,thisUnits_out.(field)),40,'k')
+        xlim([-1.5 1.5]); ylim([.5,size(PoolL,1)+.5])
+        line([0 0],[.5,size(PoolL,1)+.5],'color','k', 'linestyle','--')
+        line([nanmean(thisUnits_in.(field)) nanmean(thisUnits_in.(field))],[.5,size(PoolL,1)+.5],'color','r')
+        line([nanmedian(thisUnits_in.(field)) nanmedian(thisUnits_in.(field))],[.5,size(PoolL,1)+.5],'color','b')
+        title([titp ' selectivity stdev: ' jjnum2str(nanstd(thisUnits.RDI_LScene),3) '/'...
+            jjnum2str(nanstd(thisPool.RDI_LScene),3) '=' jjnum2str(nanstd(thisUnits.RDI_LScene)/nanstd(thisPool.RDI_LScene),3)])
+        axis ij
+
+          RDI.act_mean = nanmean(thisUnits_in.(field));
+          RDI.act_median = nanmedian(thisUnits_in.(field));
+
+
+        
 end
