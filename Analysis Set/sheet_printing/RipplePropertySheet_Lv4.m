@@ -3,7 +3,7 @@ warning off
 ROOT.Save = [ROOT.Mother '\Processed Data'];
 ROOT.Rip0 = [ROOT.Mother '\Processed Data\ripples_mat\R0'];
 ROOT.Rip = [ROOT.Mother '\Processed Data\ripples_mat\R5'];
-ROOT.Fig = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R7_nRDIs_1.5sd'];
+ROOT.Fig = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R7_nRDIs_2sd'];
 ROOT.Fig4 = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R4'];
 ROOT.Fig5 = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R5'];
 ROOT.Units = [ROOT.Mother '\Processed Data\units_mat\U1'];
@@ -79,14 +79,14 @@ for r=1:size(RipplesTable_p,1)
         %
         
         subplot('position', [.45 .5 .15 .14]); hold on
-        RDI_L = scatter_RDI(RDI_L,thisUnits,thisPool,'RDI_LScene',1.5);
+        RDI_L = scatter_RDI(RDI_L,thisUnits,thisPool,'RDI_LScene',2);
         
         subplot('position', [.45 .3 .15 .14]); hold on
-     RDI_R = scatter_RDI(RDI_R, thisUnits,thisPool,'RDI_RScene',1.5);
+     RDI_R = scatter_RDI(RDI_R, thisUnits,thisPool,'RDI_RScene',2);
 
 
         subplot('position', [.45 .1 .15 .14]); hold on
-  RDI_C = scatter_RDI(RDI_C,thisUnits,thisPool,'RDI_LR',1.5);
+  RDI_C = scatter_RDI(RDI_C,thisUnits,thisPool,'RDI_LR',2);
         %
 
         subplot('position', [.63 .66 .06 .01])
@@ -95,28 +95,29 @@ for r=1:size(RipplesTable_p,1)
         title('median RDI','FontSize',15); axis off
 
         subplot('position', [.63 .5 .06 .15])
-        RDI_L = perm_hist(RDI_L,'mean')
+        RDI_L = perm_hist(RDI_L,'mean');
 
 
         subplot('position', [.63 .3 .06 .15])
-        RDI_R = perm_hist(RDI_R,'mean')
+        RDI_R = perm_hist(RDI_R,'mean');
 
         subplot('position', [.63 .1 .06 .15])
-        RDI_C = perm_hist(RDI_C,'mean')
+        RDI_C = perm_hist(RDI_C,'mean');
 
         subplot('position', [.72 .5 .06 .15])
-        perm_hist(RDI_L,'median')
+        RDI_L = perm_hist(RDI_L,'median');
         subplot('position', [.72 .3 .06 .15])
-        perm_hist(RDI_R,'median')
+        RDI_R = perm_hist(RDI_R,'median');
         subplot('position', [.72 .1 .06 .15])
-        perm_hist(RDI_C,'median')
+        RDI_C = perm_hist(RDI_C,'median');
 
         saveas(gca,[ROOT.Fig '\' thisRip.ID{1} '.png'])
         close all
 
         RipplesTable_p.M_m(r) = max([abs(RDI_L.act_mean-RDI_L.act_median),abs(RDI_R.act_mean-RDI_R.act_median),abs(RDI_C.act_mean-RDI_C.act_median)]);
-
-
+        RipplesTable_p.pRDI_L(r) = RDI_L.p_mean;
+        RipplesTable_p.pRDI_R(r) = RDI_R.p_mean;
+        RipplesTable_p.pRDI_C(r) = RDI_C.p_mean;
     catch
         close all
     end
@@ -126,7 +127,7 @@ end
 RipplesTable_c = RipplesTable_p(RipplesTable_p.nRDIsMax>=5,:);
 writetable(RipplesTable_c,[ROOT.Save '\RipplesTable_' thisRegion '_forAnalysis_RDI.xlsx'])
 
-function perm_hist(RDI,perm)
+function RDI = perm_hist(RDI,perm)
 RDI.dist.(perm)=RDI.dist.(perm)(~isnan(RDI.dist.(perm)));
 RDI.(['p_' perm]) = min(sum(RDI.(['act_' perm])<RDI.dist.(perm)),sum(RDI.(['act_' perm])>RDI.dist.(perm)))/length(RDI.dist.(perm));
 
