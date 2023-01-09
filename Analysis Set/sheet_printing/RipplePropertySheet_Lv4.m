@@ -122,7 +122,7 @@ for r=1:size(RipplesTable_p,1)
 
 
 
-        ROOT.Fig_en = [ROOT.Fig '\Ensemble_' num2str(thisRip.nRDIsMax)];
+        ROOT.Fig_en = [ROOT.Fig '\Ensemble_' num2str(RipplesTable_p.nRDIsMax(r))];
         if ~exist(ROOT.Fig_en), mkdir(ROOT.Fig_en); end
         saveas(gca,[ROOT.Fig_en '\' thisRip.ID{1} '.png'])
         close all
