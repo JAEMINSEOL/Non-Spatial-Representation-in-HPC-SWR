@@ -69,7 +69,7 @@ for r=1:size(RipplesTable_p,1)
         figure('position',[100 100 2100 900],'color','w')
 
         subplot('position',[.05 .95 .14 .05])
-        text(0,0,thisRip.ID,'fontsize',15,'fontweight','b')
+        text(0,0,[thisRip.ID ', ' num2str(RipplesTable_p.nRDIsMax(r)) ' cells'],'fontsize',15,'fontweight','b')
         axis off
         subplot('position',[.9 .95 .1 .05])
         text(0, 0, ['printed on ' date],'FontSize',12);
@@ -118,19 +118,21 @@ for r=1:size(RipplesTable_p,1)
         RDI_R = perm_hist(RDI_R,'median');
         subplot('position', [w2 .1 .06 .15])
         RDI_C = perm_hist(RDI_C,'median');
-                RipplesTable_p.M_m(r) = max([abs(RDI_L.act_mean-RDI_L.act_median),abs(RDI_R.act_mean-RDI_R.act_median),abs(RDI_C.act_mean-RDI_C.act_median)]);
-
-
-
-        ROOT.Fig_en = [ROOT.Fig '\Ensemble_' num2str(RipplesTable_p.nRDIsMax(r))];
-        if ~exist(ROOT.Fig_en), mkdir(ROOT.Fig_en); end
-        saveas(gca,[ROOT.Fig_en '\' thisRip.ID{1} '.png'])
-        close all
-
-
+        RipplesTable_p.M_m(r) = max([abs(RDI_L.act_mean-RDI_L.act_median),abs(RDI_R.act_mean-RDI_R.act_median),abs(RDI_C.act_mean-RDI_C.act_median)]);
+        
         RipplesTable_p.pRDI_L(r) = RDI_L.p_mean;
         RipplesTable_p.pRDI_R(r) = RDI_R.p_mean;
         RipplesTable_p.pRDI_C(r) = RDI_C.p_mean;
+
+        if thisRip.DecodingP_all<0.05, suf1='Replay'; else, suf1='x'; end
+        if nanmin([RipplesTable_p.pRDI_L(r),RipplesTable_p.pRDI_R(r),RipplesTable_p.pRDI_C(r)])<0.05, suf2='Bias'; else, suf2='x'; end
+        
+        ROOT.Fig_en = [ROOT.Fig '\' suf1 '_' suf2];
+        if ~exist(ROOT.Fig_en), mkdir(ROOT.Fig_en); end
+        saveas(gca,[ROOT.Fig_en '\' num2str(RipplesTable_p.nRDIsMax(r)) '_' thisRip.ID{1} '.png'])
+        close all
+
+
     catch
         close all
     end
@@ -138,9 +140,9 @@ for r=1:size(RipplesTable_p,1)
 end
 
 RipplesTable_c = RipplesTable_p(RipplesTable_p.nRDIsMax>=5,:);
-writetable(RipplesTable_c,[ROOT.Save '\RipplesTable_' thisRegion '_forAnalysis_RDI.xlsx'])
-
-RipplesTable_c = readtable([ROOT.Save '\RipplesTable_' thisRegion '_forAnalysis_RDI.xlsx']);
+% writetable(RipplesTable_c,[ROOT.Save '\RipplesTable_' thisRegion '_forAnalysis_RDI.xlsx'])
+% 
+% RipplesTable_c = readtable([ROOT.Save '\RipplesTable_' thisRegion '_forAnalysis_RDI.xlsx']);
 
 function RDI = perm_hist(RDI,perm)
 RDI.dist.(perm)=RDI.dist.(perm)(~isnan(RDI.dist.(perm)));
