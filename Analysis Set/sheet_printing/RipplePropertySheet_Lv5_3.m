@@ -3,13 +3,12 @@ warning off
 ROOT.Save = [ROOT.Mother '\Processed Data'];
 ROOT.Rip0 = [ROOT.Mother '\Processed Data\ripples_mat\R0'];
 ROOT.Rip = [ROOT.Mother '\Processed Data\ripples_mat\R3'];
-ROOT.Rip4 = [ROOT.Mother '\Processed Data\ripples_mat\R4'];
-ROOT.Fig3 = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R10'];
+ROOT.Rip4 = [ROOT.Mother '\Processed Data\ripples_mat\R4_10ms'];
+ROOT.Fig3 = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R11_AI'];
 ROOT.Units = [ROOT.Mother '\Processed Data\units_mat\U1'];
 ROOT.Behav = [ROOT.Mother '\Processed Data\behavior_mat'];
 
 dir = '';
-thisRDI = "RDI_RScene";
 ROOT.Fig = [ROOT.Fig3];
 if ~exist(ROOT.Fig), mkdir(ROOT.Fig); end
 
@@ -35,7 +34,7 @@ dur = 0.4*Params.Fs;
 thisFRMapSCALE=2;
 Params.tbinDuration = 0.005;
 %%
-for sid=1:size(RipplesTable,1)
+for sid=93:size(RipplesTable,1)
     try
         thisRip = RipplesTable(sid,:);
         %         if thisRip.rat~=80, continue; end
@@ -104,7 +103,7 @@ for sid=1:size(RipplesTable,1)
             FRMaps(6,:,cl) = thisMap.thisFieldMap1D.skaggsMap_left1D;
             FRMaps(7,:,cl) = thisMap.thisFieldMap1D.skaggsMap_right1D;
 
-            FRMaps(:,:,cl) = FRMaps(:,:,cl) / max(max(FRMaps(:,:,cl)));
+%             FRMaps(:,:,cl) = FRMaps(:,:,cl) / max(max(FRMaps(:,:,cl)));
             catch
             end
 
@@ -180,27 +179,32 @@ for sid=1:size(RipplesTable,1)
         id = spks_epoch_u(:,2);
 FRMap=FRMaps(:,:,id);
  FRMap=FRMap(:,:,ord);
+ FRMap=FRMap(:,1:42,:);
 %% smooth FRMap
        FRMap_A = FRMap(1,:,:);FRMap_L=FRMap(2:3,:,:);FRMap_R=FRMap(4:5,:,:);FRMap_C=FRMap(6:7,:,:);
        FRMapsm_A=[]; FRMapsm_L=[]; FRMapsm_R=[]; FRMapsm_C=[];
+       start_index=[]; end_index = [];
         for i=1:size(FRMap,3)
+            [field_count, start_index(i), end_index(i), field_size, h] = field_boundary_function_jm(FRMap(1,:,i),0.25);
+
             FRMap_A(:,:,i)  = FRMap_A(:,:,i)/max(max(max(FRMap_A(:,:,i))));
             FRMap_L(:,:,i)  = FRMap_L(:,:,i)/max(max(max(FRMap_L(:,:,i))));
             FRMap_R(:,:,i)  = FRMap_R(:,:,i)/max(max(max(FRMap_R(:,:,i))));
             FRMap_C(:,:,i)  = FRMap_C(:,:,i)/max(max(max(FRMap_C(:,:,i))));
             for j=1:2
-                FRMapsm_L(j,:,i) = smooth(FRMap_L(j,:,i));
-                FRMapsm_R(j,:,i) = smooth(FRMap_R(j,:,i));
-                FRMapsm_C(j,:,i) = smooth(FRMap_C(j,:,i));
+                FRMapsm_L(j,:,i) = smooth(FRMap_L(j,:,i), "moving");
+                FRMapsm_R(j,:,i) = smooth(FRMap_R(j,:,i), "moving");
+                FRMapsm_C(j,:,i) = smooth(FRMap_C(j,:,i), "moving");
             end
-            FRMapsm_A(1,:,i) = smooth(FRMap_A(1,:,i));
+            FRMapsm_A(1,:,i) = smooth(FRMap_A(1,:,i), "moving");
         end
         %% load replay
         Replay = load([ROOT.Rip4 '\' RipplesTable.ID{sid} '.mat']);
         %%
-        figure('position',[317,63,1200,915],'color','w');
+        figure('position',[317,63,1400,915],'color','w');
+        col=5;
         % title
-        subplot(9,6,1)
+        subplot(9,6,3)
         title([cell2mat(thisRip.ID) ', ' Exper ', ' dir],'fontsize',15)
         axis off
 
@@ -216,10 +220,12 @@ FRMap=FRMaps(:,:,id);
         title(['trial ' (thisRip.trial{1}(end-2:end)) ', ' cxt ', ' corr],'fontsize',15)
         axis off
         %% EEG
-        subplot(9,4,[5 9])
         thisEEG = EEG.(['TT' num2str(TargetTT_p)]).Raw(Ist:Ied);
-        plot(thisEEG,'k')
+        thisEEG_Ripple = EEG.(['TT' num2str(TargetTT_p)]).Filtered(Ist:Ied);
+        hold on
 
+        subplot(9,col,[1 col+1])
+        plot(thisEEG,'k')
         title(['TT' num2str(TargetTT_p)])
         x1=mar; x2=mar+thisRip.RippleDuration*Params.Fs;
         dur2=x2+mar;
@@ -228,8 +234,19 @@ FRMap=FRMaps(:,:,id);
         line([x2 x2], [min(thisEEG) max(thisEEG)+50], 'color','r','linestyle','--')
         axis off
 
-        %%
-        subplot(9,4,[13 21])
+        subplot(9,col,[col*2+1])
+        plot(thisEEG_Ripple,'b')
+
+        x1=mar; x2=mar+thisRip.RippleDuration*Params.Fs;
+        dur2=x2+mar;
+        xlim([0 dur2])
+        line([x1 x1], [min(thisEEG_Ripple) max(thisEEG_Ripple)+50], 'color','r','linestyle','--')
+        line([x2 x2], [min(thisEEG_Ripple) max(thisEEG_Ripple)+50], 'color','r','linestyle','--')
+        axis off
+
+        %% reactivation rasterplot
+        clunits = hsv(max(spks_epoch(s,8))+1);
+        subplot(9,col,[3 5]*col+1)
         hold on
         x1=mar/2; x2=thisRip.RippleDuration*1e3+mar/2;
         xlim([0 dur2/2])
@@ -240,11 +257,11 @@ FRMap=FRMaps(:,:,id);
         for s=1:size(spks_epoch,1)
             x = (spks_epoch(s,1) - thisRip.STtime)*1e3+mar/2;
             patch([x-ti x+ti x+ti x-ti], [spks_epoch(s,8)+.2 spks_epoch(s,8)+.2 spks_epoch(s,8)+.8 spks_epoch(s,8)+.8],...
-                'k','edgecolor','k')
+                clunits(spks_epoch(s,8)+1,:),'edgecolor','k','edgealpha',0)
         end
-        %%
+        %% Bayesian decoding plotting
         marR = mar/Params.Fs/Params.tbinDuration;
-        ax1 = subplot(9,4,[25 33]);
+        ax1 = subplot(9,col,[6 8]*col+1);
         hold on; axis on
         [pbinN, tbinN] = size(Replay.posterior{1});
         imagesc(ax1,Replay.posterior{1});
@@ -278,60 +295,79 @@ FRMap=FRMaps(:,:,id);
         hold off;
 
         %% Reactivated cells
-        %%
         
-        ax2 = subplot(9,4,[7 11]-1);
-        fig = popul_FRMap(flip(squeeze(FRMapsm_A(1,:,:))'),Units,[0 stem_end_index 45],{' ', ' ',' '}, 1);
+        cmap = flipud(gray);
+        cmap='jet';
+        ax2 = subplot(9,col,[1 2]*col+2);
+        fig = popul_FRMap(flip(squeeze(FRMapsm_A(1,:,:))'),Units,[0 stem_end_index 42],{' ', ' ',' '}, 1);
         line([stem_end_index stem_end_index],[0 size(FRMap,3)+1],'color','w','linestyle','--')
          title('Overall')
 
-        ax3 = subplot(9,4,[15 19]-1);
-        fig = popul_FRMap(flip(squeeze(FRMapsm_L(1,:,:))'),Units,[0 stem_end_index 45],{' ', ' ',' '}, 0);
+        ax3 = subplot(9,col,[3 4]*col+2);
+        fig = popul_FRMap(flip(squeeze(FRMapsm_L(1,:,:))'),Units,[0 stem_end_index 42],{' ', ' ',' '}, 0);
         line([stem_end_index stem_end_index],[0 size(FRMap,3)+1],'color','w','linestyle','--')
         title('Zebra')
 
-        ax4 = subplot(9,4,[16 20]-1);
+        ax4 = subplot(9,col,[3 4]*col+3);
         fig = popul_FRMap(flip(squeeze(FRMapsm_L(2,:,:))'),Units,[0 stem_end_index 45],{' ', ' ',' '}, 0);
         line([stem_end_index stem_end_index],[0 size(FRMap,3)+1],'color','w','linestyle','--')
          title('Bamboo')
 
-        ax5 = subplot(9,4,[23 27]-1);
-        fig = popul_FRMap(flip(squeeze(FRMapsm_R(1,:,:))'),Units,[0 stem_end_index 45],{' ', ' ',' '}, 0);
+        ax5 = subplot(9,col,[5 6]*col+2);
+        fig = popul_FRMap(flip(squeeze(FRMapsm_R(1,:,:))'),Units,[0 stem_end_index 42],{' ', ' ',' '}, 0);
         line([stem_end_index stem_end_index],[0 size(FRMap,3)+1],'color','w','linestyle','--')
          title('Pebbles')
 
-        ax6 = subplot(9,4,[24 28]-1);
-        fig = popul_FRMap(flip(squeeze(FRMapsm_R(2,:,:))'),Units,[0 stem_end_index 45],{' ', ' ',' '}, 0);
+        ax6 = subplot(9,col,[5 6]*col+3);
+        fig = popul_FRMap(flip(squeeze(FRMapsm_R(2,:,:))'),Units,[0 stem_end_index 42],{' ', ' ',' '}, 0);
         line([stem_end_index stem_end_index],[0 size(FRMap,3)+1],'color','w','linestyle','--')
          title('Mountain')
 
-        ax7 = subplot(9,4,[31 35]-1);
-        fig = popul_FRMap(flip(squeeze(FRMapsm_C(1,:,:))'),Units,[0 stem_end_index 45],{'Stbox', 'Dv','Fw'}, 0);
+        ax7 = subplot(9,col,[7 8]*col+2);
+        fig = popul_FRMap(flip(squeeze(FRMapsm_C(1,:,:))'),Units,[0 stem_end_index 42],{'Stbox', 'Dv','Fw'}, 0);
         line([stem_end_index stem_end_index],[0 size(FRMap,3)+1],'color','w','linestyle','--')
         title('Left')
 
-        ax8 = subplot(9,4,[32 36]-1);
-        fig = popul_FRMap(flip(squeeze(FRMapsm_C(2,:,:))'),Units,[0 stem_end_index 45],{'Stbox', 'Dv','Fw'}, 0);
+        ax8 = subplot(9,col,[7 8]*col+3);
+        fig = popul_FRMap(flip(squeeze(FRMapsm_C(2,:,:))'),Units,[0 stem_end_index 42],{'Stbox', 'Dv','Fw'}, 0);
         line([stem_end_index stem_end_index],[0 size(FRMap,3)+1],'color','w','linestyle','--')
          title('Right')
 
-        colormap(ax2,'jet')
-        colormap(ax3,'jet')
-                colormap(ax4,'jet')
-        colormap(ax5,'jet')
+        colormap(ax2,cmap)
+        colormap(ax3,cmap)
+                colormap(ax4,cmap)
+        colormap(ax5,cmap)
 
-                colormap(ax6,'jet')
-        colormap(ax7,'jet')
+                colormap(ax6,cmap)
+        colormap(ax7,cmap)
 
-                colormap(ax8,'jet')
+                colormap(ax8,cmap)
 
+%% mean FR scatter
+subplot(9,col,[3 4]*col+4);
+scatters_fr(FRMapsm_L, {CxtList{1},CxtList{3}},start_index,end_index,clunits,thisRip.pRDI_L)
 
-        %%
+subplot(9,col,[5 6]*col+4);
+scatters_fr(FRMapsm_R, {CxtList{2},CxtList{4}},start_index,end_index,clunits,thisRip.pRDI_R)
+
+subplot(9,col,[7 8]*col+4);
+scatters_fr(FRMapsm_C, {'Left','Right'},start_index,end_index,clunits,thisRip.pRDI_C)
+        %% RDI bar graph
+subplot(9,col,[3 4]*col+5);
+bar_RDI(spks_epoch_u(:,8)+1,spks_epoch_u(:,5),clunits)
+
+subplot(9,col,[5 6]*col+5);
+bar_RDI(spks_epoch_u(:,8)+1,spks_epoch_u(:,6),clunits)
+
+subplot(9,col,[7 8]*col+5);
+bar_RDI(spks_epoch_u(:,8)+1,spks_epoch_u(:,7),clunits)
+        %% save fig
                 if thisRip.DecodingP_all<0.05, suf1='Replay'; else, suf1='x'; end
         if nanmin([thisRip.pRDI_L,thisRip.pRDI_R,thisRip.pRDI_C])<0.05, suf2='Bias'; else, suf2='x'; end
         
         ROOT.Fig_en = [ROOT.Fig '\' suf1 '_' suf2];
         if ~exist(ROOT.Fig_en), mkdir(ROOT.Fig_en); end
+        saveas(gca,[ROOT.Fig_en '\' num2str(RipplesTable.nRDIsMax(sid)) '_' thisRip.ID{1} '.svg'])
         saveas(gca,[ROOT.Fig_en '\' num2str(RipplesTable.nRDIsMax(sid)) '_' thisRip.ID{1} '.png'])
         close all
 
@@ -340,4 +376,50 @@ FRMap=FRMaps(:,:,id);
     catch
         close all
     end
+end
+
+function scatters_fr(FRMap, labels,start_index,end_index,clunits,p)
+x=[]; y=[];
+for i=1:size(FRMap,3)
+    if start_index(i)
+    x(i)= squeeze(nanmean(FRMap(1,start_index(i):end_index(i),i),2));
+    y(i)= squeeze(nanmean(FRMap(2,start_index(i):end_index(i),i),2));
+    else
+        x(i)= 0;
+        y(i)=0;
+    end
+end
+l=length(x);
+temp = [x',ones(l,1)+rand(l,1)*0.5-0.25 ; y',ones(l,1) *2.5+rand(l,1)*0.5-0.25];
+ c = [1:l,1:l]';
+ scatter(temp(:,2),temp(:,1),40,clunits(c,:),'filled','markerfacealpha',0.8)
+ hold on
+ for i=1:l
+     line([temp(i,2),temp(i+l,2)],[temp(i,1),temp(i+l,1)],'color',clunits(i,:),'linewidth',.2)
+ end
+ xlim([0 3]); xticks([1 2.5]); xticklabels(labels)
+ ylim([0.01 1])
+ ylabel('mean field FR (Norm.)')
+ set(gca,'fontsize',8,'fontweight','b')
+% [h,p] = ttest2(x,y);
+ if p<0.005
+     s='***';
+ elseif p<0.01
+     s='**';
+ elseif p<0.05
+     s='*';
+ else
+     s='n.s.';
+ end
+
+ text(1.75,.8,s,'fontsize',10,'fontweight','b')
+end
+
+function bar_RDI(x,y,clunits)
+b= barh(x,y);
+b.FaceColor = 'flat';
+b.CData= clunits;
+xlim([-1.2 1.2]); 
+yticks([1:max(x)+1]); yticklabels({})
+ set(gca,'fontsize',8,'fontweight','b')
 end
