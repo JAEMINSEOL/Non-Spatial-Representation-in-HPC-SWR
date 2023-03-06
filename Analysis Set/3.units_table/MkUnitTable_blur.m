@@ -17,6 +17,7 @@ try
 %     unit.PeakFR = ClusterList.onMazeMaxFR(idx);
     
     [c,d,~,~] = CalRDI_blur(thisCLID,ROOT,Behav,Spike);
+%         [c,d,~,~] = CalRDI(thisCLID,ROOT,Behav,Spike);
     unit.ReMap_No = c(1);
     unit.ReMap_Lo = c(2);
     unit.ReMap_Hi = c(3);
@@ -43,7 +44,7 @@ try
     UnitsTable=[UnitsTable;unit];
     
 catch
-    disp([unit.ID{1} ' is failed'])
+    disp([thisCLID ' is failed'])
 end
 end
 
