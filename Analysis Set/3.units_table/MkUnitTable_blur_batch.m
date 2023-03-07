@@ -37,7 +37,7 @@ for cid=1:size(Cluster_List,1)
         Spike = LoadSpikeData(ROOT, thisSID, TargetTT,Params.cellfindn);
         load([ROOT.Behav '\' thisSID '.mat'])
         
-        UnitsTable = MkUnitT able_blur(ROOT,Behav,Spike,id,thisRegion,TargetTT,Params);
+        UnitsTable = MkUnitTable_blur(ROOT,Behav,Spike,id,thisRegion,TargetTT,Params);
         
         save([ROOT.Unit '\' thisSID '.mat'], 'UnitsTable')
         UnitsTable_all = [UnitsTable_all; UnitsTable];
@@ -62,7 +62,7 @@ id = units.AvgFR>=10 & units.SpkWidth<325;
 units = units(~id,:);
 
 UnitsTable_filtered = units;
-writetable(UnitsTable_filtered,[ROOT.Unit '\UnitsTable_filtered_' thisRegion '.xlsx']);
+writetable(UnitsTable_filtered,[ROOT.Unit '\UnitsTable_filtered_' thisRegion '.xlsx'],'writemode','overwrite');
 
 % average firing rate during the outbound journey on the stem and arms >= 0.5Hz
 id = units.AvgFR>=0.5;
@@ -71,8 +71,8 @@ units = units(id,:);
 id = ismember(units.experimenter,exper2);
 units = units(id,:);
 
-id = strcmp(units.experimenter,'LSM') | abs(units.ReMap_No)>.5;
+id = nanmax(abs([units.ReMap_No units.ReMap_Lo units.ReMap_Hi]),[],2)>.5;
 units = units(id,:);
 
 UnitsTable_anal = units;
-writetable(UnitsTable_anal,[ROOT.Unit '\UnitsTable_' thisRegion '_forAnalysis.xlsx']);
+writetable(UnitsTable_anal,[ROOT.Unit '\UnitsTable_' thisRegion '_forAnalysis.xlsx'],'writemode','overwrite');

@@ -16,7 +16,7 @@ try
 %     unit.MeanFR = ClusterList.onMazeAvgFR(idx);
 %     unit.PeakFR = ClusterList.onMazeMaxFR(idx);
     
-    [c,d,~,~] = CalRDI_blur(thisCLID,ROOT,Behav,Spike);
+    [c,d,~,~,PeakField] = CalRDI_blur(thisCLID,ROOT,Behav,Spike);
 %         [c,d,~,~] = CalRDI(thisCLID,ROOT,Behav,Spike);
     unit.ReMap_No = c(1);
     unit.ReMap_Lo = c(2);
@@ -27,6 +27,8 @@ try
     unit.RDI_Lo = d(2);
     unit.RDI_Hi = d(3);
     unit.RDI_All = d(4);
+
+    unit.PeakBin = PeakField(1);
     
 %     temp = find(strcmp(unit.UnitID, table2cell(UnitSummary(:,1))));
 %     if ~isempty(temp)

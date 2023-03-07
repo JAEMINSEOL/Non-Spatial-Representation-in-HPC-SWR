@@ -17,9 +17,9 @@ try
 %     unit.PeakFR = ClusterList.onMazeMaxFR(idx);
     
     [c,d,~,~] = CalRDI(thisCLID,ROOT,Behav,Spike);
-    unit.ReMap_LScene = abs(c(1))<0.05;
-    unit.ReMap_RScene = abs(c(2))<0.05;
-    unit.ReMap_LR = abs(c(3))<0.05;
+    unit.ReMap_LScene = c(1);
+    unit.ReMap_RScene = c(2);
+    unit.ReMap_LR = c(3);
 
     unit.RDI_LScene = d(1);
     unit.RDI_RScene = d(2);
