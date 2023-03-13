@@ -4,7 +4,7 @@ ROOT.Save = [ROOT.Mother '\Processed Data'];
 ROOT.Rip0 = [ROOT.Mother '\Processed Data\ripples_mat\R0'];
 ROOT.Rip = [ROOT.Mother '\Processed Data\ripples_mat\R3'];
 ROOT.Rip4 = [ROOT.Mother '\Processed Data\ripples_mat\R4_10ms'];
-ROOT.Fig3 = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R11_AI'];
+ROOT.Fig3 = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R11_wrong'];
 ROOT.Units = [ROOT.Mother '\Processed Data\units_mat\U1'];
 ROOT.Behav = [ROOT.Mother '\Processed Data\behavior_mat'];
 
@@ -34,13 +34,13 @@ dur = 0.4*Params.Fs;
 thisFRMapSCALE=2;
 Params.tbinDuration = 0.005;
 %%
-for sid=93:size(RipplesTable,1)
+for sid=1:size(RipplesTable,1)
     try
         thisRip = RipplesTable(sid,:);
-        %         if thisRip.rat~=80, continue; end
+                if thisRip.correctness==1, continue; end
         thisRID = jmnum2str(thisRip.rat,3);
         thisSID = jmnum2str(thisRip.session,2);
-
+%         if strcmp(thisRID,'561'), continue; end
    
 
 
@@ -51,7 +51,7 @@ for sid=93:size(RipplesTable,1)
         Exper = cell2mat(thisRip.experimenter);
         if ~ismember(Exper,Experimenter), continue; end
         thisRSID = [jmnum2str(thisRip.rat,3) '-' jmnum2str(thisRip.session,2)];
-%         if ~strcmp(thisRSID(1:3),'561'), continue; end
+
 
         if ~strcmp(thisRSID, thisRSID_old)
                  Pos = load([ROOT.Raw.Mother '\rat' thisRID '\rat' thisRID '-' thisSID '\ParsedPosition.mat']);
@@ -179,14 +179,20 @@ for sid=93:size(RipplesTable,1)
         id = spks_epoch_u(:,2);
 FRMap=FRMaps(:,:,id);
  FRMap=FRMap(:,:,ord);
+ if ~max(max(max(~isnan(FRMap(:,43:end,:)))))
  FRMap=FRMap(:,1:42,:);
+ end
 %% smooth FRMap
        FRMap_A = FRMap(1,:,:);FRMap_L=FRMap(2:3,:,:);FRMap_R=FRMap(4:5,:,:);FRMap_C=FRMap(6:7,:,:);
        FRMapsm_A=[]; FRMapsm_L=[]; FRMapsm_R=[]; FRMapsm_C=[];
        start_index=[]; end_index = [];
         for i=1:size(FRMap,3)
+            try
             [field_count, start_index(i), end_index(i), field_size, h] = field_boundary_function_jm(FRMap(1,:,i),0.25);
-
+            catch
+                start_index(i) = 0;
+                end_index(i)=0;
+            end
             FRMap_A(:,:,i)  = FRMap_A(:,:,i)/max(max(max(FRMap_A(:,:,i))));
             FRMap_L(:,:,i)  = FRMap_L(:,:,i)/max(max(max(FRMap_L(:,:,i))));
             FRMap_R(:,:,i)  = FRMap_R(:,:,i)/max(max(max(FRMap_R(:,:,i))));
@@ -216,7 +222,7 @@ FRMap=FRMaps(:,:,id);
             if thisRip.area==5, thisRip.area=0; end
         end
         cxt = CxtList{thisRip.context};
-        if thisRip.correctness, corr='Correct'; else, corr='Wrong'; end
+        if thisRip.correctness==1, corr='Correct'; else, corr='Wrong'; end
         title(['trial ' (thisRip.trial{1}(end-2:end)) ', ' cxt ', ' corr],'fontsize',15)
         axis off
         %% EEG
@@ -271,7 +277,7 @@ FRMap=FRMaps(:,:,id);
         line([.5 .5], [0 pbinN], 'color','r','linestyle','--')
         line([tbinN tbinN], [0 pbinN], 'color','r','linestyle','--')
 
-        xlim([-marR tbinN+marR]+0.5);
+        xlim([-.25 tbinN+.5]);
         ylim([0 pbinN]+0.5);
         set(gca, 'xtick', [0 tbinN]+0.5, 'xticklabel', {'0' [jjnum2str(thisRip.RippleDuration*1e3,1) 'ms']}, 'Fontsize', 10);
         set(gca,  'ytick', [0 stem_end_index pbinN]+0.5, 'yticklabel', {'Stbox', 'Dv', 'Fw'}, 'Fontsize', 10);
@@ -292,6 +298,7 @@ FRMap=FRMaps(:,:,id);
         if temp(1)<0, temp(1)=0; end
         if temp(2)<0, temp(2)=0; end
         slope = abs(temp(1)-temp(2));
+        text(mean(x),mean(v_temp(i) * x + c_temp(i))*1.1,jjnum2str(thisRip.DecodingP_all,2))
         hold off;
 
         %% Reactivated cells
@@ -299,37 +306,37 @@ FRMap=FRMaps(:,:,id);
         cmap = flipud(gray);
         cmap='jet';
         ax2 = subplot(9,col,[1 2]*col+2);
-        fig = popul_FRMap(flip(squeeze(FRMapsm_A(1,:,:))'),Units,[0 stem_end_index 42],{' ', ' ',' '}, 1);
+        fig = popul_FRMap(flip(squeeze(FRMapsm_A(1,:,:))'),Units,[0 stem_end_index size(FRMap,2)],{' ', ' ',' '}, 1);
         line([stem_end_index stem_end_index],[0 size(FRMap,3)+1],'color','w','linestyle','--')
          title('Overall')
 
         ax3 = subplot(9,col,[3 4]*col+2);
-        fig = popul_FRMap(flip(squeeze(FRMapsm_L(1,:,:))'),Units,[0 stem_end_index 42],{' ', ' ',' '}, 0);
+        fig = popul_FRMap(flip(squeeze(FRMapsm_L(1,:,:))'),Units,[0 stem_end_index size(FRMap,2)],{' ', ' ',' '}, 0);
         line([stem_end_index stem_end_index],[0 size(FRMap,3)+1],'color','w','linestyle','--')
         title('Zebra')
 
         ax4 = subplot(9,col,[3 4]*col+3);
-        fig = popul_FRMap(flip(squeeze(FRMapsm_L(2,:,:))'),Units,[0 stem_end_index 45],{' ', ' ',' '}, 0);
+        fig = popul_FRMap(flip(squeeze(FRMapsm_L(2,:,:))'),Units,[0 stem_end_index size(FRMap,2)],{' ', ' ',' '}, 0);
         line([stem_end_index stem_end_index],[0 size(FRMap,3)+1],'color','w','linestyle','--')
          title('Bamboo')
 
         ax5 = subplot(9,col,[5 6]*col+2);
-        fig = popul_FRMap(flip(squeeze(FRMapsm_R(1,:,:))'),Units,[0 stem_end_index 42],{' ', ' ',' '}, 0);
+        fig = popul_FRMap(flip(squeeze(FRMapsm_R(1,:,:))'),Units,[0 stem_end_index size(FRMap,2)],{' ', ' ',' '}, 0);
         line([stem_end_index stem_end_index],[0 size(FRMap,3)+1],'color','w','linestyle','--')
          title('Pebbles')
 
         ax6 = subplot(9,col,[5 6]*col+3);
-        fig = popul_FRMap(flip(squeeze(FRMapsm_R(2,:,:))'),Units,[0 stem_end_index 42],{' ', ' ',' '}, 0);
+        fig = popul_FRMap(flip(squeeze(FRMapsm_R(2,:,:))'),Units,[0 stem_end_index size(FRMap,2)],{' ', ' ',' '}, 0);
         line([stem_end_index stem_end_index],[0 size(FRMap,3)+1],'color','w','linestyle','--')
          title('Mountain')
 
         ax7 = subplot(9,col,[7 8]*col+2);
-        fig = popul_FRMap(flip(squeeze(FRMapsm_C(1,:,:))'),Units,[0 stem_end_index 42],{'Stbox', 'Dv','Fw'}, 0);
+        fig = popul_FRMap(flip(squeeze(FRMapsm_C(1,1:stem_end_index,:))'),Units,[0 stem_end_index],{'Stbox', 'Dv'}, 0);
         line([stem_end_index stem_end_index],[0 size(FRMap,3)+1],'color','w','linestyle','--')
         title('Left')
 
         ax8 = subplot(9,col,[7 8]*col+3);
-        fig = popul_FRMap(flip(squeeze(FRMapsm_C(2,:,:))'),Units,[0 stem_end_index 42],{'Stbox', 'Dv','Fw'}, 0);
+        fig = popul_FRMap(flip(squeeze(FRMapsm_C(2,1:stem_end_index,:))'),Units,[0 stem_end_index],{'Stbox', 'Dv'}, 0);
         line([stem_end_index stem_end_index],[0 size(FRMap,3)+1],'color','w','linestyle','--')
          title('Right')
 
