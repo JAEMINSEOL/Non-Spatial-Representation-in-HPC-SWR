@@ -188,7 +188,7 @@ FRMap=FRMaps(:,:,id);
        start_index=[]; end_index = [];
         for i=1:size(FRMap,3)
             try
-            [field_count, start_index(i), end_index(i), field_size, h] = field_boundary_function_jm(FRMap(1,:,i),0.25);
+            [field_count, start_index(i), end_index(i), field_size] = field_boundary_function_jm(FRMap(1,:,i),0.25);
             catch
                 start_index(i) = 0;
                 end_index(i)=0;
