@@ -86,57 +86,57 @@ SessionTable.Wrong_Replays(sid) = sum(ismember(thisSripples.tr_temp,find(~cid))&
 SessionTable.Correct_SceneB(sid) = sum(ismember(thisSripples.tr_temp,find(cid)) & thisSripples.SceneBias);
 SessionTable.Wrong_SceneB(sid) = sum(ismember(thisSripples.tr_temp,find(~cid)) & thisSripples.SceneBias);
 
-% SessionTable.Bef_Correct_SceneB(sid) = sum(ismember(thisSripples.tr_temp+1,find(cid)) & thisSripples.SceneBias);
-% SessionTable.Bef_Wrong_SceneB(sid) = sum(ismember(thisSripples.tr_temp+1,find(~cid)) & thisSripples.SceneBias);
-% 
+SessionTable.Bef_Correct_SceneB(sid) = sum(ismember(thisSripples.tr_temp+1,find(cid)) & thisSripples.SceneBias);
+SessionTable.Bef_Wrong_SceneB(sid) = sum(ismember(thisSripples.tr_temp+1,find(~cid)) & thisSripples.SceneBias);
+
 
 SessionTable.Correct_ChoiceB(sid) = sum(ismember(thisSripples.tr_temp,find(cid)) & thisSripples.ChoiceBias);
 SessionTable.Wrong_ChoiceB(sid) = sum(ismember(thisSripples.tr_temp,find(~cid)) & thisSripples.ChoiceBias);
 
-% SessionTable.Bef_Correct_ChoiceB(sid) = sum(ismember(thisSripples.tr_temp+1,find(cid)) & thisSripples.ChoiceBias);
-% SessionTable.Bef_Wrong_ChoiceB(sid) = sum(ismember(thisSripples.tr_temp+1,find(~cid)) & thisSripples.ChoiceBias);
-% 
+SessionTable.Bef_Correct_ChoiceB(sid) = sum(ismember(thisSripples.tr_temp+1,find(cid)) & thisSripples.ChoiceBias);
+SessionTable.Bef_Wrong_ChoiceB(sid) = sum(ismember(thisSripples.tr_temp+1,find(~cid)) & thisSripples.ChoiceBias);
+
 
 SessionTable.Correct_SReplays(sid) = sum(ismember(thisSripples.tr_temp,find(cid)) & thisSripples.Decoding_All & thisSripples.SceneBias);
 SessionTable.Wrong_SReplays(sid) = sum(ismember(thisSripples.tr_temp,find(~cid))& thisSripples.Decoding_All & thisSripples.SceneBias);
 
-% SessionTable.Bef_Correct_SReplays(sid) = sum(ismember(thisSripples.tr_temp+1,find(cid)) & thisSripples.Decoding_All & thisSripples.SceneBias);
-% SessionTable.Bef_Wrong_SReplays(sid) = sum(ismember(thisSripples.tr_temp+1,find(~cid)) & thisSripples.Decoding_All & thisSripples.SceneBias);
-% 
+SessionTable.Bef_Correct_SReplays(sid) = sum(ismember(thisSripples.tr_temp+1,find(cid)) & thisSripples.Decoding_All & thisSripples.SceneBias);
+SessionTable.Bef_Wrong_SReplays(sid) = sum(ismember(thisSripples.tr_temp+1,find(~cid)) & thisSripples.Decoding_All & thisSripples.SceneBias);
+
 
 SessionTable.Correct_CReplays(sid) = sum(ismember(thisSripples.tr_temp,find(cid)) & thisSripples.Decoding_All & thisSripples.ChoiceBias);
 SessionTable.Wrong_CReplays(sid) = sum(ismember(thisSripples.tr_temp,find(~cid))& thisSripples.Decoding_All & thisSripples.ChoiceBias);
 
-% SessionTable.Bef_Correct_CReplays(sid) = sum(ismember(thisSripples.tr_temp+1,find(cid)) & thisSripples.Decoding_All & thisSripples.ChoiceBias);
-% SessionTable.Bef_Wrong_CReplays(sid) = sum(ismember(thisSripples.tr_temp+1,find(~cid)) & thisSripples.Decoding_All & thisSripples.ChoiceBias);
+SessionTable.Bef_Correct_CReplays(sid) = sum(ismember(thisSripples.tr_temp+1,find(cid)) & thisSripples.Decoding_All & thisSripples.ChoiceBias);
+SessionTable.Bef_Wrong_CReplays(sid) = sum(ismember(thisSripples.tr_temp+1,find(~cid)) & thisSripples.Decoding_All & thisSripples.ChoiceBias);
 
 Trials.context(length(cid)+1)=nan;
 SessionTable.Correct_SMatch(sid) = sum(ismember(thisSripples.tr_temp,find(cid)) &...
     (thisSripples.SceneBias==Trials.context(thisSripples.tr_temp)));
 SessionTable.Wrong_SMatch(sid) = sum(ismember(thisSripples.tr_temp,find(~cid))&...
     (thisSripples.SceneBias==Trials.context(thisSripples.tr_temp)));
-% SessionTable.Bef_Correct_SMatch(sid) = sum(ismember(thisSripples.tr_temp+1,find(cid)) &...
-%     (thisSripples.SceneBias==Trials.context(thisSripples.tr_temp+1)));
-% SessionTable.Bef_Wrong_SMatch(sid) = sum(ismember(thisSripples.tr_temp+1,find(~cid)) &...
-%     (thisSripples.SceneBias==Trials.context(thisSripples.tr_temp+1)));
+SessionTable.Bef_Correct_SMatch(sid) = sum(ismember(thisSripples.tr_temp+1,find(cid)) &...
+    (thisSripples.SceneBias==Trials.context(thisSripples.tr_temp+1)));
+SessionTable.Bef_Wrong_SMatch(sid) = sum(ismember(thisSripples.tr_temp+1,find(~cid)) &...
+    (thisSripples.SceneBias==Trials.context(thisSripples.tr_temp+1)));
 
 SessionTable.Correct_CMatch(sid) = sum(ismember(thisSripples.tr_temp,find(cid)) &...
     (thisSripples.ChoiceBias==Trials.choice_side(thisSripples.tr_temp)));
 SessionTable.Wrong_CMatch(sid) = sum(ismember(thisSripples.tr_temp,find(~cid))&...
     (thisSripples.ChoiceBias==Trials.choice_side(thisSripples.tr_temp)));
-% SessionTable.Bef_Correct_CMatch(sid) = sum(ismember(thisSripples.tr_temp+1,find(cid)) &...
-%     (thisSripples.ChoiceBias==Trials.choice_side(thisSripples.tr_temp+1)));
-% SessionTable.Bef_Wrong_CMatch(sid) = sum(ismember(thisSripples.tr_temp+1,find(~cid)) &...
-%     (thisSripples.ChoiceBias==Trials.choice_side(thisSripples.tr_temp+1)));
+SessionTable.Bef_Correct_CMatch(sid) = sum(ismember(thisSripples.tr_temp+1,find(cid)) &...
+    (thisSripples.ChoiceBias==Trials.choice_side(thisSripples.tr_temp+1)));
+SessionTable.Bef_Wrong_CMatch(sid) = sum(ismember(thisSripples.tr_temp+1,find(~cid)) &...
+    (thisSripples.ChoiceBias==Trials.choice_side(thisSripples.tr_temp+1)));
 
 SessionTable.Correct_CMatch_correct(sid) = sum(ismember(thisSripples.tr_temp,find(cid)) &...
    (thisSripples.ChoiceBias==Trials.choice_correct(thisSripples.tr_temp)));
 SessionTable.Wrong_CMatch_correct(sid) = sum(ismember(thisSripples.tr_temp,find(~cid))&...
     (thisSripples.ChoiceBias==Trials.choice_correct(thisSripples.tr_temp)));
-% SessionTable.Bef_Correct_CMatch_correct(sid) = sum(ismember(thisSripples.tr_temp+1,find(cid)) &...
-%     (thisSripples.ChoiceBias==Trials.choice_correct(thisSripples.tr_temp+1)));
-% SessionTable.Bef_Wrong_CMatch_correct(sid) = sum(ismember(thisSripples.tr_temp+1,find(~cid)) &...
-%     (thisSripples.ChoiceBias==Trials.choice_correct(thisSripples.tr_temp+1)));
+SessionTable.Bef_Correct_CMatch_correct(sid) = sum(ismember(thisSripples.tr_temp+1,find(cid)) &...
+    (thisSripples.ChoiceBias==Trials.choice_correct(thisSripples.tr_temp+1)));
+SessionTable.Bef_Wrong_CMatch_correct(sid) = sum(ismember(thisSripples.tr_temp+1,find(~cid)) &...
+    (thisSripples.ChoiceBias==Trials.choice_correct(thisSripples.tr_temp+1)));
 end
 
 % writetable(SessionTable,[ROOT.Save '\SessionCountTable_' thisRegion '_forAnalysis_RDI.xlsx']);
@@ -226,6 +226,10 @@ bar2(RC.MeanFreq,RW.MeanFreq,'Frequency (Hz)')
 %%
 figure('position',[680,462,459,516]);
 bar2((RC.abs_mRDI_C),abs(RW.abs_mRDI_C),'Choice selectivity (abs mean)')
+figure('position',[680,462,459,516]);
+bar2((RC.abs_mRDI_L),abs(RW.abs_mRDI_L),'Sl selectivity (abs mean)')
+figure('position',[680,462,459,516]);
+bar2((RC.abs_mRDI_R),abs(RW.abs_mRDI_R),'Sr selectivity (abs mean)')
 
 figure('position',[680,462,459,516]);
 bar2((RC.mRDI_C),(RW.mRDI_C),'Choice selectivity (mean)')
