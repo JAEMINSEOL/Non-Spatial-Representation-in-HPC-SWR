@@ -1,4 +1,4 @@
-function [thisRID,thisSID,thisTTID,thisCLID,d] = parsing_clusterID(clusterID);
+function [thisRID,thisSID,thisTTID,thisCLID] = parsing_clusterID(clusterID,d)
 
 hyp = find(clusterID=='-');
 
