@@ -51,14 +51,19 @@ for cid = 1:size(Cluster_List,1)
 
                     if (thisFieldMap.onmazeAvgFR1D(1)+thisFieldMap.onmazeAvgFR1D(2))>(thisFieldMap.onmazeAvgFR1D(3)+thisFieldMap.onmazeAvgFR1D(4)),...
                             Cluster_List_thisF.RDI_LR = thisFieldMap.d(3); else, Cluster_List_thisF.RDI_LR = -thisFieldMap.d(3); end
+                    
+                    Cluster_List_thisF.PeakBin = thisFieldMap.COM(1);
+                    Cluster_List_thisF.onMazeMaxFR_field = thisFieldMap.onmazeMaxFR1D(1);
+                    
                     else
                         Cluster_List_thisF.RDI_LScene =nan;
                         Cluster_List_thisF.RDI_RScene =nan;
                         Cluster_List_thisF.RDI_LR =nan;
+                        Cluster_List_thisF.PeakBin = nan;
+                    Cluster_List_thisF.onMazeMaxFR_field = thisFieldMap.onmazeMaxFR1D(1);
                     end
 
-                    Cluster_List_thisF.PeakBin = thisFieldMap.COM(1);
-                    Cluster_List_thisF.onMazeMaxFR_field = thisFieldMap.onmazeMaxFR1D(1);
+                    
 
                     Cluster_List_Field = [Cluster_List_Field;Cluster_List_thisF];
                     Cluster_List_thisS = [Cluster_List_thisS; Cluster_List_thisF];
