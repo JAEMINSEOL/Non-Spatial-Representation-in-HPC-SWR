@@ -10,7 +10,7 @@ ClusterList_SM= readtable([ROOT.Info '\result csv field_property_FR-TP(master sh
 TargRegion = 'SUB';
 exper = {'LSM'};
 
-Cluster_List = readtable([ROOT.Info '\ClusterList_SWR_' TargRegion '_filtered.xlsx']);
+Cluster_List = readtable([ROOT.Info '\ClusterList_SWR_' TargRegion '.xlsx']);
 Cluster_List_Field = table;
 
 for cid = 1:size(Cluster_List,1)
@@ -20,11 +20,14 @@ for cid = 1:size(Cluster_List,1)
             [thisRID,thisSID,thisTTID,thisCLID,~] = parsing_clusterID(clusterID,1);
             thisSID = jmnum2str(str2double(thisSID),2);
 
+             id = find(strcmp([thisRID '-' thisSID '-' thisTTID '-' jmnum2str(str2double(thisCLID),2)],ClusterList_SM.clusterID)); 
+                        if ~isempty(id),id=id(1); end
+
             fid = dir([ROOT.Raw.Mother '\rat' thisRID '\rat' thisRID '-' thisSID '\TT' thisTTID]);
             numf=0;
             for f=1:size(fid,1)
                 thisid = fid(f).name;
-                if contains(thisid,['parsedSpike_' thisCLID])
+                if contains(thisid,['parsedSpike_' thisCLID '_'])
                     if ~isempty(find(thisid=='f'))
                         numf = str2double(thisid(find(thisid=='f')+1));
                     end
@@ -34,36 +37,64 @@ for cid = 1:size(Cluster_List,1)
 
             if numf>0
                 for f = 1:numf
+                    if f>numf, break; end
                     load([ROOT.Raw.Mother '\rat' thisRID '\rat' thisRID '-' thisSID '\TT' thisTTID '\parsedSpike_' thisCLID '_f' num2str(f) '.mat'])
-                    Cluster_List_thisF =Cluster_List(cid,:);
+                    Cluster_List_thisF =Cluster_List(cid,1:19);
                     Cluster_List_thisF.ID = [clusterID '-' num2str(f)];
-                    Cluster_List_thisF(1,2:end) = Cluster_List(cid,2:end);
+%                     Cluster_List_thisF(1,2:end) = Cluster_List(cid,2:end);
                     Cluster_List_thisF.ReMap_LScene =nan;
                     Cluster_List_thisF.ReMap_RScene =nan;
                     Cluster_List_thisF.ReMap_LR =nan;
-                    
+
                     if isfield(thisFieldMap,'d')
-                    if thisFieldMap.onmazeAvgFR1D(1)>thisFieldMap.onmazeAvgFR1D(2),...
-                            Cluster_List_thisF.RDI_LScene = thisFieldMap.d(1); else, Cluster_List_thisF.RDI_LScene = -thisFieldMap.d(1); end
+                        if thisFieldMap.onmazeAvgFR1D(1)>thisFieldMap.onmazeAvgFR1D(2),...
+                                Cluster_List_thisF.RDI_LScene = thisFieldMap.d(1); else, Cluster_List_thisF.RDI_LScene = -thisFieldMap.d(1); end
 
-                    if thisFieldMap.onmazeAvgFR1D(3)>thisFieldMap.onmazeAvgFR1D(4),...
-                            Cluster_List_thisF.RDI_RScene = thisFieldMap.d(2); else, Cluster_List_thisF.RDI_RScene = -thisFieldMap.d(2); end
+                        if thisFieldMap.onmazeAvgFR1D(3)>thisFieldMap.onmazeAvgFR1D(4),...
+                                Cluster_List_thisF.RDI_RScene = thisFieldMap.d(2); else, Cluster_List_thisF.RDI_RScene = -thisFieldMap.d(2); end
 
-                    if (thisFieldMap.onmazeAvgFR1D(1)+thisFieldMap.onmazeAvgFR1D(2))>(thisFieldMap.onmazeAvgFR1D(3)+thisFieldMap.onmazeAvgFR1D(4)),...
-                            Cluster_List_thisF.RDI_LR = thisFieldMap.d(3); else, Cluster_List_thisF.RDI_LR = -thisFieldMap.d(3); end
-                    
-                    Cluster_List_thisF.PeakBin = thisFieldMap.COM(1);
-                    Cluster_List_thisF.onMazeMaxFR_field = thisFieldMap.onmazeMaxFR1D(1);
-                    
+                        if (thisFieldMap.onmazeAvgFR1D(1)+thisFieldMap.onmazeAvgFR1D(2))>(thisFieldMap.onmazeAvgFR1D(3)+thisFieldMap.onmazeAvgFR1D(4)),...
+                                Cluster_List_thisF.RDI_LR = thisFieldMap.d(3); else, Cluster_List_thisF.RDI_LR = -thisFieldMap.d(3); end
+
+
+
                     else
-                        Cluster_List_thisF.RDI_LScene =nan;
-                        Cluster_List_thisF.RDI_RScene =nan;
-                        Cluster_List_thisF.RDI_LR =nan;
-                        Cluster_List_thisF.PeakBin = nan;
-                    Cluster_List_thisF.onMazeMaxFR_field = thisFieldMap.onmazeMaxFR1D(1);
+                        if ~isempty(id)
+                          if thisFieldMap.onmazeAvgFR1D(1)>thisFieldMap.onmazeAvgFR1D(2),...
+                                Cluster_List_thisF.RDI_LScene = thisFieldMap.RMI(1); else, Cluster_List_thisF.RDI_LScene = -thisFieldMap.RMI(1); end
+
+                        if thisFieldMap.onmazeAvgFR1D(3)>thisFieldMap.onmazeAvgFR1D(4),...
+                                Cluster_List_thisF.RDI_RScene = thisFieldMap.RMI(2); else, Cluster_List_thisF.RDI_RScene = -thisFieldMap.RMI(2); end
+
+                        if (thisFieldMap.onmazeAvgFR1D(1)+thisFieldMap.onmazeAvgFR1D(2))>(thisFieldMap.onmazeAvgFR1D(3)+thisFieldMap.onmazeAvgFR1D(4)),...
+                                Cluster_List_thisF.RDI_LR = thisFieldMap.RMI(3); else, Cluster_List_thisF.RDI_LR = -thisFieldMap.RMI(3); end
+
+                        else
+                            Cluster_List_thisF.RDI_LScene=nan;
+                            Cluster_List_thisF.RDI_RScene = nan;
+                            Cluster_List_thisF.RDI_LR = nan;
+                        end
+
                     end
 
-                    
+                    if isfield(thisFieldMap,'COM') & numf>1
+
+                        Cluster_List_thisF.PeakBin = thisFieldMap.COM(1);
+                        Cluster_List_thisF.onMazeMaxFR_field = thisFieldMap.onmazeMaxFR1D(1);
+                    else
+                        if ~isempty(id)
+
+                        Cluster_List_thisF.PeakBin = ClusterList_SM.COM(id);
+                        Cluster_List_thisF.onMazeMaxFR_field = ClusterList_SM.peakFR(id);
+                        Cluster_List_thisF.SI = ClusterList_SM.SIScore(id);
+
+                        else
+                            Cluster_List_thisF.PeakBin = nan;
+                        Cluster_List_thisF.onMazeMaxFR_field = 0;
+                        end
+
+
+                    end
 
                     Cluster_List_Field = [Cluster_List_Field;Cluster_List_thisF];
                     Cluster_List_thisS = [Cluster_List_thisS; Cluster_List_thisF];
@@ -74,7 +105,7 @@ for cid = 1:size(Cluster_List,1)
                 try
                     load([ROOT.phase '\rat' thisRID '-' thisSID '-' thisTTID '-' jmnum2str(str2double(thisCLID),2) '.mat'])
                     thisFieldMap = thisFieldMap{1};
-                    Cluster_List_thisF =Cluster_List(cid,:);
+                    Cluster_List_thisF =Cluster_List(cid,1:19);
                     Cluster_List_thisF.ID = [clusterID '-1'];
                     Cluster_List_thisF.ReMap_LScene =nan;
                     Cluster_List_thisF.ReMap_RScene =nan;
@@ -89,14 +120,14 @@ for cid = 1:size(Cluster_List,1)
                             Cluster_List_thisF.RDI_LR = thisFieldMap.d(3); else, Cluster_List_thisF.RDI_LR = -thisFieldMap.d(3); end
 
 
-                    
+
                     Cluster_List_thisF.PeakBin = thisFieldMap.COM(1);
                     Cluster_List_thisF.onMazeMaxFR_field = thisFieldMap.onmazeMaxFR1D(1);
 
                     save([ROOT.Raw.Map '/rat' thisRID '-' thisSID '-' num2str(thisTTID) '-' jmnum2str(str2double(thisCLID),2) '-' jmnum2str(1,2) '.mat'],'-struct','thisFieldMap')
                 catch
-%                     find(strcmp([thisRID '-' thisSID '-' num2str(thisTTID) '-' jmnum2str(str2double(thisCLID),2)], ClusterList_SM.clusterID))
-                    Cluster_List_thisF =Cluster_List(cid,:);
+                    %                     find(strcmp([thisRID '-' thisSID '-' num2str(thisTTID) '-' jmnum2str(str2double(thisCLID),2)], ClusterList_SM.clusterID))
+                    Cluster_List_thisF =Cluster_List(cid,1:19);
                     Cluster_List_thisF.ID = [clusterID '-1'];
                     Cluster_List_thisF.ReMap_LScene =nan;
                     Cluster_List_thisF.ReMap_RScene =nan;
@@ -129,8 +160,10 @@ for cid = 1:size(Cluster_List,1)
     [~,t] = max(abs(Cluster_List_thisS.RDI_LR));
     Cluster_List.RDI_LR(cid) = Cluster_List_thisS.RDI_LR(t);
 
-        [~,t] = max(abs(Cluster_List_thisS.onMazeMaxFR_field));
+    [~,t] = max(abs(Cluster_List_thisS.onMazeMaxFR_field));
     Cluster_List.PeakBin(cid) = Cluster_List_thisS.PeakBin(t);
+
+    Cluster_List.NumField(cid) = size(Cluster_List_thisS,1);
 
 end
 Cluster_List(isnan(Cluster_List.RDI_LScene),:)=[];
