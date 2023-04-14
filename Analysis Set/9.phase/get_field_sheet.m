@@ -11,6 +11,8 @@ TargRegion = 'SUB';
 exper = {'LSM'};
 
 Cluster_List = readtable([ROOT.Info '\ClusterList_SWR_' TargRegion '.xlsx']);
+Cluster_List_p = Cluster_List;
+Cluster_List_n = Cluster_List;
 Cluster_List_Field = table;
 
 for cid = 1:size(Cluster_List,1)
@@ -110,13 +112,13 @@ for cid = 1:size(Cluster_List,1)
                     Cluster_List_thisF.ReMap_LScene =nan;
                     Cluster_List_thisF.ReMap_RScene =nan;
                     Cluster_List_thisF.ReMap_LR =nan;
-                    if thisFieldMap.onmazeAvgFR1D(1)>thisFieldMap.onmazeAvgFR1D(2),...
+                    if thisFieldMap.onmazeAvgFR1D(2)>thisFieldMap.onmazeAvgFR1D(3),...
                             Cluster_List_thisF.RDI_LScene = thisFieldMap.d(1); else, Cluster_List_thisF.RDI_LScene = -thisFieldMap.d(1); end
 
-                    if thisFieldMap.onmazeAvgFR1D(3)>thisFieldMap.onmazeAvgFR1D(4),...
+                    if thisFieldMap.onmazeAvgFR1D(4)>thisFieldMap.onmazeAvgFR1D(5),...
                             Cluster_List_thisF.RDI_RScene = thisFieldMap.d(2); else, Cluster_List_thisF.RDI_RScene = -thisFieldMap.d(2); end
 
-                    if (thisFieldMap.onmazeAvgFR1D(1)+thisFieldMap.onmazeAvgFR1D(2))>(thisFieldMap.onmazeAvgFR1D(3)+thisFieldMap.onmazeAvgFR1D(4)),...
+                    if (thisFieldMap.onmazeAvgFR1D(2)+thisFieldMap.onmazeAvgFR1D(3))>(thisFieldMap.onmazeAvgFR1D(4)+thisFieldMap.onmazeAvgFR1D(5)),...
                             Cluster_List_thisF.RDI_LR = thisFieldMap.d(3); else, Cluster_List_thisF.RDI_LR = -thisFieldMap.d(3); end
 
 
@@ -146,7 +148,8 @@ for cid = 1:size(Cluster_List,1)
 
         end
     end
-
+%%
+    
     Cluster_List.ReMap_LScene(cid) =nan;
     Cluster_List.ReMap_RScene(cid) =nan;
     Cluster_List.ReMap_LR(cid) =nan;
@@ -164,10 +167,50 @@ for cid = 1:size(Cluster_List,1)
     Cluster_List.PeakBin(cid) = Cluster_List_thisS.PeakBin(t);
 
     Cluster_List.NumField(cid) = size(Cluster_List_thisS,1);
+%%
+        Cluster_List_p.ReMap_LScene(cid) =nan;
+    Cluster_List_p.ReMap_RScene(cid) =nan;
+    Cluster_List_p.ReMap_LR(cid) =nan;
+
+    [~,t] = max((Cluster_List_thisS.RDI_LScene));
+    Cluster_List_p.RDI_LScene(cid) = Cluster_List_thisS.RDI_LScene(t);
+
+    [~,t] = max((Cluster_List_thisS.RDI_RScene));
+    Cluster_List_p.RDI_RScene(cid) = Cluster_List_thisS.RDI_RScene(t);
+
+    [~,t] = max((Cluster_List_thisS.RDI_LR));
+    Cluster_List_p.RDI_LR(cid) = Cluster_List_thisS.RDI_LR(t);
+
+    [~,t] = max(abs(Cluster_List_thisS.onMazeMaxFR_field));
+    Cluster_List_p.PeakBin(cid) = Cluster_List_thisS.PeakBin(t);
+
+    Cluster_List_p.NumField(cid) = size(Cluster_List_thisS,1);
+%%
+        Cluster_List_n.ReMap_LScene(cid) =nan;
+    Cluster_List_n.ReMap_RScene(cid) =nan;
+    Cluster_List_n.ReMap_LR(cid) =nan;
+
+    [~,t] = min((Cluster_List_thisS.RDI_LScene));
+    Cluster_List_n.RDI_LScene(cid) = Cluster_List_thisS.RDI_LScene(t);
+
+    [~,t] = min((Cluster_List_thisS.RDI_RScene));
+    Cluster_List_n.RDI_RScene(cid) = Cluster_List_thisS.RDI_RScene(t);
+
+    [~,t] = min((Cluster_List_thisS.RDI_LR));
+    Cluster_List_n.RDI_LR(cid) = Cluster_List_thisS.RDI_LR(t);
+
+    [~,t] = max(abs(Cluster_List_thisS.onMazeMaxFR_field));
+    Cluster_List_n.PeakBin(cid) = Cluster_List_thisS.PeakBin(t);
+
+    Cluster_List_n.NumField(cid) = size(Cluster_List_thisS,1);
 
 end
 Cluster_List(isnan(Cluster_List.RDI_LScene),:)=[];
+Cluster_List_p(isnan(Cluster_List_p.RDI_LScene),:)=[];
+Cluster_List_n(isnan(Cluster_List_n.RDI_LScene),:)=[];
 Cluster_List_Field(isnan(Cluster_List_Field.RDI_LScene),:)=[];
 
-writetable(Cluster_List,[ROOT.Save '\ClusterList_SWR_' TargRegion '_forAnalysis.xlsx'],'writemode','overwrite');
-writetable(Cluster_List_Field,[ROOT.Save '\ClusterList_SWR_' TargRegion '_field_forAnalysis.xlsx'],'writemode','overwrite');
+writetable(Cluster_List,[ROOT.Save '\UnitsTable_' TargRegion '_forAnalysis.xlsx'],'writemode','overwrite');
+writetable(Cluster_List_p,[ROOT.Save '\UnitsTable_' TargRegion '_p_forAnalysis.xlsx'],'writemode','overwrite');
+writetable(Cluster_List_n,[ROOT.Save '\UnitsTable_' TargRegion '_n_forAnalysis.xlsx'],'writemode','overwrite');
+writetable(Cluster_List_Field,[ROOT.Save '\UnitsTable_' TargRegion '_field_forAnalysis.xlsx'],'writemode','overwrite');
