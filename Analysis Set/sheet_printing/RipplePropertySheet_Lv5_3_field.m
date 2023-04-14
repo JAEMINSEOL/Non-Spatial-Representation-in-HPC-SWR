@@ -4,7 +4,7 @@ ROOT.Save = [ROOT.Mother '\Processed Data'];
 ROOT.Rip0 = [ROOT.Mother '\Processed Data\ripples_mat\R0'];
 ROOT.Rip = [ROOT.Mother '\Processed Data\ripples_mat\R3'];
 ROOT.Rip4 = [ROOT.Mother '\Processed Data\ripples_mat\R4'];
-ROOT.Fig3 = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R11_sub'];
+ROOT.Fig3 = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R11_sub_field'];
 ROOT.Units = [ROOT.Mother '\Processed Data\units_mat\U1'];
 ROOT.Behav = [ROOT.Mother '\Processed Data\behavior_mat'];
 
@@ -80,7 +80,7 @@ for sid=1:size(RipplesTable,1)
             %             Pos = load([ROOT.Raw.Mother '\rat' thisRSID(1:3) '\rat' thisRSID '\ParsedPosition.mat']);
             clusters = UnitsTable(UnitsTable.rat==thisRip.rat & UnitsTable.session==thisRip.session,:);
             clusters_A = UnitsTable_A(UnitsTable_A.rat==thisRip.rat & UnitsTable_A.session==thisRip.session,:);
-            Spike=LoadSpikeData_field(ROOT, thisRSID, [1:24], Params.cellfindn);
+            Spike=LoadSpikeData(ROOT, thisRSID, [1:24], Params.cellfindn);
             load([ROOT.Rip0 '\' thisRSID '.mat'])
             disp([thisRSID ' plotting...'])
             thisRSID_old = thisRSID;
@@ -130,8 +130,8 @@ for sid=1:size(RipplesTable,1)
 
         cls_all = size(clusters_A,1);
         for un = 1:cls_all
-            thisTTID = num2str(clusters_A.TT(un));
-            thisCLID = num2str(str2double(clusters_A.ID{un}(end-1:end)));
+           [thisRID,thisSID,thisTTID,thisCLID, thisFLID] = parsing_clusterID(clusters_A.ID{un},1);
+            
             Spk = Spike.(['TT' (thisTTID)]).(['Unit' thisCLID]);
 
             thisSpks = Spk.t_spk(Spk.t_spk>=thisRip.STtime-mar/Params.Fs & Spk.t_spk<=thisRip.EDtime+mar/Params.Fs);
@@ -143,7 +143,7 @@ for sid=1:size(RipplesTable,1)
                 spks_epoch_in = [spks_epoch_in;[thisSpks_in,s2*un,s2*u,s2*clusters_A.SI(un),...
                     s2*clusters_A.RDI_LScene(un), s2*clusters_A.RDI_RScene(un), s2*clusters_A.RDI_LR(un)]];
                 u=u+1;
-                Units = [Units; [thisTTID '-' thisCLID]];
+                Units = [Units; [thisTTID '-' thisCLID '-' thisFLID]];
                 UnitsA = [UnitsA; [clusters_A.ID(un)]];
             end
 
