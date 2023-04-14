@@ -30,19 +30,19 @@ thisRID  = str2double(thisRID);
 thisSID  = str2double(thisSID);
 thisTTID  = str2double(thisTTID);
 thisCLID  = str2double(thisCLID);
-thisFLID  = str2double(thisCLID);
+thisFLID  = str2double(thisFLID);
 
 if d==1
 thisRID  = num2str(thisRID);
 thisSID  = num2str(thisSID);
 thisTTID  = num2str(thisTTID);
 thisCLID  = num2str(thisCLID);
-thisFLID  = num2str(thisCLID);
+thisFLID  = num2str(thisFLID);
 elseif d==2
 thisRID  =jmnum2str(thisRID,3);
 thisSID  = jmnum2str(thisSID,2);
 thisTTID  = jmnum2str(thisTTID,2);
 thisCLID  = jmnum2str(thisCLID,2);
-thisFLID  = jmnum2str(thisCLID,2);
+thisFLID  = jmnum2str(thisFLID,2);
 end
 end
