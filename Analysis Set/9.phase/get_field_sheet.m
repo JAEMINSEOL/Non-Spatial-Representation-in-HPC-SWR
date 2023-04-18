@@ -58,6 +58,12 @@ for cid = 1:size(Cluster_List,1)
                         if nanmean(thisFieldMap.skaggsMap_left1D) > nanmean(thisFieldMap.skaggsMap_right1D),...
                                 Cluster_List_thisF.RDI_LR = thisFieldMap.d(3); else, Cluster_List_thisF.RDI_LR = -thisFieldMap.d(3); end
 
+                        if isfield(thisFieldMap,'stem_flag')
+                            if ~thisFieldMap.stem_flag
+                            Cluster_List_thisF.RDI_LR=nan;
+                            end
+                        end
+
 
                     else
                         if ~isempty(id)
@@ -69,6 +75,17 @@ for cid = 1:size(Cluster_List,1)
 
                             if nanmean(thisFieldMap.skaggsMap_left1D) > nanmean(thisFieldMap.skaggsMap_right1D),...
                                     Cluster_List_thisF.RDI_LR = abs(thisFieldMap.RMI(3)); else, Cluster_List_thisF.RDI_LR = -abs(thisFieldMap.RMI(3)); end
+
+                            if abs(thisFieldMap.RMI(3))==1
+                                Cluster_List_thisF.RDI_LR=nan;
+                            end
+
+
+                        if isfield(thisFieldMap,'stem_flag')
+                            if ~thisFieldMap.stem_flag
+                            Cluster_List_thisF.RDI_LR=nan;
+                            end
+                        end
 
                         else
                             Cluster_List_thisF.RDI_LScene=nan;
