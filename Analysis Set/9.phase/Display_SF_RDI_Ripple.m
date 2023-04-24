@@ -24,24 +24,39 @@ thisRegion = 'SUB';
 thisRegion2 = 'SUB_field';
 RipplesTable = readtable([ROOT.Save '\RipplesTable_' thisRegion2 '_forAnalysis_RDI.xlsx']);
 % UnitsTable = readtable([ROOT.Units '\UnitsTable_filtered_' thisRegion2 '.xlsx']);
-UnitsTable_A = readtable([ROOT.Units '\UnitsTable_' thisRegion2 '_forAnalysis.xlsx']);
-UnitsTable_B = readtable([ROOT.Units '\UnitsTable_' thisRegion '_forAnalysis.xlsx']);
+UnitsTable_A = readtable([ROOT.Units '\UnitsTable_' thisRegion '_forAnalysis.xlsx']);
+UnitsTable_B = readtable([ROOT.Units '\UnitsTable_' thisRegion2 '_forAnalysis.xlsx']);
 
 %%
 nRDI_MF = RipplesTable.nRDI_MF;
 nCells = RipplesTable.nTPPs;
 x = round((1-nRDI_MF).*nCells); % 0~5까지의 랜덤한 인티저 수열 생성
 y = histcounts(x, 0:(max(x)+1)); % 각 숫자의 갯수 세기
-labels = string(y); % 갯수로 구성된 문자열 벡터 생성
-p=pie(y, labels); 
-
-
-% set(cdfplot((1-nRDI_MF).*nCells), 'LineWidth', 3); 
-
+% labels = string(y); % 갯수로 구성된 문자열 벡터 생성
+% p=pie(y, labels); 
 title('# of single field cells')
 set(gca,'FontSize',15,'FontWeight','bold')
 t = findobj(p,'Type','text'); % 텍스트 객체 찾기
 set(t,'FontSize',15,'FontWeight','bold'); % 텍스트 객체의 글꼴 크기와 굵기 변경
+
+%%
+t = '_SC';
+x = RipplesTable.(['nRDI_hetero' t]);
+y = nanmean(UnitsTable_A.(['MultiVar' t]));
+
+figure
+subplot(1,2,1)
+histogram((x))
+line([y y], [0 120],'color','r')
+ylabel('# of ripples')
+title(['RDI_' t],'Interpreter','none')
+subplot(1,2,2)
+set(cdfplot((x)), 'LineWidth', 3); 
+line([y y], [0 1],'color','r')
+ylabel('ripple proportion')
+title(['RDI_' t],'Interpreter','none')
+
+
 
 %%
 mRDI_SF = 1-RipplesTable.nRDI_MF;
