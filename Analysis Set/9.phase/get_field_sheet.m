@@ -229,25 +229,62 @@ ClusterList.NumField(cid) = size(ClusterList_field,1);
 x = max([abs(ClusterList_field.RDI_LScene),abs(ClusterList_field.RDI_RScene)],[],2);
 y = abs(ClusterList_field.RDI_LR);
 p = ClusterList_field.PeakBin;
-x=x(p<35); y=y(p<35);
+% x=x(p<35); y=y(p<35);
+x=x(~isnan(y)); y=y(~isnan(y));
 
 if length(x)>1
     x=x(1:2);y=y(1:2);
     d = x-y;
     if d(1)*d(2)>0
-        ClusterList.MultiVar(cid)=0;
-        ClusterList.RDI_hetero(cid)=nan;
+        ClusterList.MultiVar_SC(cid)=0;
+        ClusterList.RDI_hetero_SC(cid)=nan;
     else
-        ClusterList.MultiVar(cid)=1;
+        ClusterList.MultiVar_SC(cid)=1;
         th1 = rad2deg(subspace([y(1) x(1)]', [1 1]'));
         th2 = rad2deg(subspace([x(2) y(2)]', [1 1]'));
-        ClusterList.RDI_hetero(cid)=sin(deg2rad(th1-45))*sin(deg2rad(th2-45));
+        ClusterList.RDI_hetero_SC(cid)=sin(deg2rad(th1-45))*sin(deg2rad(th2-45));
     end
 else
-    ClusterList.MultiVar(cid)=0;
-    ClusterList.RDI_hetero(cid)=nan;
+    ClusterList.MultiVar_SC(cid)=0;
+    ClusterList.RDI_hetero_SC(cid)=nan;
 end
 
+
+x = (ClusterList_field.RDI_LScene);
+% p = ClusterList_field.PeakBin;
+x=x(~isnan(x));
+if length(x)>1
+    x=x(1:2);
+        ClusterList.MultiVar_L(cid)=(x(1)*x(2)<0);
+    ClusterList.RDI_hetero_L(cid)=abs(x(1)-x(2));
+else
+    ClusterList.MultiVar_L(cid)=0;
+    ClusterList.RDI_hetero_L(cid)=nan;
+end
+
+x = (ClusterList_field.RDI_RScene);
+% p = ClusterList_field.PeakBin;
+x=x(~isnan(x));
+if length(x)>1
+    x=x(1:2);
+        ClusterList.MultiVar_R(cid)=(x(1)*x(2)<0);
+    ClusterList.RDI_hetero_R(cid)=abs(x(1)-x(2));
+else
+    ClusterList.MultiVar_R(cid)=0;
+    ClusterList.RDI_hetero_R(cid)=nan;
+end
+
+x = (ClusterList_field.RDI_LR);
+% p = ClusterList_field.PeakBin;
+x=x(~isnan(x));
+if length(x)>1
+    x=x(1:2);
+        ClusterList.MultiVar_C(cid)=(x(1)*x(2)<0);
+    ClusterList.RDI_hetero_C(cid)=abs(x(1)-x(2));
+else
+    ClusterList.MultiVar_C(cid)=0;
+    ClusterList.RDI_hetero_C(cid)=nan;
+end
 
 
 ClusterList_s = ClusterList;
