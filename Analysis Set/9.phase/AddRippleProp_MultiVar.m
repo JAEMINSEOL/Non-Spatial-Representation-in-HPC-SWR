@@ -45,11 +45,23 @@ for r=1:size(RipplesTable_p,1)
     thisUnits_R = thisUnits(~isnan(thisUnits.RDI_RScene),:);
     thisUnits_C = thisUnits(~isnan(thisUnits.RDI_LR),:);
 
-    disp([RipID ' is finished!'])
+    
 
-    RipplesTable_p.nRDI_hetero(r) = nanmean(thisUnits.MultiVar);
-    RipplesTable_p.mRDI_hetero(r) = nanmean(thisUnits.RDI_hetero);
+    RipplesTable_p.nRDI_MF(r) = nanmean(thisUnits.NumField>1);
+    RipplesTable_p.nRDI_hetero_SC(r) = nanmean(thisUnits.MultiVar_SC);
+    RipplesTable_p.mRDI_hetero_SC(r) = nanmean(thisUnits.RDI_hetero_SC);
 
+    RipplesTable_p.nRDI_hetero_L(r) = nanmean(thisUnits.MultiVar_L);
+    RipplesTable_p.mRDI_hetero_L(r) = nanmean(thisUnits.RDI_hetero_L);
+
+    RipplesTable_p.nRDI_hetero_R(r) = nanmean(thisUnits.MultiVar_R);
+    RipplesTable_p.mRDI_hetero_R(r) = nanmean(thisUnits.RDI_hetero_R);
+    
+    RipplesTable_p.nRDI_hetero_C(r) = nanmean(thisUnits.MultiVar_C);
+    RipplesTable_p.mRDI_hetero_C(r) = nanmean(thisUnits.RDI_hetero_C);
+
+
+   disp([RipID ' is finished!']) 
 end
  suff = '_RDIs';
 writetable(RipplesTable_p,[ROOT.Save '\RipplesTable_' thisRegion2 suff '.xlsx'],'writemode','replacefile')
