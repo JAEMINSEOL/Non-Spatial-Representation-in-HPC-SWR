@@ -31,13 +31,140 @@ UnitsTable_B = readtable([ROOT.Units '\UnitsTable_' thisRegion2 '_forAnalysis.xl
 nRDI_MF = RipplesTable.nRDI_MF;
 nCells = RipplesTable.nTPPs;
 x = round((1-nRDI_MF).*nCells); % 0~5까지의 랜덤한 인티저 수열 생성
-y = histcounts(x, 0:(max(x)+1)); % 각 숫자의 갯수 세기
+% y = histcounts(x, 0:(max(x)+1)); % 각 숫자의 갯수 세기
 % labels = string(y); % 갯수로 구성된 문자열 벡터 생성
-% p=pie(y, labels); 
+p=pie(y, labels); 
 title('# of single field cells')
 set(gca,'FontSize',15,'FontWeight','bold')
 t = findobj(p,'Type','text'); % 텍스트 객체 찾기
 set(t,'FontSize',15,'FontWeight','bold'); % 텍스트 객체의 글꼴 크기와 굵기 변경
+
+%% single field + univariate (pie chart)
+
+nCells = RipplesTable.nTPPs;
+
+figure;
+sgtitle('# of single field + univariate cells')
+
+subplot(2,3,1)
+nRDI_UV = RipplesTable.nRDI_MF;
+x = round((1-nRDI_UV).*nCells);
+y = histcounts(x, 0:(max(x)+1)); % 각 숫자의 갯수 세기
+labels = string(y); % 갯수로 구성된 문자열 벡터 생성
+labels(strcmp(labels,'0'))="";
+p=pie(y, labels); 
+title('(single field only)')
+caxis([0 11])
+
+subplot(2,3,2)
+nRDI_UV = RipplesTable.nRDI_hetero_L;
+x = round((1-nRDI_UV).*nCells);
+y = histcounts(x, 0:(max(x)+1)); % 각 숫자의 갯수 세기
+labels = string(y); % 갯수로 구성된 문자열 벡터 생성
+labels(strcmp(labels,'0'))="";
+p=pie(y, labels); 
+title('Left Scene')
+caxis([0 11])
+
+subplot(2,3,3)
+nRDI_UV = RipplesTable.nRDI_hetero_R;
+x = round((1-nRDI_UV).*nCells);
+y = histcounts(x, 0:(max(x)+1)); % 각 숫자의 갯수 세기
+labels = string(y); % 갯수로 구성된 문자열 벡터 생성
+labels(strcmp(labels,'0'))="";
+p=pie(y, labels); 
+title('Right Scene')
+caxis([0 11])
+
+subplot(2,3,5)
+nRDI_UV = RipplesTable.nRDI_hetero_C;
+x = round((1-nRDI_UV).*nCells);
+y = histcounts(x, 0:(max(x)+1)); % 각 숫자의 갯수 세기
+labels = string(y); % 갯수로 구성된 문자열 벡터 생성
+labels(strcmp(labels,'0'))="";
+p=pie(y, labels); 
+title('Choice')
+caxis([0 11])
+
+subplot(2,3,6)
+nRDI_UV = RipplesTable.nRDI_hetero_SC;
+x = round((1-nRDI_UV).*nCells);
+y = histcounts(x, 0:(max(x)+1)); % 각 숫자의 갯수 세기
+labels = string(y); % 갯수로 구성된 문자열 벡터 생성
+labels(strcmp(labels,'0'))="";
+p=pie(y, labels); 
+title('Scene vs. Choice')
+caxis([0 11])
+
+colormap jet
+
+%% single field + univariate (histogram)
+
+nCells = RipplesTable.nTPPs;
+
+figure;
+sgtitle('# of single field + univariate cells')
+
+subplot(2,3,1)
+nRDI_UV = RipplesTable.nRDI_MF;
+x = round((1-nRDI_UV).*nCells);
+histogram(x, 'binedges',[0:12]); 
+title('(single field only)')
+xlabel('single field cells'); ylabel('ripples')
+
+subplot(2,3,2)
+nRDI_UV = RipplesTable.nRDI_hetero_L;
+x = round((1-nRDI_UV).*nCells);
+histogram(x, 'binedges',[0:12]); 
+title('Left Scene')
+xlabel('single+univariate cells'); ylabel('ripples')
+
+subplot(2,3,3)
+nRDI_UV = RipplesTable.nRDI_hetero_R;
+x = round((1-nRDI_UV).*nCells);
+histogram(x, 'binedges',[0:12]); 
+title('Right Scene')
+xlabel('single+univariate cells'); ylabel('ripples')
+
+subplot(2,3,5)
+nRDI_UV = RipplesTable.nRDI_hetero_C;
+x = round((1-nRDI_UV).*nCells);
+histogram(x, 'binedges',[0:12]); 
+title('Choice')
+xlabel('single+univariate cells'); ylabel('ripples')
+
+subplot(2,3,6)
+nRDI_UV = RipplesTable.nRDI_hetero_SC;
+x = round((1-nRDI_UV).*nCells);
+histogram(x, 'binedges',[0:12]); 
+title('Scene vs. Choice')
+xlabel('single+univariate cells'); ylabel('ripples')
+
+%% get ratio of non-spatial ripple using univariate+SF
+
+figure;
+x = [RipplesTable.pRDI_L_UV, RipplesTable.pRDI_R_UV, RipplesTable.pRDI_C_UV];
+x0 = x<0.05;
+
+x1 = max(x0,[],2);
+
+x2 = RipplesTable.DecodingP_all<0.05;
+
+x3 = x1+2*x2;
+
+id = min(isnan(x),[],2);
+
+% x3(id)=[];
+
+y = histcounts(x3, 0:(max(x3)+1)); % 각 숫자의 갯수 세기
+y = y([1,3,4,2]);
+labels = string(y); % 갯수로 구성된 문자열 벡터 생성
+labels(strcmp(labels,'0'))="";
+p=pie(y, labels); 
+
+
+
+x = [RipplesTable.pRDI_L_UV_scuv, RipplesTable.pRDI_R_UV_scuv, RipplesTable.pRDI_C_UV_scuv];
 
 %%
 t = '_SC';
