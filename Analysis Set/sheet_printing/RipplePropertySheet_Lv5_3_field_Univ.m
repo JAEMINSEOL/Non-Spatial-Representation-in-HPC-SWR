@@ -36,8 +36,8 @@ mar = 0.05*Params.Fs;
 dur = 0.4*Params.Fs;
 thisFRMapSCALE=2;
 Params.tbinDuration = 0.005;
-
-filter_ns = 'L';
+plot_matrix
+filter_ns = 'C';
 
 
 %%
