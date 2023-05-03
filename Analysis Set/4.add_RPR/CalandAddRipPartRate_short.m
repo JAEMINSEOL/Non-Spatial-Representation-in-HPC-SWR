@@ -55,7 +55,7 @@ for clUnit = 1:size(UnitsTable,1)
     
 end
 %%
-% writetable(UnitsTable,[ROOT.Save '\UnitsTable_RPR_' thisRegion suff '.xlsx'])
+
 %%
 figure;
 rpr = UnitsTable.RipPartRate_all;
