@@ -13,11 +13,8 @@ fixRadius = 3;  % original
 videoSamplingRate = 30;
 area=[];
 %%
-findHYPHEN = find(clusterID == '-');
-thisRID = clusterID(1, 1:findHYPHEN(1) - 1);
-thisSID = clusterID(1, findHYPHEN(1) + 1:findHYPHEN(2) - 1);
-thisTTID = num2str(str2double(clusterID(1, findHYPHEN(2) + 1:findHYPHEN(3) - 1)));
-thisCLID = clusterID(1, findHYPHEN(3) + 1:end);
+[thisRID,thisSID,thisTTID,thisCLID,thisFieldID] = parsing_clusterID(clusterID,2);
+thisTTID = num2str(str2double(thisTTID));
 
 %
 load([DatROOT '\rat' thisRID '\rat' thisRID '-' thisSID '\ParsedPosition.mat']);
@@ -26,8 +23,11 @@ load([DatROOT '\rat' thisRID '\rat' thisRID '-' thisSID '\ParsedPosition.mat']);
 if exist([DatROOT '\rat' thisRID '\rat' thisRID '-' thisSID '\TT' thisTTID '\parsedSpike_' thisCLID '.mat'])
 
 load([DatROOT '\rat' thisRID '\rat' thisRID '-' thisSID '\TT' thisTTID '\parsedSpike_' thisCLID '.mat'],'t_spk','x_spk','y_spk','cont_spk','ambiguity_spk','trial_spk');
-else
+elseif exist([DatROOT '\rat' thisRID '\rat' thisRID '-' thisSID '\TT' thisTTID '\parsedSpike_' num2str(str2double(thisCLID)) '.mat'])
     load([DatROOT '\rat' thisRID '\rat' thisRID '-' thisSID '\TT' thisTTID '\parsedSpike_' num2str(str2double(thisCLID)) '.mat'],'t_spk','x_spk','y_spk','cont_spk','ambiguity_spk','trial_spk');
+elseif exist([DatROOT '\rat' thisRID '\rat' thisRID '-' thisSID '\TT' thisTTID '\parsedSpike_' num2str(str2double(thisCLID)) '_' num2str(str2double(thisFieldID)) '.mat'])
+    load([DatROOT '\rat' thisRID '\rat' thisRID '-' thisSID '\TT' thisTTID '\parsedSpike_' num2str(str2double(thisCLID)) '_' num2str(str2double(thisFieldID)) '.mat'],...
+        't_spk','x_spk','y_spk','cont_spk','ambiguity_spk','trial_spk');
 end
 %% Set variables depend on session_type
 session_type = get_sessionType(thisRID, thisSID);
@@ -39,6 +39,8 @@ else ratemap_number = 10; overallmap_idx = 10; end
 %% change context order
 % before changing : zebra = 1, pebbles = 2, bamboo = 3, mountain = 4
 % after changing : zebra = 1, pebbles = 3, bamboo = 2, mountain = 4
+if sum(cont(:,3))==0, cont(:,3)=cont(:,2); cont(:,2)=0; end
+if sum(cont_spk(:,3))==0, cont_spk(:,3)=cont_spk(:,2); cont_spk(:,2)=0; end
 
 for iter = 1:size(t, 1)
     if cont(iter,2) == true
@@ -104,13 +106,15 @@ elseif sum(session_type == [2 3 4 5])
         trial_number(iter) = trial_number(iter + 3) + trial_number(iter + 6);
     end
     trial_number(10) = sum(trial_number(4:9));
+
+%    trial_number(11) = trial_number(4) + trial_number(5) + trial_number(6);
+%    trial_number(12) = trial_number(7) + trial_number(8) + trial_number(9);
 end
 
 %%
 diverging_point = get_divergingPoint(InfoROOT, thisRID, thisSID);
 diverging_point = diverging_point*0.23;
 Boundaries;
-
 %% Filtering (outbound)
 pos = logical([]); spks = logical([]);
 
@@ -129,7 +133,7 @@ elseif session_type == 6    % new learning
     pos(:,3) = pos(:,3) & correctness(:,1) & ~area(:,5);
     spks(:,3) = ismember(t_spk,thisField.ts);
     
-    if size(cont,2)<5
+    if size(cont,2)<5 || sum(sum(cont(:,5:6)))==0
     cont(:,5) = cont(:,1) | cont(:,2);
     cont(:,6) = cont(:,3) | cont(:,4);
     cont_spk(:,5) = cont_spk(:,1) | cont_spk(:,2);
@@ -151,10 +155,14 @@ elseif sum(session_type == [2 3 4 5])
         pos(:,iter) = pos(:,iter) & correctness(:,1) & ~area(:,5) & ambiguity(:,iter);
         spks(:,iter) = spks(:,10) & ambiguity_spk(:,iter);
         
-        pos(:,iter + 3) = pos(:,iter) & (cont(:,1) | cont(:,2));
-        pos(:,iter + 6) = pos(:,iter) & (cont(:,3) | cont(:,4));
-        spks(:,iter + 3) = spks(:,iter) & (cont_spk(:,1) | cont_spk(:,2));
-        spks(:,iter + 6) = spks(:,iter) & (cont_spk(:,3) | cont_spk(:,4));
+        pos(:,iter + 3) = pos(:,iter) & (cont(:,1) | cont(:,3));
+        pos(:,iter + 6) = pos(:,iter) & (cont(:,2) | cont(:,4));
+        spks(:,iter + 3) = spks(:,iter) & (cont_spk(:,1) | cont_spk(:,3));
+        spks(:,iter + 6) = spks(:,iter) & (cont_spk(:,2) | cont_spk(:,4));
+
+        % 1,2,3 = amb all
+        % 4,5,6 = amb zebra
+        % 7,8,9 = amb bamboo
     end
 end
 
@@ -204,10 +212,10 @@ elseif strcmp(option,'trial')
         getFieldMaps_trial;
     end
        
-    map_size = min(cellfun('size',rawMap1D_trial,1));
+    map_size = max(cellfun('size',rawMap1D_trial,1));
     for trial_iter = 1 : total_trial_number 
-        if size(rawMap1D_trial{trial_iter},1) > map_size
-            rawMap1D_trial{trial_iter}(map_size+1:end) = [];
+        if size(rawMap1D_trial{trial_iter},1) < map_size
+            rawMap1D_trial{trial_iter}(end+1:map_size) = nan;
         end
     end
     rawMap1D_trial = cat(2,rawMap1D_trial{:});
