@@ -38,9 +38,10 @@ Dv =  (max(Behav.y)-diverging_point)/thisFRMapSCALE;
             trial_set_all =cat(2,[1:Behav.total_trial_number]',Behav.trial_context,Behav.trial_correctness);
             
               c=nan(1,3);  
-            c(1) = nancorrcoef(thisFieldMap1D.skaggsMap1D{2},thisFieldMap1D.skaggsMap1D{3});
-            c(2) = nancorrcoef(thisFieldMap1D.skaggsMap1D{4},thisFieldMap1D.skaggsMap1D{5});
+            c(1) = nancorrcoef(thisFieldMap1D.skaggsMap1D{1},thisFieldMap1D.skaggsMap1D{3});
+            c(2) = nancorrcoef(thisFieldMap1D.skaggsMap1D{2},thisFieldMap1D.skaggsMap1D{4});
             c(3) = nancorrcoef(thisFieldMap1D.skaggsMap_left1D,thisFieldMap1D.skaggsMap_right1D);
+           
             
                 
             sample_idx = [];
@@ -116,12 +117,13 @@ Dv =  (max(Behav.y)-diverging_point)/thisFRMapSCALE;
 
 end
     function c=nancorrcoef(x,y)
-x=x(~isnan(x));
-y=y(~isnan(y));
+x(isnan(x))=0;
+y(isnan(y))=0;
 if length(x)==length(y)
         c = corrcoef(x,y);
         c=c(2);
 else
+    
 c=nan;
 end
     end
