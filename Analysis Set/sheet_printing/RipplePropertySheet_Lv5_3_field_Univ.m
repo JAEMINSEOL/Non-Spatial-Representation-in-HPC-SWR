@@ -4,8 +4,8 @@ ROOT.Save = [ROOT.Mother '\Processed Data'];
 ROOT.Rip0 = [ROOT.Mother '\Processed Data\ripples_mat\R0'];
 ROOT.Rip = [ROOT.Mother '\Processed Data\ripples_mat\R3'];
 ROOT.Rip4 = [ROOT.Mother '\Processed Data\ripples_mat\R4'];
-ROOT.Fig = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R11_sub_field_uv'];
-ROOT.Units = [ROOT.Mother '\Processed Data\units_mat\U1'];
+ROOT.Fig = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R13_sub'];
+ROOT.Units = [ROOT.Mother '\Processed Data\units_mat\U2'];
 ROOT.Behav = [ROOT.Mother '\Processed Data\behavior_mat'];
 
 dir = '';
@@ -20,7 +20,7 @@ SessionList = readtable([ROOT.Info '\SessionList_SWR.xlsx'],'ReadRowNames',false
 %%
 thisRegion = 'SUB';
 thisRegion2 = 'SUB_field';
-RipplesTable = readtable([ROOT.Save '\RipplesTable_' thisRegion2 '_forAnalysis_RDI.xlsx']);
+RipplesTable = readtable([ROOT.Save '\RipplesTable_' thisRegion2 '_RDIs_UV.xlsx']);
 % UnitsTable = readtable([ROOT.Units '\UnitsTable_filtered_' thisRegion2 '.xlsx']);
 UnitsTable_B = readtable([ROOT.Units '\UnitsTable_' thisRegion2 '_forAnalysis.xlsx']);
 UnitsTable_A = readtable([ROOT.Units '\UnitsTable_' thisRegion '_forAnalysis.xlsx']);
@@ -36,18 +36,20 @@ mar = 0.05*Params.Fs;
 dur = 0.4*Params.Fs;
 thisFRMapSCALE=2;
 Params.tbinDuration = 0.005;
-plot_matrix
-filter_ns = 'C';
 
+filter_ns = 'C';
+filter_ns2 = 'LR';
 
 %%
-col_name_A = string(UnitsTable_A.Properties.VariableNames(24:32));
-UnitsTable_B(1,28:36) = array2table(nan(1,9));
-UnitsTable_B = renamevars(UnitsTable_B, UnitsTable_B.Properties.VariableNames(28:36),col_name_A);
-for uid=1:size(UnitsTable_B,1)
-    tar = find(strncmp(UnitsTable_A.ID,UnitsTable_B.ID(uid),12));
-    UnitsTable_B(uid,28:36) = UnitsTable_A(tar,24:32);
-end
+% sz = size(UnitsTable_A,2);
+% col_name_A = string(UnitsTable_A.Properties.VariableNames(27:sz));
+% UnitsTable_B(1,31:sz+4) = array2table(nan(1,sz-27+1));
+% UnitsTable_B = renamevars(UnitsTable_B, UnitsTable_B.Properties.VariableNames(31:sz+4),col_name_A);
+% for uid=1:size(UnitsTable_B,1)
+%     tar = find(strncmp(UnitsTable_A.ID,UnitsTable_B.ID(uid),12));
+%     UnitsTable_B(uid,31:sz+4) = UnitsTable_A(tar,27:sz);
+% end
+    
 %%
 for sid=1:size(RipplesTable,1)
     try
@@ -100,9 +102,9 @@ for sid=1:size(RipplesTable,1)
 
             %% remove heterogeneous cells
 
-            clusters_B = clusters_B(~clusters_B.(['MultiVar_' filter_ns]),:);
-            clusters_A = clusters_A(~clusters_A.(['MultiVar_' filter_ns]),:);
-            %% Load FRMap
+%              clusters_B = clusters_B(clusters_B.(['Selectivity_' filter_ns2])>=1 & clusters_B.(['Selectivity_' filter_ns2])<4,:);
+%              clusters_A = clusters_A(clusters_A.(['Selectivity_' filter_ns2])>=1 & clusters_A.(['Selectivity_' filter_ns2])<4,:);
+              %% Load FRMap
 
             FRMaps = [];
             for cl=1:size(clusters_B.ID,1)
@@ -152,10 +154,16 @@ for sid=1:size(RipplesTable,1)
             if ~isempty(thisSpks_in)
                 h = contains(clusters_A.ID,clusters_B.ID{un}(1:12));
                 s1 = ones(size(thisSpks,1),1); s2 = ones(size(thisSpks_in,1),1);
+%                 spks_epoch = [spks_epoch;[thisSpks,s1*un,s1*u,s1*clusters_B.SI(un),...
+%                     s1*clusters_B.RDI_LScene(un), s1*clusters_B.RDI_RScene(un), s1*clusters_B.RDI_LR(un), s1*clusters_A.(['RDI_hetero_' filter_ns])(h)]];
                 spks_epoch = [spks_epoch;[thisSpks,s1*un,s1*u,s1*clusters_B.SI(un),...
-                    s1*clusters_B.RDI_LScene(un), s1*clusters_B.RDI_RScene(un), s1*clusters_B.RDI_LR(un), s1*clusters_A.(['RDI_hetero_' filter_ns])(h)]];
+                    s1*clusters_B.RDI_LScene(un), s1*clusters_B.RDI_RScene(un), s1*clusters_B.RDI_LR(un),...
+                    s1*clusters_B.Selectivity_LScene(un),s1*clusters_B.Selectivity_RScene(un),s1*clusters_B.Selectivity_LR(un)]];
                 spks_epoch_in = [spks_epoch_in;[thisSpks_in,s2*un,s2*u,s2*clusters_B.SI(un),...
-                    s2*clusters_B.RDI_LScene(un), s2*clusters_B.RDI_RScene(un), s2*clusters_B.RDI_LR(un),s2*clusters_A.(['RDI_hetero_' filter_ns])(h)]];
+                    s2*clusters_B.RDI_LScene(un), s2*clusters_B.RDI_RScene(un), s2*clusters_B.RDI_LR(un),...
+                    s2*clusters_B.Selectivity_LScene(un),s2*clusters_B.Selectivity_RScene(un),s2*clusters_B.Selectivity_LR(un)]];
+% spks_epoch_in = [spks_epoch_in;[thisSpks_in,s2*un,s2*u,s2*clusters_B.SI(un),...
+%                     s2*clusters_B.RDI_LScene(un), s2*clusters_B.RDI_RScene(un), s2*clusters_B.RDI_LR(un),s2*clusters_A.(['RDI_hetero_' filter_ns])(h)]];
                 u=u+1;
                 Units = [Units; [thisTTID '-' thisCLID '-' thisFLID]];
                 UnitsA = [UnitsA; [clusters_B.ID(un)]];
@@ -184,9 +192,9 @@ for sid=1:size(RipplesTable,1)
         %%
 
         for s=1:size(spks_epoch,1)
-            spks_epoch(s,9) = find(ord==spks_epoch(s,3)+1)-1;
+            spks_epoch(s,11) = find(ord==spks_epoch(s,3)+1)-1;
         end
-        [~,ia] = sort(spks_epoch(:,9));
+        [~,ia] = sort(spks_epoch(:,11));
         spks_epoch = spks_epoch(ia,:);
         [~,ia,~] = unique(spks_epoch(:,3),'rows');
         spks_epoch_u = spks_epoch(ia,:);
@@ -245,12 +253,12 @@ for sid=1:size(RipplesTable,1)
 
          % trial info
         subplot(9,6,5:6)
-             title((['MultiVar cell ' jjnum2str(thisRip.(['nRDI_hetero_' filter_ns])*100,2) '%, mean RHS ' jjnum2str(thisRip.(['mRDI_hetero_' filter_ns]),2)]),'fontsize',15)
+%              title((['MultiVar cell ' jjnum2str(thisRip.(['nRDI_hetero_' filter_ns])*100,2) '%, mean RHS ' jjnum2str(thisRip.(['mRDI_hetero_' filter_ns]),2)]),'fontsize',15)
              xlim([1, size(spks_epoch_u_in,1)*0.7]);
              [~,b] = unique(spks_epoch_u_in(:,1));
              het = spks_epoch_u(b,[1,8]);
              for h=1:size(het,1)
-                 text(h*1.2,0.5,jjnum2str(het(h,2),2))
+%                  text(h*1.2,0.5,jjnum2str(het(h,2),2))
              end
         axis off
         %% EEG
@@ -278,8 +286,23 @@ for sid=1:size(RipplesTable,1)
         line([x2 x2], [min(thisEEG_Ripple) max(thisEEG_Ripple)+50], 'color','r','linestyle','--')
         axis off
 
-        %% reactivation rasterplot
+        %% color scheme
         clunits = hsv(max(spks_epoch(s,end))+1);
+        clunits_L = clunits; clunits_R = clunits; clunits_C = clunits;
+        
+        for s=1:size(spks_epoch_u,1)
+            if spks_epoch_u(s,8)<1 | spks_epoch_u(s,8)>3 | abs(spks_epoch_u(s,5))<0.1
+                clunits_L(spks_epoch_u(s,end)+1,:) = 1;
+            end
+            if spks_epoch_u(s,9)<1 | spks_epoch_u(s,9)>3 | abs(spks_epoch_u(s,6))<0.1
+                clunits_R(spks_epoch_u(s,end)+1,:) = 1;
+            end
+            if spks_epoch_u(s,10)<1 | spks_epoch_u(s,10)>3 | abs(spks_epoch_u(s,7))<0.1
+                clunits_C(spks_epoch_u(s,end)+1,:) = 1;
+            end
+        end
+
+%% reactivation rasterplot
         subplot(9,col,[3 5]*col+1)
         hold on
         x1=mar/2; x2=thisRip.RippleDuration*1e3+mar/2;
@@ -328,14 +351,14 @@ for sid=1:size(RipplesTable,1)
             if temp(2)<0, temp(2)=0; end
             slope = abs(temp(1)-temp(2));
             if thisRip.DecodingP_all<0.001
-                text(mean(x),mean(v_temp(i) * x + c_temp(i))*1.1,'<0.001')
+                text(mean(x),mean(v_temp(i) * x + c_temp(i))*1.1,'<0.001', 'color', 'r')
             else
-            text(mean(x),mean(v_temp(i) * x + c_temp(i))*1.1,jjnum2str(thisRip.DecodingP_all,2))
+            text(mean(x),mean(v_temp(i) * x + c_temp(i))*1.1,jjnum2str(thisRip.DecodingP_all,3), 'color', 'r')
             end
             hold off;
         end
         %% Reactivated cells
-        temp = sortrows(spks_epoch_u,9);
+        temp = sortrows(spks_epoch_u,11);
 for c=1:size(Units,1)
     if isnan(temp(c,8))
         Units{c,2}='k';
@@ -394,33 +417,37 @@ end
         %% mean FR scatter
         % thisRip.pRDI_L=1; thisRip.pRDI_R=1; thisRip.pRDI_C=1;
         subplot(9,col,[3 4]*col+4);
-        scatters_fr(FRMapsm_L, {CxtList{1},CxtList{3}},start_index,end_index,clunits,thisRip.pRDI_L_UV)
+        scatters_fr(FRMapsm_L, {CxtList{1},CxtList{3}},start_index,end_index,clunits_L,thisRip.pRDI_L_UV)
 
         subplot(9,col,[5 6]*col+4);
-        scatters_fr(FRMapsm_R, {CxtList{2},CxtList{4}},start_index,end_index,clunits,thisRip.pRDI_R_UV)
+        scatters_fr(FRMapsm_R, {CxtList{2},CxtList{4}},start_index,end_index,clunits_R,thisRip.pRDI_R_UV)
 
         subplot(9,col,[7 8]*col+4);
-        scatters_fr(FRMapsm_C, {'Left','Right'},start_index,end_index,clunits,thisRip.pRDI_C_UV)
+        scatters_fr(FRMapsm_C, {'Left','Right'},start_index,end_index,clunits_C,thisRip.pRDI_C_UV)
 
         %% RDI bar graph
         subplot(9,col,[3 4]*col+5);
-        bar_RDI(spks_epoch_u(:,end)+1,spks_epoch_u(:,5),clunits)
+        bar_RDI(spks_epoch_u(:,end)+1,spks_epoch_u(:,5),clunits_L)
         set ( gca, 'xdir', 'reverse' )
 
         subplot(9,col,[5 6]*col+5);
-        bar_RDI(spks_epoch_u(:,end)+1,spks_epoch_u(:,6),clunits)
+        bar_RDI(spks_epoch_u(:,end)+1,spks_epoch_u(:,6),clunits_R)
         set ( gca, 'xdir', 'reverse' )
 
         subplot(9,col,[7 8]*col+5);
-        bar_RDI(spks_epoch_u(:,end)+1,spks_epoch_u(:,7),clunits)
+        bar_RDI(spks_epoch_u(:,end)+1,spks_epoch_u(:,7),clunits_C)
         set ( gca, 'xdir', 'reverse' )
 
         %% save fig
         if thisRip.DecodingP_all<0.05, suf1='Replay'; else, suf1='x'; end
-        suf1='';
-        if thisRip.(['pRDI_' filter_ns '_UV'])<0.05, suf2=[filter_ns '_selective']; else, suf2='x'; end
+        
+        if nanmin([thisRip.pRDI_L_UV, thisRip.pRDI_R_UV,...
+                thisRip.pRDI_C_UV])<0.05, suf2=['NSselective']; 
+        else
+            suf2='x';
+        end
 
-        ROOT.Fig_en = [ROOT.Fig '\' suf2];
+        ROOT.Fig_en = [ROOT.Fig '\' suf1 '_' suf2];
         if ~exist(ROOT.Fig_en), mkdir(ROOT.Fig_en); end
         saveas(gca,[ROOT.Fig_en '\'  thisRip.ID{1} '.svg'])
         saveas(gca,[ROOT.Fig_en '\'  thisRip.ID{1} '.png'])
@@ -465,8 +492,8 @@ set(gca,'fontsize',8,'fontweight','b')
 %      s='n.s.';
 %  end
 
-if p<0.005
-    s='***';
+if p<0.001
+    s='<0.001';
 else
     s=jjnum2str(p,3);
 end
