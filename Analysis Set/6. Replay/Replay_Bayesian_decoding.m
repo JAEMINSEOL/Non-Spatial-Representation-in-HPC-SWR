@@ -1,11 +1,11 @@
-function [posterior,p_test,R_actual,R_shuffled,v,c] = Replay_Bayesian_decoding(ROOT,Params,RipplesTable,ReactTable,RipNum)
+function [posterior,p_test,R_actual,R_shuffled,v,c] = Replay_Bayesian_decoding(ROOT,Params,thisRip,ReactTable,mapRUNs)
 tbinDuration = Params.tbinDuration;
 fitting_threshold = Params.fitting_threshold;
 
 
-RipID = RipplesTable.ID(RipNum);
+RipID = thisRip.ID{1};
 thisReact = ReactTable(strcmp(ReactTable.RippleID,RipID),:);
-ripple_duration = RipplesTable.RippleDuration(RipNum);
+ripple_duration = thisRip.RippleDuration;
 nCells = size(unique(thisReact.UnitID),1);
     % time binning
 
@@ -27,8 +27,9 @@ for UnitNum=1:nCells
     thisTTID = num2str(str2double(clusterID(1, findHYPHEN(2) + 1:findHYPHEN(3) - 1)));
     thisCLID = jmnum2str(str2double(clusterID(1, findHYPHEN(3) + 1:end)),2);
 
+    try
     Spk = load([ROOT.Raw.Mother '\rat' thisRID '\rat' thisRID '-' thisSID '\TT' thisTTID '\parsedSpike_' num2str(str2double(thisCLID)) '.mat']);
-    load([ROOT.Unit '\' clusterID '.mat']);
+%     load([ROOT.Unit '\' clusterID '.mat']);
 
     % linearized firing map for each reactivated unit
     thisField = table;
@@ -40,7 +41,9 @@ for UnitNum=1:nCells
     thisMap = getFieldMaps(clusterID,thisField,'session',ROOT.Raw.Mother,ROOT.Info);
 
     % get N matrix
-    thisSPK = thisReact.SpkTime_fromRippleStart(strcmp(clusterID,thisReact.UnitID),:);
+    thisSPK = Spk.t_spk(Spk.t_spk>=thisRip.STtime & Spk.t_spk<=thisRip.EDtime);
+    thisSPK = thisSPK - thisRip.STtime;
+%     thisSPK = thisReact.SpkTime_fromRippleStart(strcmp(clusterID,thisReact.UnitID),:);
 
     for tbinRUN = 1 : tbinN
         if tbinRUN < tbinN
@@ -61,13 +64,16 @@ for UnitNum=1:nCells
     else
         for mapRUN = 1 : length(pbinN), mapMat{mapRUN}(:,cellRUN)= nan(pbinN(mapRUN),1); end
     end
+    end
 end
 
 skaggsMap1D = thisMap.skaggsMap1D;
 pbinN = [size(skaggsMap1D{1},1),size(skaggsMap1D{2},1) size(skaggsMap1D{3},1) size(skaggsMap1D{4},1) size(skaggsMap1D{5},1)];
-
+if mapRUNs==0
+mapRUNs = length(pbinN);
+end
 occUniform = {};
-for mapRUN = 1 : length(pbinN)
+for mapRUN = 1 : mapRUNs
     occUniform{mapRUN} = repmat([1/pbinN(mapRUN)], [pbinN(mapRUN) 1]);
 end
 
@@ -79,7 +85,7 @@ end
                 p_test = []; type = {};
                 
                 tic;
-                for mapRUN = 1 : length(pbinN)
+                for mapRUN = 1 : mapRUNs
                     %% get Posterior
                     posterior{mapRUN} = Replay_getP(tbinDuration, occUniform{mapRUN}, N, mapMat{mapRUN});
                     
@@ -119,6 +125,6 @@ end
                 end % for mapRUN
                 toc;
 else
-    disp([RipplesTable.ID{RipNum} ' has less Place cells'])
+    disp([thisRip.ID{1} ' has less Place cells'])
 end
 
