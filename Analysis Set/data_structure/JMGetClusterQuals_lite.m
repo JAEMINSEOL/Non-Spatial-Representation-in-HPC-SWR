@@ -1,4 +1,4 @@
-function [nSPKS, withinREFRACPortion, max_width, max_peak, max_amp, peak_ratio, LRATIO, ISODIST,  LogISIPEAKTIME, valley_slope, valley_proportion,SpaInfoScore,onmazeAvgFR] = JMGetClusterQuals_lite(clusterID, ROOT,exper)
+function [nSPKS, FRRate,withinREFRACPortion, max_width, max_peak, max_amp, peak_ratio, LRATIO, ISODIST,  LogISIPEAKTIME, valley_slope, valley_proportion,SpaInfoScore,onmazeAvgFR,onmazeMaxFR,offmazeAvgFR] = JMGetClusterQuals_lite(clusterID, ROOT,exper)
 sFr = 1 / 32000;
 microSEC = 10^6;
 mSEC = 10^3;
@@ -47,14 +47,26 @@ end
 
 %Load cluster file
 cd([ROOT.Raw.Mother '\rat' thisRID '\rat' thisRID '-' thisSID '\TT' thisTTID]);
-if exist(['TT' thisTTID '_beh_SS_' num2str(str2double(thisCLID)) '.ntt'])
-    [thisEpochCLTS, thisEpochCLAP] = Nlx2MatSpike(['TT' thisTTID '_beh_SS_' num2str(str2double(thisCLID)) '.ntt'], [1 0 0 0 1], 0, 4, [epochST, epochED]);
-elseif exist(['TT' thisTTID '_beh_SS_' thisCLID '.ntt'])
+if exist(['TT' thisTTID '_beh_SS_' thisCLID '.ntt']) && strcmp(exper,'LSM')
     [thisEpochCLTS, thisEpochCLAP] = Nlx2MatSpike(['TT' thisTTID '_beh_SS_' thisCLID '.ntt'], [1 0 0 0 1], 0, 4, [epochST, epochED]);
-    d = dir(['TT' thisTTID '_beh_SS_' thisCLID '.ntt']);
+        d = dir(['TT' thisTTID '_beh_SS_' thisCLID '.ntt']);
+        if str2double(thisCLID)<10
     movefile(d.name, ['TT' thisTTID '_beh_SS_' num2str(str2double(thisCLID)) '.ntt'])
+        end
+elseif exist(['TT' thisTTID '_beh_SS_' num2str(str2double(thisCLID)) '.ntt'])
+    [thisEpochCLTS, thisEpochCLAP] = Nlx2MatSpike(['TT' thisTTID '_beh_SS_' num2str(str2double(thisCLID)) '.ntt'], [1 0 0 0 1], 0, 4, [epochST, epochED]);
+
 end
-thisEpochCLAP = thisEpochCLAP ./ 100;
+
+if strcmp(exper,'JS')
+ [~,header] = Nlx2MatSpike(['TT' thisTTID '_beh_SS_' num2str(str2double(thisCLID)) '.ntt'], [1 0 0 0 0], 1, 4, [epochST, epochED]);
+ adBitStr = header{contains(header, 'ADBitVolts')};
+adBits = sscanf(adBitStr(13:end), '%f');
+scaleV = 1 / (adBits(1) * 10^6); %100uV
+thisEpochCLAP = thisEpochCLAP ./ scaleV;
+else
+    thisEpochCLAP = thisEpochCLAP ./ 100;
+end
 %
 
 
@@ -64,8 +76,11 @@ nSPKS = size(thisEpochCLTS, 2); %to calculate firing rate
 
 %spike constraint means %1/1/2014 by SB
 if nSPKS <= 10
+    FRRate = -2;
     onmazeMaxFR = -2;
     onmazeAvgFR = -2;
+    offmazeAvgFR = -2;
+    offmazeMaxFR = -2;
     withinREFRACPortion = -2;
     max_width = -2;
     max_peak = -2;
@@ -203,6 +218,10 @@ if str2double(thisCLID) < 10 & exist([ROOT.Raw.Mother '\rat' thisRID '\rat' this
 end
 Spk = load([ROOT.Raw.Mother '\rat' thisRID '\rat' thisRID '-' thisSID '\TT' thisTTID '\parsedSpike_' num2str(str2double(thisCLID)) '.mat']);
 
+if ~isfield(Pos,'cont')
+    Pos.cont = Pos.sc;
+end
+
 if ~isfield(Pos,'trial_context')
     Pos.cont = Pos.sc;
     Pos.trial_context = max(find(sum(Pos.sc,1)));
@@ -218,67 +237,44 @@ end
 
 
 % track type: 1 for short track, 2 for long track, 3 for additional recording (rat561)
-
+diverging_point = get_divergingPoint(ROOT.Info, thisRID, thisSID);
+Boundaries;
 switch exper
     case 'LSM'
-        if num2str(thisRID) < 400, track_type = 2;
-        elseif num2str(thisRID) > 400 && num2str(thisRID) <= 500, track_type = 4;
-        elseif num2str(thisRID) > 500, track_type = 3;
-        end
-        
-        if track_type == 1
-            xEdge = [330 420 420 490 490 260 260 330 330];
-            yEdge = [480 480 270 270 180 180 270 270 480];
-        elseif track_type == 2
-            xEdge = [330 400 400 480 480 250 250 330 330];
-            yEdge = [480 480 160 160 70 70 160 160 480];
-        elseif track_type == 4 % for rat415
-            xEdge = [325 395 395 475 475 245 245 325 325];
-            yEdge = [480 480 190 190 100 100 190 190 480];
-        elseif track_type == 3 % for rat561
-            xEdge = [325 395 395 475 475 245 245 325 325];
-            yEdge = [480 480 200 200 110 110 200 200 490];
-        end
-        
-        imROW = 500;
-        imCOL = 650;
+
     case 'JS'
-        xEdge = [0 2 2 0 ];
-        yEdge = [1000 1000 0 0];
         Pos.x1 = Pos.x;
         Pos.x = Pos.y+ rand(length(Pos.y),1);
-        Pos.y=Pos.x1/10;
+        Pos.y=Pos.x1;
         Spk.x1 = Spk.x_spk;
         Spk.x_spk = Spk.y_spk + rand(length(Spk.y_spk),1);
-        Spk.y_spk = Spk.x1/10;
-        imROW = 800;
-        imCOL = 200;
+        Spk.y_spk = Spk.x1;
+
     case 'SEB'
-        imROW = 500;
-        imCOL = 650;
-        xEdge = [300 380 380 430 430 250 250 300 300];
-        yEdge = [400 400 200 200 150 150 200 200 400];
-        
+
 end
 thisPos = [Pos.t,Pos.x,Pos.y];
 thisCLTSforSpatialInfo = [Spk.t_spk,Spk.x_spk,Spk.y_spk];
-
-in = inpolygon(thisPos(:,2), thisPos(:,3), xEdge, yEdge) & logical(cxt);
-thisPos = thisPos(in,:);
-in = inpolygon(thisCLTSforSpatialInfo(:,2), thisCLTSforSpatialInfo(:,3), xEdge, yEdge) & logical(cxt_spk);
-thisCLTSforSpatialInfo = thisCLTSforSpatialInfo(in,:);
-
-nSPKS_in = length(thisCLTSforSpatialInfo(:,1));
 FRRate = nSPKS / length(thisPos(:,1)) * videoSamplingRate; % mean firing rate
 
-thisFRMapSCALE = 10;
+inp = inpolygon(thisPos(:,2), thisPos(:,3), xEdge, yEdge) & logical(cxt);
+thisPos = thisPos(inp,:);
+ins = inpolygon(thisCLTSforSpatialInfo(:,2), thisCLTSforSpatialInfo(:,3), xEdge, yEdge) & logical(cxt_spk);
+thisCLTSforSpatialInfo = thisCLTSforSpatialInfo(ins,:);
 
-[occMap spkMap rawMap skaggsMap] = abmFiringRateMap([thisCLTSforSpatialInfo(:, 1) thisCLTSforSpatialInfo(:, 2) thisCLTSforSpatialInfo(:, 3)], thisPos(:, 1:3), imROW / thisFRMapSCALE, imCOL / thisFRMapSCALE, thisFRMapSCALE, videoSamplingRate);
+nSPKS_in = length(thisCLTSforSpatialInfo(:,1));
+nPos_out = Pos.t(~inp);
+nSPKs_out = Spk.t_spk(~ins);
+
+thisFRMapSCALE = 2;
+
+[occMap spkMap rawMap skaggsMap] = abmFiringRateMap([thisCLTSforSpatialInfo(:, 1) thisCLTSforSpatialInfo(:, 2) thisCLTSforSpatialInfo(:, 3)], [thisPos(:, 1),[thisPos(:,2:3)]], imROW / thisFRMapSCALE, imCOL / thisFRMapSCALE, thisFRMapSCALE, videoSamplingRate);
 
 SpaInfoScore = GetSpaInfo(occMap, skaggsMap);
 onmazeMaxFR = nanmax(nanmax(skaggsMap));
 onmazeAvgFR = nanmean(nanmean(skaggsMap));
 onmazeMinFR = nanmin(nanmin(skaggsMap));
+offmazeAvgFR = length(nSPKs_out) / length(nPos_out)*videoSamplingRate;
 
 fprintf('\n%s is processed\n', clusterID);
 clear thisEpochCLTS thisEpochCLAP nvtTS nvtX nvtY nvtHD;
