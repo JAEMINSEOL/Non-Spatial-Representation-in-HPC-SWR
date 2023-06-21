@@ -31,7 +31,7 @@ UnitsTable = readtable([ROOT.Units '\UnitsTable_' thisRegion '_forAnalysis.xlsx'
 
 TT_table = readtable([ROOT.Info '\TT_table.xlsx']);
 
-for sid=64:size(SessionList,1)
+for sid=86:size(SessionList,1)
     if ~SessionList.include(sid) | ~strcmp(SessionList.experimenter(sid),'LSM'), continue; end
     thisRIDn = SessionList.rat(sid); thisRID=jmnum2str(thisRIDn,3);
     thisSIDn = SessionList.session(sid); thisSID=jmnum2str(thisSIDn,2);
@@ -39,6 +39,10 @@ for sid=64:size(SessionList,1)
     load([ROOT.Behav '\' thisRSID '.mat']);
     BehavTable = readtable([ROOT.Behav '\' thisRSID '.xlsx']);
     Spike=LoadSpikeData(ROOT, thisRSID, [1:24], Params.cellfindn);
+
+    theseRip = RipplesTable(RipplesTable.rat==thisRIDn & RipplesTable.session==thisSIDn,:);
+
+    if isempty(theseRip), continue; end
 
 
     Pos = load([ROOT.Raw.Mother '\rat' thisRID '\rat' thisRID '-' thisSID '\ParsedPosition.mat']);
@@ -60,141 +64,254 @@ for sid=64:size(SessionList,1)
     [~,t] = max(thisTT_table.RippleBandMean);
     TargetTT_p = thisTT_table.TT(t);
 
+
+
     EEG = LoadEEGData(ROOT, thisRSID, TargetTT_p,Params,Params_Ripple);
 
 
-    theseRip = RipplesTable(RipplesTable.rat==thisRIDn & RipplesTable.session==thisSIDn,:);
 
-    if isempty(theseRip), continue; end
 
     for bid=1:size(BehavTable,1)-1
 
         try
-        ITIs = BehavTable.xEnd(bid);
-        ITIe = BehavTable.start(bid+1);
+            ITIs = BehavTable.xEnd(bid);
+            ITIe = BehavTable.start(bid+1);
 
-        thisRip = RipplesTable(RipplesTable.rat==thisRIDn & RipplesTable.session==thisSIDn&...
-            RipplesTable.STtime>ITIs & RipplesTable.STtime<ITIe,:);
+            thisRip = RipplesTable(RipplesTable.rat==thisRIDn & RipplesTable.session==thisSIDn&...
+                RipplesTable.STtime>ITIs & RipplesTable.STtime<ITIe,:);
 
-        Tori = theseRip.STtime(1) - theseRip.STindex(1) * unit;
-        EPOCHst = floor((BehavTable.start(bid)-Tori) / unit );
-        EPOCHed = ceil((BehavTable.reward(bid+1)-Tori )/ unit );
-        thisEEG = EEG.(['TT' num2str(TargetTT_p)]).Raw(EPOCHst:EPOCHed);
-        thisEEGr = EEG.(['TT' num2str(TargetTT_p)]).Filtered(EPOCHst:EPOCHed);
+            Tori = theseRip.STtime(1) - theseRip.STindex(1) * unit;
+            EPOCHst = floor((BehavTable.start(bid)-Tori) / unit );
+            EPOCHrw = ceil((BehavTable.reward(bid)-Tori )/ unit );
+            EPOCHist = ceil((BehavTable.xEnd(bid)-Tori )/ unit );
+            EPOCHied = ceil((BehavTable.start(bid+1)-Tori )/ unit );
+            EPOCHed = ceil((BehavTable.reward(bid+1)-Tori )/ unit );
+            thisEEG = EEG.(['TT' num2str(TargetTT_p)]).Raw;
+            thisEEGr = EEG.(['TT' num2str(TargetTT_p)]).Filtered;
 
-        EPOCHedT = (EPOCHed-EPOCHst)*unit;
-        xlist = [0:5000:EPOCHed-EPOCHst]; xlistS={};
-        for x=1:length(xlist),xlistS{x}=num2str(xlist(x)*unit); end
-        %%
-        clusters = UnitsTable(UnitsTable.rat==thisRIDn & UnitsTable.session==thisSIDn,:);
-        cls_all = size(clusters,1);
+            Emax = max(abs(thisEEG(EPOCHst:EPOCHed)))*1.1;
+            Emaxr = max(abs(thisEEGr(EPOCHst:EPOCHed)))*1.5;
 
-        %%
-        figure('position',[1927,82,1907,876]);
-        subplot(5,1,1)
-        plot(thisEEG,'color','k')
-        line([1 1]*(BehavTable.xEnd(bid)-Tori) / unit - EPOCHst,[-2500 2500],'color','r')
-        line([1 1]*(BehavTable.start(bid+1)-Tori) / unit - EPOCHst,[-2500 2500],'color','r')
+            EPOCHedT = (EPOCHed-EPOCHst)*unit;
+            xlist = [0:1000:EPOCHrw-EPOCHst]; xlistS={};
+            for x=1:length(xlist),xlistS{x}=num2str(xlist(x)*unit); end
+            xlist2 = [0:1000:EPOCHied-EPOCHist]; xlistS2={};
+            for x=1:length(xlist2),xlistS2{x}=num2str(xlist2(x)*unit); end
+            xlist3 = [0:1000:EPOCHed-EPOCHied]; xlistS3={};
+            for x=1:length(xlist3),xlistS3{x}=num2str(xlist3(x)*unit); end
+            %%
+            clusters = UnitsTable(UnitsTable.rat==thisRIDn & UnitsTable.session==thisSIDn,:);
+            cls_all = size(clusters,1);
 
-        line([1 1]*(BehavTable.reward(bid)-Tori) / unit - EPOCHst,[-2500 2500],'color','b')
-        line([1 1]*(BehavTable.reward(bid+1)-Tori) / unit - EPOCHst,[-2500 2500],'color','b')
+            %%
+            figure('position',[1927,82,1907,876]);
+            subplot(5,6,1)
+            plot(thisEEG(EPOCHst:EPOCHrw),'color','k')
 
 
+            xticks(xlist)
+            xticklabels(xlistS)
+            xlim([0 xlist(end)])
 
-        for rid=1:size(thisRip,1)
-            x1 = (thisRip.STtime(rid)-Tori)/ unit - EPOCHst; x2 = (thisRip.EDtime(rid)-Tori)/ unit - EPOCHst;
-            patch([x1 x2 x2 x1], [-1 -1 1 1]*2500,'y','facealpha',0.3,'edgealpha',0)
-        end
+            ylabel('Amplitude (uV)')
+            ylim([-Emax Emax])
 
-        xticks(xlist)
-        xticklabels(xlistS)
-        xlim([0 xlist(end)])
+            subplot(5,6,[2 5])
+            plot(thisEEG(EPOCHist:EPOCHied),'color','k')
+            %         line([1 1]*(BehavTable.xEnd(bid)-Tori) / unit - EPOCHist,[-1 1]*Emax,'color','r')
+            %         line([1 1]*(BehavTable.start(bid+1)-Tori) / unit - EPOCHist,[-1 1]*Emax,'color','r')
 
-        ylabel('Amplitude (uV)')
-        %%
-        subplot(5,1,2)
-        plot(thisEEGr,'color','b')
-        line([1 1]*(BehavTable.xEnd(bid)-Tori) / unit - EPOCHst,[-200 200],'color','r')
-        line([1 1]*(BehavTable.start(bid+1)-Tori) / unit - EPOCHst,[-200 200],'color','r')
-
-        line([1 1]*(BehavTable.reward(bid)-Tori) / unit - EPOCHst,[-200 200],'color','b')
-        line([1 1]*(BehavTable.reward(bid+1)-Tori) / unit - EPOCHst,[-200 200],'color','b')
-
-        for rid=1:size(thisRip,1)
-            x1 = (thisRip.STtime(rid)-Tori)/ unit - EPOCHst; x2 = (thisRip.EDtime(rid)-Tori)/ unit - EPOCHst;
-            patch([x1 x2 x2 x1], [-400 -400 400 400],'y','facealpha',0.3,'edgealpha',0)
-        end
-
-        xticks(xlist)
-        xticklabels(xlistS)
-         xlim([0 xlist(end)])
-         ylabel('Amplitude (uV)')
-%%
-subplot(5,1,3)
-thisPos = (Pos.t>=EPOCHst*unit+Tori & Pos.t<=EPOCHed*unit+Tori);
-plot(max(Pos.y_linearized) - Pos.y_linearized(thisPos),'k','linewidth',2)
-line([0 sum(thisPos)], [1 1]*max(Pos.y_linearized) -diverging_point,'color','b')
-ylabel('Pos (cm)')
-xlim([0 sum(thisPos)])
-
-        %%
-        subplot(5,1,[4 5]); hold on
-        ylistS={};
-        for un = 1:cls_all
-
-            [thisRIDc,thisSIDc,thisTTIDc,thisCLIDc, thisFLIDc] = parsing_clusterID(clusters.ID{un},1);
-
-            Spk = Spike.(['TT' (thisTTIDc)]).(['Unit' thisCLIDc]);
-
-            thisSpks = Spk.t_spk(Spk.t_spk>=EPOCHst*unit+Tori & Spk.t_spk<=EPOCHed*unit+Tori);
-
-            if clusters.(['Selectivity_' Sel])(un)>=1
-                if (clusters.(['RDI_' Sel])(un))>0
-                    c='r';
-                else
-                    c='b';
-                end
-            else
-                c='k';
+            %         line([1 1]*(BehavTable.reward(bid)-Tori) / unit - EPOCHst,[-2500 2500],'color','b')
+            for rid=1:size(thisRip,1)
+                x1 = (thisRip.STtime(rid)-Tori)/ unit - EPOCHist; x2 = (thisRip.EDtime(rid)-Tori)/ unit - EPOCHist;
+                patch([x1 x2 x2 x1], [-1 -1 1 1]*Emax,'y','facealpha',0.3,'edgealpha',0)
             end
 
-            scatter(thisSpks-(EPOCHst*unit+Tori),ones(length(thisSpks),1)*un,c,'|')
+            xticks(xlist2)
+            xticklabels(xlistS2)
+            xlim([0 xlist2(end)])
+            ylim([-Emax Emax])
 
-            ylistS{un} = [(thisTTIDc) '-' thisCLIDc];
-        end
-        xlim([0 str2double(xlistS{end})])
+            subplot(5,6,6)
+            plot(thisEEG(EPOCHied:EPOCHed),'color','k')
+            %         line([1 1]*(BehavTable.xEnd(bid)-Tori) / unit - EPOCHist,[-1 1]*Emax,'color','r')
+            %         line([1 1]*(BehavTable.start(bid+1)-Tori) / unit - EPOCHist,[-1 1]*Emax,'color','r')
 
-        for rid=1:size(thisRip,1)
-            x1 = thisRip.STtime(rid)-(EPOCHst*unit+Tori); x2 = thisRip.EDtime(rid)-(EPOCHst*unit+Tori);
-            patch([x1 x2 x2 x1], [0 0 1 1]*(un+.5),'y','facealpha',0.3,'edgealpha',0)
-        end
-
-        yticks([1:un])
-        yticklabels(ylistS)
-        ylim([0 un+.5])
-
- ylabel('Unit')
-        %%
-        CxList = {'Zebra','Pebbles','Bamboo','Mountains'};
-        CrList={'C','W'};
-        cx1 = CxList{BehavTable.context(bid)}; cx2 = CxList{BehavTable.context(bid+1)}; 
-        cr1 = CrList{BehavTable.correctness(bid)}; cr2 = CrList{BehavTable.correctness(bid+1)}; 
-        sgtitle(['Trial ' BehavTable.TrialID{bid} ' (' cx1 '(' cr1 ') -' cx2 '(' cr2 '))'])
+            %         line([1 1]*(BehavTable.reward(bid)-Tori) / unit - EPOCHst,[-2500 2500],'color','b')
 
 
-        ROOT.Fig_en = [ROOT.Fig '\All\' thisRegion '\' Sel];
-        if ~exist(ROOT.Fig_en), mkdir(ROOT.Fig_en); end
-        saveas(gca,[ROOT.Fig_en '\'  BehavTable.TrialID{bid} '.svg'])
-        saveas(gca,[ROOT.Fig_en '\'  BehavTable.TrialID{bid} '.png'])
+            xticks(xlist3)
+            xticklabels(xlistS3)
+            xlim([0 xlist3(end)])
+            ylim([-Emax Emax])
+            %%
+            subplot(5,6,7)
+            plot(thisEEGr(EPOCHst:EPOCHrw),'color','b')
+            xticks(xlist)
+            xticklabels(xlistS)
+            xlim([0 xlist(end)])
+            ylabel('Amplitude (uV)')
+            ylim([-Emaxr Emaxr])
 
-        if ~isempty(thisRip)
-                ROOT.Fig_en = [ROOT.Fig '\Rip\' thisRegion '\' Sel];
-        if ~exist(ROOT.Fig_en), mkdir(ROOT.Fig_en); end
-        saveas(gca,[ROOT.Fig_en '\'  BehavTable.TrialID{bid} '.svg'])
-        saveas(gca,[ROOT.Fig_en '\'  BehavTable.TrialID{bid} '.png'])
-        end
-        
-        close all
+
+            subplot(5,6,[8 11])
+            plot(thisEEGr(EPOCHist:EPOCHied),'color','b')
+
+            for rid=1:size(thisRip,1)
+                x1 = (thisRip.STtime(rid)-Tori)/ unit - EPOCHist; x2 = (thisRip.EDtime(rid)-Tori)/ unit - EPOCHist;
+                patch([x1 x2 x2 x1], [-1 -1 1 1]*Emaxr,'y','facealpha',0.3,'edgealpha',0)
+            end
+
+            xticks(xlist2)
+            xticklabels(xlistS2)
+            xlim([0 xlist2(end)])
+            ylim([-Emaxr Emaxr])
+
+            subplot(5,6, 12)
+            plot(thisEEGr(EPOCHied:EPOCHed),'color','b')
+
+            xticks(xlist3)
+            xticklabels(xlistS3)
+            xlim([0 xlist3(end)])
+            ylim([-Emaxr Emaxr])
+            %%
+            subplot(5,6,13)
+            thisPos = (Pos.t>=EPOCHst*unit+Tori & Pos.t<=EPOCHrw*unit+Tori);
+            plot(max(Pos.y_linearized) - Pos.y_linearized(thisPos),'k','linewidth',2)
+            line([0 sum(thisPos)], [1 1]*max(Pos.y_linearized) -diverging_point,'color','b')
+            ylabel('Pos (cm)')
+            xlim([0 sum(thisPos)]); ylim([0 max(Pos.y_linearized)-min(Pos.y_linearized)]*1.2)
+
+            subplot(5,6,[14 17])
+            thisPos = (Pos.t>=EPOCHist*unit+Tori & Pos.t<=EPOCHied*unit+Tori);
+            plot(max(Pos.y_linearized) - Pos.y_linearized(thisPos),'k','linewidth',2)
+            line([0 sum(thisPos)], [1 1]*max(Pos.y_linearized) -diverging_point,'color','b')
+            xlim([0 sum(thisPos)]); ylim([0 max(Pos.y_linearized)-min(Pos.y_linearized)]*1.2)
+
+            subplot(5,6,18)
+            thisPos = (Pos.t>=EPOCHied*unit+Tori & Pos.t<=EPOCHed*unit+Tori);
+            plot(max(Pos.y_linearized) - Pos.y_linearized(thisPos),'k','linewidth',2)
+            line([0 sum(thisPos)], [1 1]*max(Pos.y_linearized) -diverging_point,'color','b')
+            xlim([0 sum(thisPos)]); ylim([0 max(Pos.y_linearized)-min(Pos.y_linearized)]*1.2)
+
+            %%
+            subplot(5,6,[19 25]); hold on
+            ylistS={};
+            for un = 1:cls_all
+
+                [thisRIDc,thisSIDc,thisTTIDc,thisCLIDc, thisFLIDc] = parsing_clusterID(clusters.ID{un},1);
+
+                Spk = Spike.(['TT' (thisTTIDc)]).(['Unit' thisCLIDc]);
+
+                thisSpks = Spk.t_spk(Spk.t_spk>=EPOCHst*unit+Tori & Spk.t_spk<=EPOCHrw*unit+Tori);
+
+                if clusters.(['Selectivity_' Sel])(un)>=1
+                    if (clusters.(['RDI_' Sel])(un))>0
+                        c='r';
+                    else
+                        c='b';
+                    end
+                else
+                    c='k';
+                end
+
+                scatter(thisSpks-(EPOCHst*unit+Tori),ones(length(thisSpks),1)*un,c,'|')
+
+                ylistS{un} = [(thisTTIDc) '-' thisCLIDc];
+            end
+            xlim([0 str2double(xlistS{end})])
+            yticks([1:un])
+            yticklabels(ylistS)
+            ylim([0 un+.5])
+            ylabel('Unit')
+
+            subplot(5,6,[20 29]); hold on
+            ylistS={};
+            for un = 1:cls_all
+
+                [thisRIDc,thisSIDc,thisTTIDc,thisCLIDc, thisFLIDc] = parsing_clusterID(clusters.ID{un},1);
+
+                Spk = Spike.(['TT' (thisTTIDc)]).(['Unit' thisCLIDc]);
+
+                thisSpks = Spk.t_spk(Spk.t_spk>=EPOCHist*unit+Tori & Spk.t_spk<=EPOCHied*unit+Tori);
+
+                if clusters.(['Selectivity_' Sel])(un)>=1
+                    if (clusters.(['RDI_' Sel])(un))>0
+                        c='r';
+                    else
+                        c='b';
+                    end
+                else
+                    c='k';
+                end
+
+                scatter(thisSpks-(EPOCHist*unit+Tori),ones(length(thisSpks),1)*un,c,'|')
+
+                ylistS{un} = [(thisTTIDc) '-' thisCLIDc];
+            end
+            xlim([0 str2double(xlistS2{end})])
+
+            for rid=1:size(thisRip,1)
+                x1 = thisRip.STtime(rid)-(EPOCHist*unit+Tori); x2 = thisRip.EDtime(rid)-(EPOCHist*unit+Tori);
+                patch([x1 x2 x2 x1], [0 0 1 1]*(un+.5),'y','facealpha',0.3,'edgealpha',0)
+            end
+
+            yticks([1:un])
+            yticklabels(ylistS)
+            ylim([0 un+.5])
+
+
+
+            subplot(5,6,[24 30]); hold on
+            ylistS={};
+            for un = 1:cls_all
+
+                [thisRIDc,thisSIDc,thisTTIDc,thisCLIDc, thisFLIDc] = parsing_clusterID(clusters.ID{un},1);
+
+                Spk = Spike.(['TT' (thisTTIDc)]).(['Unit' thisCLIDc]);
+
+                thisSpks = Spk.t_spk(Spk.t_spk>=EPOCHied*unit+Tori & Spk.t_spk<=EPOCHed*unit+Tori);
+
+                if clusters.(['Selectivity_' Sel])(un)>=1
+                    if (clusters.(['RDI_' Sel])(un))>0
+                        c='r';
+                    else
+                        c='b';
+                    end
+                else
+                    c='k';
+                end
+
+                scatter(thisSpks-(EPOCHied*unit+Tori),ones(length(thisSpks),1)*un,c,'|')
+
+                ylistS{un} = [(thisTTIDc) '-' thisCLIDc];
+            end
+            xlim([0 str2double(xlistS3{end})])
+
+            yticks([1:un])
+            yticklabels(ylistS)
+            ylim([0 un+.5])
+            %%
+            CxList = {'Zebra','Pebbles','Bamboo','Mountains'};
+            CrList={'C','W'};
+            cx1 = CxList{BehavTable.context(bid)}; cx2 = CxList{BehavTable.context(bid+1)};
+            cr1 = CrList{BehavTable.correctness(bid)}; cr2 = CrList{BehavTable.correctness(bid+1)};
+            sgtitle(['Trial ' BehavTable.TrialID{bid} ' (' cx1 '(' cr1 ') -' cx2 '(' cr2 '))'])
+
+
+            ROOT.Fig_en = [ROOT.Fig '\All_s\' thisRegion '\' Sel];
+            if ~exist(ROOT.Fig_en), mkdir(ROOT.Fig_en); end
+            saveas(gca,[ROOT.Fig_en '\'  BehavTable.TrialID{bid} '.svg'])
+            saveas(gca,[ROOT.Fig_en '\'  BehavTable.TrialID{bid} '.png'])
+
+            if ~isempty(thisRip)
+                ROOT.Fig_en = [ROOT.Fig '\Rip_s\' thisRegion '\' Sel];
+                if ~exist(ROOT.Fig_en), mkdir(ROOT.Fig_en); end
+                saveas(gca,[ROOT.Fig_en '\'  BehavTable.TrialID{bid} '.svg'])
+                saveas(gca,[ROOT.Fig_en '\'  BehavTable.TrialID{bid} '.png'])
+            end
+
+            close all
         catch
             close all
         end
