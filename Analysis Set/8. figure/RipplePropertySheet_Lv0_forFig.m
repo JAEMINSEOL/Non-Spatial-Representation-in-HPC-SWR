@@ -5,7 +5,7 @@ ROOT.Rip0 = [ROOT.Mother '\Processed Data\ripples_mat\R0'];
 ROOT.Rip = [ROOT.Mother '\Processed Data\ripples_mat\R3'];
 ROOT.Rip4 = [ROOT.Mother '\Processed Data\ripples_mat\R4'];
 ROOT.Rip5 = [ROOT.Mother '\Processed Data\ripples_mat\R5_cell_AllPopul'];
-ROOT.Fig = [ROOT.Mother '\Manuscript figures\R0_fig'];
+ROOT.Fig = [ROOT.Mother '\Manuscript figures\R2\R0_fig'];
 ROOT.Units = [ROOT.Mother '\Processed Data\units_mat\U2'];
 ROOT.Behav = [ROOT.Mother '\Processed Data\behavior_mat'];
 
@@ -23,15 +23,18 @@ microSEC = 1e-06;
 len = 20000;
 thisFRMapSCALE=2;
 %%
-thisRegion = 'CA1';
-thisRegion2 = 'CA1_field';
+thisRegion = 'SUB';
+thisRegion2 = 'SUB_field';
 Sel = 'LScene';
 RipplesTable = readtable([ROOT.Rip '\RipplesTable_' thisRegion '_forAnalysis.xlsx']);
+RipplesTable = readtable([ROOT.Save '\RipplesTable_' thisRegion2 '_RDIs_UV_cell_HeteroIn_AllPopul.xlsx']);
+
+RipplesTable = readtable([ROOT.Rip0 '\RipplesList_' thisRegion '.xlsx']);
 UnitsTable = readtable([ROOT.Units '\UnitsTable_' thisRegion '_forAnalysis.xlsx']);
 
 TT_table = readtable([ROOT.Info '\TT_table.xlsx']);
 
-for sid=86:size(SessionList,1)
+for sid=1:size(SessionList,1)
     if ~SessionList.include(sid) | ~strcmp(SessionList.experimenter(sid),'LSM'), continue; end
     thisRIDn = SessionList.rat(sid); thisRID=jmnum2str(thisRIDn,3);
     thisSIDn = SessionList.session(sid); thisSID=jmnum2str(thisSIDn,2);
@@ -125,6 +128,7 @@ for sid=86:size(SessionList,1)
             for rid=1:size(thisRip,1)
                 x1 = (thisRip.STtime(rid)-Tori)/ unit - EPOCHist; x2 = (thisRip.EDtime(rid)-Tori)/ unit - EPOCHist;
                 patch([x1 x2 x2 x1], [-1 -1 1 1]*Emax,'y','facealpha',0.3,'edgealpha',0)
+                text(x1, Emax*round(mod(rid,2)-0.5), thisRip.ID{rid}(end-3:end),'color','r')
             end
 
             xticks(xlist2)
@@ -299,13 +303,13 @@ for sid=86:size(SessionList,1)
             sgtitle(['Trial ' BehavTable.TrialID{bid} ' (' cx1 '(' cr1 ') -' cx2 '(' cr2 '))'])
 
 
-            ROOT.Fig_en = [ROOT.Fig '\All_s\' thisRegion '\' Sel];
+            ROOT.Fig_en = [ROOT.Fig '\All\' thisRegion '\' Sel];
             if ~exist(ROOT.Fig_en), mkdir(ROOT.Fig_en); end
             saveas(gca,[ROOT.Fig_en '\'  BehavTable.TrialID{bid} '.svg'])
             saveas(gca,[ROOT.Fig_en '\'  BehavTable.TrialID{bid} '.png'])
 
             if ~isempty(thisRip)
-                ROOT.Fig_en = [ROOT.Fig '\Rip_s\' thisRegion '\' Sel];
+                ROOT.Fig_en = [ROOT.Fig '\Rip\' thisRegion '\' Sel];
                 if ~exist(ROOT.Fig_en), mkdir(ROOT.Fig_en); end
                 saveas(gca,[ROOT.Fig_en '\'  BehavTable.TrialID{bid} '.svg'])
                 saveas(gca,[ROOT.Fig_en '\'  BehavTable.TrialID{bid} '.png'])
