@@ -165,7 +165,7 @@ for sid=1:size(RipplesTable,1)
         axis off
 
 
-                sgtitle(['(SUB_refCA1) ' cell2mat(thisRip.ID) ', ' Exper ', ' dir 'trial ' (thisRip.trial{1}(end-2:end)) ', ' cxt ', ' corr],...
+                sgtitle([thisRip.ID{1}(1:7) thisRegion  thisRip.ID{1}(end-4:end) ', ' Exper ', ' dir 'trial ' (thisRip.trial{1}(end-2:end)) ', ' cxt ', ' corr],...
             'fontsize',15,'Interpreter','none')
         %% EEG
         thisEEG = EEG.(['TT' num2str(TargetTT_p)]).Raw(Ist:Ied);
@@ -430,6 +430,8 @@ ylabel('right scene RDI mean')
 subplot(8,12, [59 72]);
 DistPerm(NS_perm.RDI_C.dist.mean,NS_perm.RDI_C.act_mean,thisRip.pRDI_C_UV,[-1 1],'mean',0.2)
 ylabel('choice RDI mean')
+
+save([ROOT.Rip5 ['\' thisRegion0 '-' thisRip.ID{1} '_UV.mat']],'-struct','NS_perm');
 
         %% save fig
         if thisRip.DecodingP_all<0.05, suf1='Replay'; else, suf1='x'; end
