@@ -415,9 +415,9 @@ S_perm = load([ROOT.Rip4 '\' thisRip.ID{1} '.mat'],"c","v",'R_shuffled','R_actua
 % title('permutation test')
 % ylabel('r^2 for pos decoding')
 
-if sum(clunits_L(:,2))<5, thisRip.pRDI_L_UV=nan; NS_perm.RDI_L.p_mean=nan; RipplesTable.pRDI_L_UV(sid)=nan; end
-if sum(clunits_R(:,2))<5, thisRip.pRDI_R_UV=nan; NS_perm.RDI_R.p_mean=nan; RipplesTable.pRDI_R_UV(sid)=nan; end
-if sum(clunits_C(:,2))<5, thisRip.pRDI_C_UV=nan; NS_perm.RDI_C.p_mean=nan; RipplesTable.pRDI_C_UV(sid)=nan; end
+if sum(~clunits_L(:,2))<5, thisRip.pRDI_L_UV=nan; NS_perm.RDI_L.p_mean=nan; RipplesTable.pRDI_L_UV(sid)=nan; end
+if sum(~clunits_R(:,2))<5, thisRip.pRDI_R_UV=nan; NS_perm.RDI_R.p_mean=nan; RipplesTable.pRDI_R_UV(sid)=nan; end
+if sum(~clunits_C(:,2))<5, thisRip.pRDI_C_UV=nan; NS_perm.RDI_C.p_mean=nan; RipplesTable.pRDI_C_UV(sid)=nan; end
 
 subplot(8,12, [11 24]);
 DistPerm(NS_perm.RDI_L.dist.mean,NS_perm.RDI_L.act_mean,thisRip.pRDI_L_UV,[-1 1],'mean',0.2)
