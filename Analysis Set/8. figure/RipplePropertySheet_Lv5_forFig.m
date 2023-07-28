@@ -5,7 +5,7 @@ ROOT.Rip0 = [ROOT.Mother '\Processed Data\ripples_mat\R0'];
 ROOT.Rip = [ROOT.Mother '\Processed Data\ripples_mat\R2'];
 ROOT.Rip4 = [ROOT.Mother '\Processed Data\ripples_mat\R4'];
 ROOT.Rip5 = [ROOT.Mother '\Processed Data\ripples_mat\R5_cell_AllPopul'];
-ROOT.Fig = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R24_sub'];
+ROOT.Fig = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R24_ca1'];
 ROOT.Units = [ROOT.Mother '\Processed Data\units_mat\U2'];
 ROOT.Behav = [ROOT.Mother '\Processed Data\behavior_mat'];
 
@@ -19,10 +19,11 @@ SessionList = readtable([ROOT.Info '\SessionList_SWR.xlsx'],'ReadRowNames',false
 
 
 %%
-thisRegion0 = 'SUB_refCA1';
-thisRegion = 'SUB';
-thisRegion2 = 'SUB_field';
+thisRegion0 = 'CA1';
+thisRegion = 'CA1';
+thisRegion2 = 'CA1_field';
 RipplesTable = readtable([ROOT.Save '\RipplesTable_' thisRegion0 '_forAnalysis.xlsx']);
+% writetable(RipplesTable,[ROOT.Save '\RipplesTable_' thisRegion0 '_forAnalysis.xlsx'],'writemode','replacefile');
 % UnitsTable = readtable([ROOT.Units '\UnitsTable_filtered_' thisRegion2 '.xlsx']);
 UnitsTable_B = readtable([ROOT.Units '\UnitsTable_' thisRegion2 '_forAnalysis.xlsx']);
 UnitsTable_A = readtable([ROOT.Units '\UnitsTable_' thisRegion '_forAnalysis.xlsx']);
@@ -238,6 +239,8 @@ for sid=1:size(RipplesTable,1)
             patch([x-ti x+ti x+ti x-ti], [aspks_epoch(s,end)+.2 aspks_epoch(s,end)+.2 aspks_epoch(s,end)+.8 aspks_epoch(s,end)+.8],...
                 'k','edgecolor','k','edgealpha',0)
         end
+
+        text(x2,-.1,[jjnum2str(thisRip.RippleDuration*1e3,1) 'ms'])
         %% Bayesian decoding plotting
 %         if 1
 %             marR = mar/Params.Fs/Params.tbinDuration;
@@ -623,10 +626,11 @@ histogram(dist,'binwidth',binw,'facecolor','k','Normalization','probability')
 line([act act],[0 y1],'color','r')
 line([mean(lim) mean(lim)],[0 y1],'color','k','linestyle',':')
 xlim(lim)
+if p<0.05, c='r'; else, c='k'; end
 if p<0.001
-    text(-0.3,y1*0.8,['p<0.001'])
+    text(-0.3,y1*0.8,['p<0.001'],'color',c)
 else
-text(-0.3,y1*0.8,['p= ' jjnum2str(p,3)])
+text(-0.3,y1*0.8,['p= ' jjnum2str(p,3)],'color',c)
 end
 text(-0.3,y1*0.9,[ylab '= ' jjnum2str(act,2)],'color','r')
 set(gca,'xdir','reverse','ydir','normal')
