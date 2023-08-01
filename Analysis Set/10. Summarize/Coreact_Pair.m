@@ -92,6 +92,7 @@ for Reg = 1:numel(RegionList)
             RDI_L1 = []; RDI_R1 = []; RDI_C1 = [];
             for f = 1:size(thisField_1,1)
                 F = load([ROOT.Unit1 '\' thisField_1.ID{f} '.mat'],'RDIs_field'); F= F.RDIs_field;
+                if size(F,1)<3, F(3,:)=nan; end
                 RDI_L1 = [RDI_L1;interp1(1:size(F,2),F(1,:),linspace(1,size(F,2),40))];
                 RDI_R1 = [RDI_R1; interp1(1:size(F,2),F(2,:),linspace(1,size(F,2),40))];
                 RDI_C1 = [RDI_C1; interp1(1:size(F,2),F(3,:),linspace(1,size(F,2),40))];
@@ -105,6 +106,7 @@ for Reg = 1:numel(RegionList)
              RDI_L2 = []; RDI_R2 = []; RDI_C2 = [];
             for f = 1:size(thisField_2,1)
                 F = load([ROOT.Unit1 '\' thisField_2.ID{f} '.mat'],'RDIs_field'); F= F.RDIs_field;
+                if size(F,1)<3, F(3,:)=nan; end
                 RDI_L2 = [RDI_L2;interp1(1:size(F,2),F(1,:),linspace(1,size(F,2),40))];
                 RDI_R2 = [RDI_R2; interp1(1:size(F,2),F(2,:),linspace(1,size(F,2),40))];
                 RDI_C2 = [RDI_C2; interp1(1:size(F,2),F(3,:),linspace(1,size(F,2),40))];
