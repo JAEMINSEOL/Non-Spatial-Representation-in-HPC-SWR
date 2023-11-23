@@ -1,9 +1,9 @@
 Initial_SWRFilter_common;
 warning off
-ROOT.Rip = [ROOT.Mother '\Processed Data\ripples_mat'];
-ROOT.Behav = [ROOT.Mother '\Processed Data\behavior_mat'];
-ROOT.React = [ROOT.Mother '\Processed Data\react_mat'];
-ROOT.Save = [ROOT.Mother '\Processed Data'];
+ROOT.Rip = [ROOT.Processed '\ripples_mat'];
+ROOT.Behav = [ROOT.Processed '\behavior_mat'];
+ROOT.React = [ROOT.Processed '\react_mat'];
+ROOT.Save = [ROOT.Processed];
 
 Recording_region = readtable([ROOT.Info '\Recording_region_SWR.csv'],'ReadRowNames',true);
 
