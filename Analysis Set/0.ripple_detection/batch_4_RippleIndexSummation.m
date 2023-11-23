@@ -1,19 +1,21 @@
 
 Initial_SWRFilter_common;
 warning off
-ROOT.Old = [ROOT.Mother '\Processed Data\ripples_mat\R0_200'];
-ROOT.Unit = [ROOT.Mother '\Processed Data\units_mat\U0'];
-ROOT.Save = [ROOT.Mother '\Processed Data\ripples_mat\R0_300'];
-ROOT.Fig = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R0_300'];
-if ~exist(ROOT.Save), mkdir(ROOT.Save); end
+thisRegion = 'SUB';
+Experimenter = {'JS','LSM','SEB'};
+
+ROOT.Save = ROOT.Processed;
+ROOT.Old = [ROOT.Save '\ripples_mat\R0'];
+ROOT.Unit = [ROOT.Save '\units_mat\U0'];
+ROOT.SaveRip = [ROOT.Save '\ripples_mat\R0'];
+ROOT.Fig = [ROOT.Save '\ripples_mat\ProfilingSheet\R0\' thisRegion];
+if ~exist(ROOT.SaveRip), mkdir(ROOT.SaveRip); end
 if ~exist(ROOT.Fig), mkdir(ROOT.Fig); end
+
 %%
 Recording_region = readtable([ROOT.Info '\Recording_region_SWR.csv'],'ReadRowNames',true);
 SessionList = readtable([ROOT.Info '\SessionList_SWR.xlsx'],'ReadRowNames',false);
-Cluster_List = readtable([ROOT.Unit '\ClusterList_SWR_CA1_filtered.xlsx'],'ReadVariableNames',true);
-thisRegion = 'CA1';
-Experimenter = {'JS','LSM','SEB'};
-
+Cluster_List = readtable([ROOT.Info '\ClusterList_SWR_' thisRegion '_filtered.xlsx'],'ReadVariableNames',true);
 
 
 fd = dir(ROOT.Save);
@@ -32,12 +34,12 @@ for sid=1:size(SessionList,1)
         
         TargetTT_r = GetTargetTT(ROOT,thisRSID,thisRegion,Params,0.03);
         TargetTT_c = GetTargetTT(ROOT,thisRSID,thisRegion,Params,0);
-        if size(TargetTT_r,1)<2, continue; end
-        if ~exist([ROOT.Old '\' ID '.mat']), continue; end
-        load([ROOT.Old '\' ID '.mat']);
+        if size(TargetTT_c,1)<2, continue; end
+        if ~exist([ROOT.Old '\' thisRegion '\' ID '.mat']), continue; end
+        load([ROOT.Old '\' thisRegion '\' ID '.mat']);
          %%
         L=1;
-        for t1=1:length(TargetTT_r)
+        for t1=1:length(TargetTT_c)
             try
                 thisTTID=TargetTT_r(t1);
                 L = max(L,length(Ripples.(['TT' num2str(thisTTID)]).index(end,2)));
@@ -91,7 +93,7 @@ for sid=1:size(SessionList,1)
 %         
         %%
         TT_table = readtable([ROOT.Info '\TT_table.xlsx']);
-         thisTT_table = TT_table(TT_table.rat==thisRID & TT_table.session==thisSID,:);
+         thisTT_table = TT_table(TT_table.rat==thisRID & TT_table.session==thisSID& strcmp(TT_table.region,thisRegion),:);
          for t=1:size(thisTT_table,1)
              if ~ismember(thisTT_table.TT(t),TargetTT_r)
                  thisTT_table.TT(t)=0;
@@ -114,15 +116,17 @@ for sid=1:size(SessionList,1)
         ripples_index(:,4) = time_ori + ripples_index(:,2)/Params_Ripple.Fs;
         for i=1:size(ripples_index,1), ripples_index(i,5) = max(RippleVector(ripples_index(i,1):ripples_index(i,2))); end
         
-        writematrix(ripples_index,[ROOT.Save '\' ID '_' thisRegion '.csv'],'WriteMode', 'overwrite')
+        writematrix(ripples_index,[ROOT.SaveRip '\' ID '_' thisRegion '.csv'],'WriteMode', 'overwrite')
         disp([ID '_' thisRegion '.csv is saved!'])
         
         
-        ripples = readtable([ROOT.Save '\' ID '_' thisRegion '.csv']);
+        ripples = readtable([ROOT.SaveRip '\' ID '_' thisRegion '.csv']);
         Spike=LoadSpikeData(ROOT, ID, TargetTT_c, Params.cellfindn);
         clusters = Cluster_List(Cluster_List.rat==thisRID & Cluster_List.session==thisSID,:);
         %%
-        Ripple_List=table;
+        if isempty(clusters)
+            spks_all=0;
+        else
         spks_all=[];
         for cl = 1:size(clusters,1)
             thisTTID = num2str(clusters.TT(cl));
@@ -130,6 +134,8 @@ for sid=1:size(SessionList,1)
             Spk = Spike.(['TT' (thisTTID)]).(['Unit' thisCLID]);
             spks_all = [spks_all;[Spk.t_spk,ones(size(Spk.t_spk,1),1)*cl]];
         end
+        end
+                Ripple_List=table;
         
         for rid = 1: size(ripples,1)
             Ripple_List.ID{rid} = [jmnum2str(thisRID,3) '-' jmnum2str(thisSID,2) '-' thisRegion '-' jmnum2str(rid,4)];
@@ -173,6 +179,6 @@ for sid=1:size(SessionList,1)
     end
 end
 %%
-writetable(RipplesTable_all,[ROOT.Save '\RipplesList_' thisRegion '.xlsx'],'WriteMode', 'overwrite')
+writetable(RipplesTable_all,[ROOT.SaveRip '\RipplesList_' thisRegion '.xlsx'],'WriteMode', 'overwrite')
 RipplesTable_filt = RipplesTable_all(RipplesTable_all.ensemble>=3,:);
-writetable(RipplesTable_filt,[ROOT.Save '\RipplesList_' thisRegion '_filtered.xlsx'],'WriteMode', 'overwrite')
+writetable(RipplesTable_filt,[ROOT.SaveRip '\RipplesList_' thisRegion '_filtered.xlsx'],'WriteMode', 'overwrite')

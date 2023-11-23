@@ -1,10 +1,11 @@
 Initial_SWRFilter_common;
-ROOT.Save = [ROOT.Mother '\Processed Data\ripples_mat\R0'];
+
 SessionList = readtable([ROOT.Info '\SessionList_SWR.xlsx'],'ReadRowNames',false);
 
-Experimenter = {'LSM','JS','SEB'};
-
-
+Experimenter = {'LSM'};
+thisRegion = 'CA1';
+ROOT.Save = [ROOT.Save '\ripples_mat\R0\' thisRegion ];
+if ~exist(ROOT.Save), mkdir(ROOT.Save); end
 
 fd = dir(ROOT.Save);
 
@@ -14,14 +15,17 @@ for sid=1:size(SessionList,1)
     if SessionList.include(sid) && ismember(SessionList.experimenter(sid),Experimenter)
         thisRID = jmnum2str(SessionList.rat(sid),3);
         thisSID = jmnum2str(SessionList.session(sid),2);
+        thisRSID = [thisRID '-' thisSID];
         
-        TargetTT = [1:24]';
-        
+%         TargetTT = [1:24]';
+        TargetTT = GetTargetTT(ROOT,thisRSID,thisRegion,Params,1);
+        if isempty(TargetTT), continue;  end
         %% EEG
-        EEG = LoadEEGData(ROOT, [thisRID '-' thisSID], TargetTT,Params,Params_Ripple);
+        EEG = LoadEEGData(ROOT, thisRSID, TargetTT,Params,Params_Ripple);
         Ripples = struct;
         for thisTTID=1:24
             try
+                raw = EEG.(['TT' num2str(thisTTID)]).Raw;
                 envelope_smoothed = EEG.(['TT' num2str(thisTTID)]).Envelope_smoothed;
                 
                 cscID = [thisRID '-' thisSID '-' num2str(thisTTID)];
@@ -93,6 +97,14 @@ for sid=1:size(SessionList,1)
                     % duration check
                     ripples_index(:,3) = (ripples_index(:,2)-ripples_index(:,1));
                     ripples_index(ripples_index(:,3)<Params_Ripple.minDuration*Params.Fs,:) =[];
+                    ripples_index(:,3)=[];
+                    
+                    % noise check
+                EEGr = max(abs(raw));
+                for r=1:size(ripples_index,1)
+                ripples_index(r,3) = sum(abs(raw(ripples_index(r,1):ripples_index(r,2)))>=EEGr);
+                end
+                ripples_index(ripples_index(:,3)>1,:) =[];
                     ripples_index(:,3)=[];
                     
                     
