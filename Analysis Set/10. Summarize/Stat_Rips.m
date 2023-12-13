@@ -1,27 +1,30 @@
 Initial_SWRFilter_common;
 warning off
-ROOT.Save = [ROOT.Mother '\Processed Data'];
-ROOT.Rip0 = [ROOT.Mother '\Processed Data\ripples_mat\R0'];
-ROOT.Rip = [ROOT.Mother '\Processed Data\ripples_mat\R3'];
-ROOT.Rip4 = [ROOT.Mother '\Processed Data\ripples_mat\R4'];
-ROOT.Fig3 = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R11_sub'];
-ROOT.Units = [ROOT.Mother '\Processed Data\units_mat\U1'];
-ROOT.Behav = [ROOT.Mother '\Processed Data\behavior_mat'];
+ROOT.Save = [ROOT.Processed];
+ROOT.Rip0 = [ROOT.Save '\ripples_mat\R0'];
+ROOT.Rip = [ROOT.Save '\ripples_mat\R3'];
+ROOT.Rip4 = [ROOT.Save '\ripples_mat\R4'];
+ROOT.Fig3 = [ROOT.Save '\ripples_mat\ProfilingSheet\R11_sub'];
+ROOT.Units = [ROOT.Save '\units_mat\U1'];
+ROOT.Behav = [ROOT.Save '\behavior_mat'];
 
 
+
+thisRegion0 = 'CA1';
 thisRegion = 'CA1';
 thisRegion2 = [thisRegion '_field'];
-RipplesTable.CA1 = readtable([ROOT.Save '\RipplesTable_' thisRegion2 '_RDIs_UV_cell_HeteroIn_AllPopul' '.xlsx']);
+RipplesTable.CA1 = readtable([ROOT.Save '\RipplesTable_' thisRegion0 '_forAnalysis' '.xlsx']);
 UnitsTable.CA1 = readtable([ROOT.Units '\UnitsTable_' thisRegion '_forAnalysis.xlsx']);
-UnitsTable.CA1_field  = readtable([ROOT.Units '\UnitsTable_' thisRegion '_forAnalysis.xlsx']);
+UnitsTable.CA1_field  = readtable([ROOT.Units '\UnitsTable_' thisRegion2 '_forAnalysis.xlsx']);
 
+thisRegion0 = 'SUB';
 thisRegion = 'SUB';
 thisRegion2 = [thisRegion '_field'];
-RipplesTable.SUB = readtable([ROOT.Save '\RipplesTable_' thisRegion2 '_RDIs_UV_cell_HeteroIn_AllPopul' '.xlsx']);
+RipplesTable.SUB = readtable([ROOT.Save '\RipplesTable_' thisRegion0 '_forAnalysis' '.xlsx']);
 UnitsTable.SUB = readtable([ROOT.Units '\UnitsTable_' thisRegion '_forAnalysis.xlsx']);
-UnitsTable.SUB_field = readtable([ROOT.Units '\UnitsTable_' thisRegion '_forAnalysis.xlsx']);
+UnitsTable.SUB_field = readtable([ROOT.Units '\UnitsTable_' thisRegion2 '_forAnalysis.xlsx']);
 
-CList = [[139 193 69]/255; [29 111 169]/255];
+CList = [ [207 8 23]/255;[23 84 181]/255];
 
 RipplesTable.CA1.NS = nanmin([RipplesTable.CA1.pRDI_L_UV,RipplesTable.CA1.pRDI_R_UV,RipplesTable.CA1.pRDI_C_UV],[],2) <0.05;
 RipplesTable.CA1.NS_p = nanmin([RipplesTable.CA1.pRDI_L_UV,RipplesTable.CA1.pRDI_R_UV,RipplesTable.CA1.pRDI_C_UV],[],2);
@@ -34,16 +37,23 @@ RipplesTable.CA1.S_p = RipplesTable.CA1.DecodingP_all ;
 
 RipplesTable.SUB.S = RipplesTable.SUB.DecodingP_all  <0.05;
 RipplesTable.SUB.S_p = RipplesTable.SUB.DecodingP_all ;
-R0 = RipplesTable.SUB;
-R1 = RipplesTable.CA1;
+
+RipplesTable.CA1.NS(RipplesTable.CA1.nFields<5)=0;
+RipplesTable.CA1.NS_p(RipplesTable.CA1.nFields<5)=nan;
+
+RipplesTable.SUB.NS(RipplesTable.SUB.nFields<5)=0;
+RipplesTable.SUB.NS_p(RipplesTable.SUB.nFields<5)=nan;
+
+T0 = RipplesTable.SUB;
+T1 = RipplesTable.CA1;
 
 %% spike, ensemble 다시 계산 
 thisRegion = 'SUB'; cl=1;
 thisRegion2 = [thisRegion '_field'];
 ReactTable = readtable([ROOT.Save '\ReactTable_' thisRegion '_' thisRegion '.xlsx']);
 
-for rid = 1:size(R0,1)
-    thisReact = ReactTable(find(cellfun(Params.cellfind(R0.ID{rid}),ReactTable.RippleID)),:);
+for rid = 1:size(T0,1)
+    thisReact = ReactTable(find(cellfun(Params.cellfind(T0.ID{rid}),ReactTable.RippleID)),:);
 
     RipplesTable.(thisRegion).spike(rid) = size(thisReact,1);
     RipplesTable.(thisRegion).ensemble(rid) = size(unique(thisReact.UnitID),1);
@@ -55,8 +65,8 @@ end
 
 %% SUB vs. CA1 spike, ensemble 비교
 
-x1 = R0.spike ./ R0.ensemble;
-x2 = R1.spike ./ R1.ensemble;
+x1 = T0.spike ./ T0.ensemble;
+x2 = T1.spike ./ T1.ensemble;
 leg = {'SUB','CA1'};
 HistAndBar(x1,x2,CList,leg,'spikes per cell')
 
@@ -67,6 +77,8 @@ HistAndBar(x1,x2,CList,leg,'spikes per cell')
 figure; hold on
 T0 = RipplesTable.SUB;
 T1 = RipplesTable.CA1;
+
+
 histogram(T0.NS_p,'binwidth',0.01,'Normalization','probability','FaceColor',CList(1,:))
 histogram(T1.NS_p,'binwidth',0.01,'Normalization','probability','FaceColor',CList(2,:))
 
@@ -117,7 +129,16 @@ c0= cdfplot(T0.NS_p); c0.Color = CList(1,:);
 c1 = cdfplot(T1.NS_p); c1.Color = CList(2,:);
 
 %%
-[p,h] = ttest2(T0.S_p,T1.S_p)
+sum(T0.NS_p<0.05 & ~(T0.S_p<0.05))/size(T0,1)
+sum(~(T0.NS_p<0.05) & (T0.S_p<0.05))/size(T0,1)
+
+sum(T1.NS_p<0.05 & ~(T1.S_p<0.05))/size(T1,1)
+sum(~(T1.NS_p<0.05) & (T1.S_p<0.05))/size(T1,1)
+
+sum((T0.NS_p<0.05) & (T0.S_p<0.05))/size(T0,1)
+sum(T1.NS_p<0.05 & (T1.S_p<0.05))/size(T1,1)
+%%
+[p,h] = ttest2(T0.NS_p,T1.NS_p)
 
 %% SF vs. MF 
 thisRegion = 'SUB'; cl=1;

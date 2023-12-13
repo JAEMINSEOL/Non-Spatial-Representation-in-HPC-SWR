@@ -1,23 +1,23 @@
 Initial_SWRFilter_common;
 warning off
-ROOT.Save = [ROOT.Mother '\Processed Data'];
-ROOT.Rip0 = [ROOT.Mother '\Processed Data\ripples_mat\R0'];
-ROOT.Rip = [ROOT.Mother '\Processed Data\ripples_mat\R3'];
-ROOT.Rip4 = [ROOT.Mother '\Processed Data\ripples_mat\R4'];
-ROOT.Fig3 = [ROOT.Mother '\Processed Data\ripples_mat\ProfilingSheet\R11_sub'];
-ROOT.Units = [ROOT.Mother '\Processed Data\units_mat\U1'];
-ROOT.Behav = [ROOT.Mother '\Processed Data\behavior_mat'];
+ROOT.Save = [ROOT.Processed ''];
+ROOT.Rip0 = [ROOT.Save '\ripples_mat\R0'];
+ROOT.Rip = [ROOT.Save '\ripples_mat\R3'];
+ROOT.Rip4 = [ROOT.Save '\ripples_mat\R4'];
+ROOT.Fig3 = [ROOT.Save '\ripples_mat\ProfilingSheet\R11_sub'];
+ROOT.Units = [ROOT.Save '\units_mat\U1'];
+ROOT.Behav = [ROOT.Save '\behavior_mat'];
 
 
 thisRegion = 'CA1';
 thisRegion2 = [thisRegion '_field'];
-RipplesTable.CA1 = readtable([ROOT.Save '\RipplesTable_' thisRegion2 '_RDIs_UV_cell_HeteroIn_AllPopul' '.xlsx']);
+% RipplesTable.CA1 = readtable([ROOT.Save '\RipplesTable_' thisRegion2 '_RDIs_UV_cell_HeteroIn_AllPopul' '.xlsx']);
 UnitsTable.CA1 = readtable([ROOT.Units '\UnitsTable_' thisRegion '_forAnalysis.xlsx']);
 UnitsTable.CA1_field  = readtable([ROOT.Units '\UnitsTable_' thisRegion2 '_forAnalysis.xlsx']);
 
 thisRegion = 'SUB';
 thisRegion2 = [thisRegion '_field'];
-RipplesTable.SUB = readtable([ROOT.Save '\RipplesTable_' thisRegion2 '_RDIs_UV_cell_HeteroIn_AllPopul' '.xlsx']);
+% RipplesTable.SUB = readtable([ROOT.Save '\RipplesTable_' thisRegion2 '_RDIs_UV_cell_HeteroIn_AllPopul' '.xlsx']);
 UnitsTable.SUB = readtable([ROOT.Units '\UnitsTable_' thisRegion '_forAnalysis.xlsx']);
 UnitsTable.SUB_field = readtable([ROOT.Units '\UnitsTable_' thisRegion2 '_forAnalysis.xlsx']);
 
