@@ -1,9 +1,19 @@
 Initial_SWRFilter_common;
 warning off
 
-thisRegion0 = 'CA1';
-thisRegion = 'CA1';
-thisRegion2 = 'CA1_field';
+
+RegionList = {'CA1','SUB'};
+for reg=1:2
+thisR = RegionList{reg};
+% 
+
+thisRegion0 = thisR;
+thisRegion = thisR;
+thisRegion2 = [thisR '_field'];
+
+% thisRegion0 = 'CA1';
+% thisRegion = 'CA1';
+% thisRegion2 = 'CA1_field';
 
 % thisRegion0 = 'SUB';
 % thisRegion = 'SUB';
@@ -15,7 +25,7 @@ ROOT.Rip0 = [ROOT.Processed '\ripples_mat\R0\' thisRegion];
 ROOT.Rip = [ROOT.Processed '\ripples_mat\R2'];
 ROOT.Rip4 = [ROOT.Processed '\ripples_mat\R4'];
 ROOT.Rip5 = [ROOT.Processed '\ripples_mat\R5_cell_AllPopul'];
-ROOT.Fig = [ROOT.Processed '\ripples_mat\ProfilingSheet\R26_' thisRegion];
+ROOT.Fig = [ROOT.Processed '\ripples_mat\ProfilingSheet\R28_' thisRegion];
 ROOT.Units = [ROOT.Processed '\units_mat\U2'];
 ROOT.Behav = [ROOT.Processed '\behavior_mat'];
 
@@ -433,42 +443,52 @@ for sid=1:size(RipplesTable,1)
         %         subplot(9,col,[3 4]*col+5);
         subplot(9,col,[3 4]*col+4);
         bar_RDI(spks_epoch_u(:,end)+1,spks_epoch_u(:,5),clunits_L)
+        pf = abs(thisRip.n_fields_L / thisRip.nFields);
+        pfn = pf - abs(thisRip.n_afields_L / thisRip.nFields);
+        title(['median=' jjnum2str(thisRip.MRDI_L_UV,3) ', p=' jjnum2str(WilRDI_L_UV,2)])
 %         set ( gca, 'xdir', 'reverse' )
 
 
         %         subplot(9,col,[5 6]*col+5);
         subplot(9,col,[5 6]*col+4);
         bar_RDI(spks_epoch_u(:,end)+1,spks_epoch_u(:,6),clunits_R)
+                pf = abs(thisRip.n_fields_R / thisRip.nFields);
+        pfn = pf - abs(thisRip.n_afields_R / thisRip.nFields);
+        title(['median=' jjnum2str(thisRip.MRDI_R_UV,3) ', p=' jjnum2str(WilRDI_R_UV,2)])
 %         set ( gca, 'xdir', 'reverse' )
 
 
         %         subplot(9,col,[7 8]*col+5);
         subplot(9,col,[7 8]*col+4);
         bar_RDI(spks_epoch_u(:,end)+1,spks_epoch_u(:,7),clunits_C)
+                pf = abs(thisRip.n_fields_C / thisRip.nFields);
+        pfn = pf - abs(thisRip.n_afields_C / thisRip.nFields);
+        title(['median=' jjnum2str(thisRip.MRDI_C_UV,3) ', p=' jjnum2str(WilRDI_C_UV,2)])
 %         set ( gca, 'xdir', 'reverse' )
 
         %% permutation distribution
-
-        NS_perm = load([ROOT.Rip5 ['\' thisRegion0 '-' thisRip.ID{1} '_UV.mat']]);
-        S_perm = load([ROOT.Rip4 '\' thisRip.ID{1} '.mat'],"c","v",'R_shuffled','R_actual','posterior','p_test');
+try
+            S_perm = load([ROOT.Rip4 '\' thisRip.ID{1} '.mat'],"c","v",'R_shuffled','R_actual','posterior','p_test');
 
         subplot(9,col,[1 2]*col+5);
         DistPerm(S_perm.R_shuffled{1},S_perm.R_actual(1),thisRip.DecodingP_all,[0 .5],'r^2',0.5)
         title('permutation test')
         ylabel('r^2 for pos decoding')
 
+         NS_perm = load([ROOT.Rip5 ['\' thisRegion0 '-' thisRip.ID{1} '_UV.mat']]);
+   
         subplot(9,col,[3 4]*col+5);
-        DistPerm(NS_perm.RDI_L.dist.mean,thisRip.snr_RDI_L_UV,thisRip.pRDI_L_UV,[-1 1],'mean',0.2)
+        DistPerm(NS_perm.RDI_L.dist.median,thisRip.MRDI_L_UV,thisRip.WilRDI_L_UV,[-1 1],'mean',0.2)
         ylabel('left scene RDI mean')
 
         subplot(9,col,[5 6]*col+5);
-        DistPerm(NS_perm.RDI_R.dist.mean,thisRip.snr_RDI_R_UV,thisRip.pRDI_R_UV,[-1 1],'mean',0.2)
+        DistPerm(NS_perm.RDI_R.dist.median,thisRip.MRDI_R_UV,thisRip.WilRDI_R_UV,[-1 1],'mean',0.2)
         ylabel('right scene RDI mean')
 
         subplot(9,col,[7 8]*col+5);
-        DistPerm(NS_perm.RDI_C.dist.mean,thisRip.snr_RDI_C_UV,thisRip.pRDI_C_UV,[-1 1],'mean',0.2)
+        DistPerm(NS_perm.RDI_C.dist.median,thisRip.MRDI_C_UV,thisRip.WilRDI_C_UV,[-1 1],'mean',0.2)
         ylabel('choice RDI mean')
-
+end
         %% save fig
         if thisRip.DecodingP_all<0.05, suf1='Replay'; else, suf1='x'; end
 
@@ -489,7 +509,7 @@ for sid=1:size(RipplesTable,1)
     end
 end
 writetable(RipplesTable,[ROOT.Save '\RipplesTable_' thisRegion0 '_forAnalysis.xlsx'],'writemode','replacefile')
-
+end
 
 %%
 function scatters_fr(FRMap, labels,start_index,end_index,clunits,p)
