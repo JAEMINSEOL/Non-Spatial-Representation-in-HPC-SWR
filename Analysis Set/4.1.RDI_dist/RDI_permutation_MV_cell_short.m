@@ -14,14 +14,14 @@ if ~exist(ROOT.Rip), mkdir(ROOT.Rip); end
 Recording_region = readtable([ROOT.Info '\Recording_region_SWR.csv'],'ReadRowNames',true);
 SessionList = readtable([ROOT.Info '\SessionList_SWR.xlsx'],'ReadRowNames',false);
 
-% 
-thisRegion0 = 'CA1';
-thisRegion = 'CA1';
-thisRegion2 = 'CA1_field';
 
-% thisRegion0 = 'SUB';
-% thisRegion = 'SUB';
-% thisRegion2 = 'SUB_field';
+% thisRegion0 = 'CA1';
+% thisRegion = 'CA1';
+% thisRegion2 = 'CA1_field';
+
+thisRegion0 = 'SUB';
+thisRegion = 'SUB';
+thisRegion2 = 'SUB_field';
 
 
 % RipplesTable = readtable([ROOT.Save '\RipplesTable_' thisRegion '_forAnalysis_RDI.xlsx']);
@@ -81,7 +81,7 @@ for rid=1:size(RipplesTable_p,1)
 try
 %     if exist([ROOT.Rip ['\' thisRegion0 '-' RipID '_UV.mat']])
 
-        load([ROOT.Rip ['\' thisRegion0 '-' RipID '_UV.mat']],'thisUnits','RDI_L','RDI_R','RDI_C')
+%         load([ROOT.Rip ['\' thisRegion0 '-' RipID '_UV.mat']],'thisUnits','RDI_L','RDI_R','RDI_C')
         %     disp([RipID ' is finished!'])
 
     thisUnits=table;
@@ -94,24 +94,52 @@ try
 %         RipplesTable_p.mRDI_C_UV(rid) = RDI_C.act_mean;
 
 m = median(UnitsTable_B.RDI_LScene(abs(UnitsTable_B.RDI_LScene)>=0.1));
-[p,h,w] = signrank(thisUnits.RDI_LScene(abs(thisUnits.RDI_LScene)>=0.1)-m);
+p1 = sum(UnitsTable_B.RDI_LScene>=0.1)/sum(abs(UnitsTable_B.RDI_LScene)>=0.1); p2 = sum(UnitsTable_B.RDI_LScene<=-0.1)/sum(abs(UnitsTable_B.RDI_LScene)>=0.1);
+if sum(abs(thisUnits.RDI_LScene)>=0.1)<1
+    RipplesTable_p.WilRDI_L_UV(rid) = nan; 
+    RipplesTable_p.MRDI_L_UV(rid) = nan;
+    RipplesTable_p.pBinom_L_UV(rid) = nan;
+else
+[p,h,w] = signrank(thisUnits.RDI_LScene(abs(thisUnits.RDI_LScene)>=0.1),m);
 RipplesTable_p.WilRDI_L_UV(rid) = p;
-if sum(abs(thisUnits.RDI_LScene)>=0.1)<3, RipplesTable_p.WilRDI_L_UV(rid) = nan; end
-RipplesTable_p.MRDI_L_UV(rid) = RDI_L.act_median;
+RipplesTable_p.MRDI_L_UV(rid) = median(thisUnits.RDI_LScene(abs(thisUnits.RDI_LScene)>=0.1));
+b1=myBinomTest(sum(thisUnits.RDI_LScene>=0.1),sum(abs(thisUnits.RDI_LScene)>=0.1),p1,'one');
+b2= myBinomTest(sum(thisUnits.RDI_LScene<=-0.1),sum(abs(thisUnits.RDI_LScene)>=0.1),p2,'one');
+RipplesTable_p.pBinom_L_UV(rid) = min([b1,b2]);
+end
 
 m = median(UnitsTable_B.RDI_RScene(abs(UnitsTable_B.RDI_RScene)>=0.1));
+p1 = sum(UnitsTable_B.RDI_RScene>=0.1)/sum(abs(UnitsTable_B.RDI_RScene)>=0.1); p2 = sum(UnitsTable_B.RDI_RScene<=-0.1)/sum(abs(UnitsTable_B.RDI_RScene)>=0.1);
+if sum(abs(thisUnits.RDI_RScene)>=0.1)<1
+    RipplesTable_p.WilRDI_R_UV(rid) = nan;
+    RipplesTable_p.MRDI_R_UV(rid) = nan;
+     RipplesTable_p.pBinom_R_UV(rid) = nan;
+else
 [p,h,w] = signrank(thisUnits.RDI_RScene(abs(thisUnits.RDI_RScene)>=0.1)-m);
 RipplesTable_p.WilRDI_R_UV(rid) = p;
-if sum(abs(thisUnits.RDI_RScene)>=0.1)<3, RipplesTable_p.WilRDI_R_UV(rid) = nan; end
-RipplesTable_p.MRDI_R_UV(rid) = RDI_R.act_median;
+RipplesTable_p.MRDI_R_UV(rid) = median(thisUnits.RDI_RScene(abs(thisUnits.RDI_RScene)>=0.1));
+b1=myBinomTest(sum(thisUnits.RDI_RScene>=0.1),sum(abs(thisUnits.RDI_RScene)>=0.1),p1,'one');
+b2= myBinomTest(sum(thisUnits.RDI_RScene<=-0.1),sum(abs(thisUnits.RDI_RScene)>=0.1),p2,'one');
+RipplesTable_p.pBinom_R_UV(rid) = min([b1,b2]);
+end
 
 m = median(UnitsTable_B.RDI_LR(abs(UnitsTable_B.RDI_LR)>=0.1));
+p1 = sum(UnitsTable_B.RDI_LR>=0.1)/sum(abs(UnitsTable_B.RDI_LR)>=0.1); p2 = sum(UnitsTable_B.RDI_LR<=-0.1)/sum(abs(UnitsTable_B.RDI_LR)>=0.1);
+if sum(abs(thisUnits.RDI_LR)>=0.1)<3
+    RipplesTable_p.WilRDI_C_UV(rid) = nan;
+    RipplesTable_p.MRDI_C_UV(rid) = nan;
+     RipplesTable_p.pBinom_C_UV(rid) = nan;
+else
 [p,h,w] = signrank(thisUnits.RDI_LR(abs(thisUnits.RDI_LR)>=0.1)-m);
 RipplesTable_p.WilRDI_C_UV(rid) = p;
-if sum(abs(thisUnits.RDI_LR)>=0.1)<3, RipplesTable_p.WilRDI_C_UV(rid) = nan; end
-RipplesTable_p.MRDI_C_UV(rid) = RDI_C.act_median;
+RipplesTable_p.MRDI_C_UV(rid) = median(thisUnits.RDI_LR(abs(thisUnits.RDI_LR)>=0.1));
+b1=myBinomTest(sum(thisUnits.RDI_LR>=0.1),sum(abs(thisUnits.RDI_LR)>=0.1),p1,'one');
+b2= myBinomTest(sum(thisUnits.RDI_LR<=-0.1),sum(abs(thisUnits.RDI_LR)>=0.1),p2,'one');
+RipplesTable_p.pBinom_C_UV(rid) = min([b1,b2]);
+end
 
 %  sum(nanmin([RipplesTable_p.WilRDI_L_UV, RipplesTable_p.WilRDI_R_UV RipplesTable_p.WilRDI_C_UV],[],2)<0.05)
+%  sum(nanmin([RipplesTable_p.pBinom_L_UV, RipplesTable_p.pBinom_R_UV RipplesTable_p.pBinom_C_UV],[],2)<0.05)
 %         RipplesTable_p.mRDI_L_UV(rid) = mean(thisUnits.RDI_LScene(abs(thisUnits.RDI_LScene)>=0.1));
 %         RipplesTable_p.mRDI_R_UV(rid) = mean(thisUnits.RDI_RScene(abs(thisUnits.RDI_RScene)>=0.1));
 %         RipplesTable_p.mRDI_C_UV(rid) = mean(thisUnits.RDI_LR(abs(thisUnits.RDI_LR)>=0.1));
