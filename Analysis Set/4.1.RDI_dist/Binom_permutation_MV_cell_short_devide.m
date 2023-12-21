@@ -93,51 +93,18 @@ try
 %         RipplesTable_p.mRDI_R_UV(rid) = RDI_R.act_mean;
 %         RipplesTable_p.mRDI_C_UV(rid) = RDI_C.act_mean;
 
-m = median(UnitsTable_B.RDI_LScene(abs(UnitsTable_B.RDI_LScene)>=0.1));
-p1 = sum(UnitsTable_B.RDI_LScene>=0.1)/sum(abs(UnitsTable_B.RDI_LScene)>=0.1); p2 = sum(UnitsTable_B.RDI_LScene<=-0.1)/sum(abs(UnitsTable_B.RDI_LScene)>=0.1);
-if sum(abs(thisUnits.RDI_LScene)>=0.1)<1
-    RipplesTable_p.WilRDI_L_UV(rid) = nan; 
-    RipplesTable_p.MRDI_L_UV(rid) = nan;
-    RipplesTable_p.pBinom_L_UV(rid) = nan;
-else
-[p,h,w] = signrank(thisUnits.RDI_LScene(abs(thisUnits.RDI_LScene)>=0.1),m);
-RipplesTable_p.WilRDI_L_UV(rid) = p;
-RipplesTable_p.MRDI_L_UV(rid) = median(thisUnits.RDI_LScene(abs(thisUnits.RDI_LScene)>=0.1));
-b1=myBinomTest(sum(thisUnits.RDI_LScene>=0.1),sum(abs(thisUnits.RDI_LScene)>=0.1),p1,'one');
-b2= myBinomTest(sum(thisUnits.RDI_LScene<=-0.1),sum(abs(thisUnits.RDI_LScene)>=0.1),p2,'one');
-RipplesTable_p.pBinom_L_UV(rid) = min([b1,b2]);
-end
 
-m = median(UnitsTable_B.RDI_RScene(abs(UnitsTable_B.RDI_RScene)>=0.1));
-p1 = sum(UnitsTable_B.RDI_RScene>=0.1)/sum(abs(UnitsTable_B.RDI_RScene)>=0.1); p2 = sum(UnitsTable_B.RDI_RScene<=-0.1)/sum(abs(UnitsTable_B.RDI_RScene)>=0.1);
-if sum(abs(thisUnits.RDI_RScene)>=0.1)<1
-    RipplesTable_p.WilRDI_R_UV(rid) = nan;
-    RipplesTable_p.MRDI_R_UV(rid) = nan;
-     RipplesTable_p.pBinom_R_UV(rid) = nan;
-else
-[p,h,w] = signrank(thisUnits.RDI_RScene(abs(thisUnits.RDI_RScene)>=0.1)-m);
-RipplesTable_p.WilRDI_R_UV(rid) = p;
-RipplesTable_p.MRDI_R_UV(rid) = median(thisUnits.RDI_RScene(abs(thisUnits.RDI_RScene)>=0.1));
-b1=myBinomTest(sum(thisUnits.RDI_RScene>=0.1),sum(abs(thisUnits.RDI_RScene)>=0.1),p1,'one');
-b2= myBinomTest(sum(thisUnits.RDI_RScene<=-0.1),sum(abs(thisUnits.RDI_RScene)>=0.1),p2,'one');
-RipplesTable_p.pBinom_R_UV(rid) = min([b1,b2]);
-end
 
-m = median(UnitsTable_B.RDI_LR(abs(UnitsTable_B.RDI_LR)>=0.1));
-p1 = sum(UnitsTable_B.RDI_LR>=0.1)/sum(abs(UnitsTable_B.RDI_LR)>=0.1); p2 = sum(UnitsTable_B.RDI_LR<=-0.1)/sum(abs(UnitsTable_B.RDI_LR)>=0.1);
-if sum(abs(thisUnits.RDI_LR)>=0.1)<3
-    RipplesTable_p.WilRDI_C_UV(rid) = nan;
-    RipplesTable_p.MRDI_C_UV(rid) = nan;
-     RipplesTable_p.pBinom_C_UV(rid) = nan;
-else
-[p,h,w] = signrank(thisUnits.RDI_LR(abs(thisUnits.RDI_LR)>=0.1)-m);
-RipplesTable_p.WilRDI_C_UV(rid) = p;
-RipplesTable_p.MRDI_C_UV(rid) = median(thisUnits.RDI_LR(abs(thisUnits.RDI_LR)>=0.1));
-b1=myBinomTest(sum(thisUnits.RDI_LR>=0.1),sum(abs(thisUnits.RDI_LR)>=0.1),p1,'one');
-b2= myBinomTest(sum(thisUnits.RDI_LR<=-0.1),sum(abs(thisUnits.RDI_LR)>=0.1),p2,'one');
-RipplesTable_p.pBinom_C_UV(rid) = min([b1,b2]);
-end
+%%
+[m,p1,p2,b1,b2,thisUnits_p,thisUnits_n] = FiltUnits(thisUnits,thisReact_A, UnitsTable_B,'RDI_LScene');
+RipplesTable_p.pBinomDev_L_UV(rid) = min([b1,b2]);
 
+[m,p1,p2,b1,b2,thisUnits_p,thisUnits_n] = FiltUnits(thisUnits,thisReact_A, UnitsTable_B,'RDI_RScene');
+RipplesTable_p.pBinomDev_R_UV(rid) = min([b1,b2]);
+
+[m,p1,p2,b1,b2,thisUnits_p,thisUnits_n] = FiltUnits(thisUnits,thisReact_A, UnitsTable_B,'RDI_LR');
+RipplesTable_p.pBinomDev_C_UV(rid) = min([b1,b2]);
+%%
 %  sum(nanmin([RipplesTable_p.WilRDI_L_UV, RipplesTable_p.WilRDI_R_UV RipplesTable_p.WilRDI_C_UV],[],2)<0.05)
 %  sum(nanmin([RipplesTable_p.pBinom_L_UV, RipplesTable_p.pBinom_R_UV RipplesTable_p.pBinom_C_UV],[],2)<0.05)
 %         RipplesTable_p.mRDI_L_UV(rid) = mean(thisUnits.RDI_LScene(abs(thisUnits.RDI_LScene)>=0.1));
@@ -261,5 +228,38 @@ if ~isempty(samp)
     x1 = nanmean(samp2.(rdi)); x2 = nanmedian(samp2.(rdi));
 else
     x1 = nan; x2=nan;
+end
+end
+
+
+%%
+function [m,p1,p2,b1,b2,thisUnits_p,thisUnits_n] = FiltUnits(thisUnits,thisReact_A, UnitsTable_B,var)
+
+    thisUnits_p=table; thisUnits_n=table;
+    for u=1:size(thisReact_A,1)
+        temp =UnitsTable_B(find(strncmp(thisReact_A.UnitID(u),UnitsTable_B.ID,12)),:);
+        if ~isempty(temp)
+            if ~isnan(max(temp.(var)))
+        [~,m] = max(temp.(var));
+        thisUnits_p =[thisUnits_p;temp(m,:)];
+
+         [~,m] = min(temp.(var));
+        thisUnits_n =[thisUnits_n;temp(m,:)];
+            else
+                thisUnits_p =[thisUnits_p;temp(1,:)];
+                thisUnits_n =[thisUnits_n;temp(1,:)];
+            end
+        end
+
+    end
+
+    m = median(UnitsTable_B.(var)(abs(UnitsTable_B.(var))>=0.1));
+p1 = sum(UnitsTable_B.(var)>=0.1)/sum(abs(UnitsTable_B.(var))>=0.1); p2 = sum(UnitsTable_B.(var)<=-0.1)/sum(abs(UnitsTable_B.(var))>=0.1);
+
+if sum(abs(thisUnits.(var))>=0.1)<1
+b1 = nan; b2=nan;
+else
+b1=myBinomTest(sum(thisUnits_p.(var)>=0.1),sum(abs(thisUnits_p.(var))>=0.1),p1,'one');
+b2= myBinomTest(sum(thisUnits_n.(var)<=-0.1),sum(abs(thisUnits_n.(var))>=0.1),p2,'one');
 end
 end
