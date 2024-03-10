@@ -2,7 +2,7 @@ Initial_SWRFilter_common;
 warning off
 
 
-RegionList = {'CA1','SUB'};
+RegionList = {'SUB','CA1'};
 for reg=1:2
 thisR = RegionList{reg};
 % 
@@ -25,7 +25,7 @@ ROOT.Rip0 = [ROOT.Processed '\ripples_mat\R0\' thisRegion];
 ROOT.Rip = [ROOT.Processed '\ripples_mat\R2'];
 ROOT.Rip4 = [ROOT.Processed '\ripples_mat\R4'];
 ROOT.Rip5 = [ROOT.Processed '\ripples_mat\R5_cell_AllPopul'];
-ROOT.Fig = [ROOT.Processed '\ripples_mat\ProfilingSheet\R34 (bar only)_' thisRegion];
+ROOT.Fig = [ROOT.Processed '\ripples_mat\ProfilingSheet\R35 (bar only)_' thisRegion];
 ROOT.Units = [ROOT.Processed '\units_mat\U2'];
 ROOT.Behav = [ROOT.Processed '\behavior_mat'];
 
@@ -40,7 +40,7 @@ SessionList = readtable([ROOT.Info '\SessionList_SWR.xlsx'],'ReadRowNames',false
 
 %%
 
-RipplesTable = readtable([ROOT.Save '\RipplesTable_' thisRegion0 '_forAnalysis.xlsx']);
+RipplesTable = readtable([ROOT.Save '\RipplesTable_' thisRegion0 '_forAnalysis_240310.xlsx']);
 % UnitsTable = readtable([ROOT.Units '\UnitsTable_filtered_' thisRegion2 '.xlsx']);
 UnitsTable_B = readtable([ROOT.Units '\UnitsTable_' thisRegion2 '_forAnalysis.xlsx']);
 UnitsTable_A = readtable([ROOT.Units '\UnitsTable_' thisRegion '_forAnalysis.xlsx']);
@@ -60,13 +60,7 @@ Params.tbinDuration = 0.005;
 filter_ns = 'C';
 filter_ns2 = 'LR';
 
-RipplesTable.pBinomDev_L_UV(RipplesTable.nRDI_L_max<5) = nan;
-RipplesTable.pBinomDev_R_UV(RipplesTable.nRDI_R_max<5) = nan;
-RipplesTable.pBinomDev_C_UV(RipplesTable.nRDI_C_max<5) = nan;
 
-RipplesTable.pBinomDev_L_UV(isnan(RipplesTable.pRatio_L_UV)) = nan;
-RipplesTable.pBinomDev_R_UV(isnan(RipplesTable.pRatio_R_UV)) = nan;
-RipplesTable.pBinomDev_C_UV(isnan(RipplesTable.pRatio_C_UV)) = nan;
 %%
 
 %%
@@ -153,12 +147,23 @@ for sid=1:size(RipplesTable,1)
 
         [aspks_epoch,aspks_epoch_in,aspks_epoch_u,aspks_epoch_u_in,Unitsa,UnitsAa] = LoadUnits(thisRip,clusters_A,Spike,Params,mar);
 
+
         %% Set order
         [spks_epoch,spks_epoch_in,spks_epoch_u,spks_epoch_u_in,Units,UnitsA,FRMap_B,ord,flag] = ...
             SetOrder(spks_epoch,spks_epoch_in,spks_epoch_u,spks_epoch_u_in,Units,UnitsA,FRMaps_B);
 
         [aspks_epoch,aspks_epoch_in,aspks_epoch_u,aspks_epoch_u_in,Unitsa,UnitsAa,FRMap_A,orda,flag] = ...
             SetOrder(aspks_epoch,aspks_epoch_in,aspks_epoch_u,aspks_epoch_u_in,Unitsa,UnitsAa,FRMaps_A);
+        %%
+        s0=1;
+        for s=1:size(spks_epoch_u,1)-1
+            spks_epoch_u(s,12)=s0;
+            %             if ~(str2double(UnitsA{s}(11:12)) == str2double(UnitsA{s+1}(11:12)) && str2double(UnitsA{s}(8:9)) == str2double(UnitsA{s+1}(8:9)))
+            if spks_epoch_u(s,1) ~=spks_epoch_u(s+1,1)
+                s0=s0+1;
+            end
+        end
+        spks_epoch_u(end,12)=s0;
         %%
         %         size(aspks_epoch_u,1)
         if ~flag, continue; end
@@ -230,34 +235,68 @@ for sid=1:size(RipplesTable,1)
         %% color scheme
         s = size(spks_epoch,1);
         clunits = hsv(max(spks_epoch(s,end))+1);
-        clunits = [ones(s,1),zeros(s,1) , zeros(s,1)];
+        clunits = [zeros(s,1),zeros(s,1) , zeros(s,1)];
 
         %         aclunits = hsv(max(aspks_epoch(s,end))+1);
         clunits_L = clunits; clunits_R = clunits; clunits_C = clunits;
 
-        for s=1:size(spks_epoch_u,1)
+                    spks_for_bias_L=[]; spks_for_bias_R=[]; spks_for_bias_C=[];
+        for s0=0:max(spks_epoch_u(:,11))
+            id = find(spks_epoch_u(:,12)==s0+1);
 
+            for s1=1:length(id)
+                s=id(s1);
             if spks_epoch_u(s,8)<1 | abs(spks_epoch_u(s,5))<0.1
-                clunits_L(spks_epoch_u(s,end)+1,:) = 1;
+                clunits_L(spks_epoch_u(s,11)+1,:) = 1;
+            elseif abs(spks_epoch_u(s,5)) >= max(abs(spks_epoch_u(id,5)))
+                clunits_L(spks_epoch_u(s,11)+1,:) = [1 0 0];
+                spks_for_bias_L = [spks_for_bias_L; spks_epoch_u(s,:)];
+            end
             end
             %             if(spks_epoch_u(s,8)>3)
             %                 clunits_L(spks_epoch_u(s,end)+1,:) = 0.7;
             %             end
 
+            for s1=1:length(id)
+                s=id(s1);
             if spks_epoch_u(s,9)<1 | abs(spks_epoch_u(s,6))<0.1
-                clunits_R(spks_epoch_u(s,end)+1,:) = 1;
+                clunits_R(spks_epoch_u(s,11)+1,:) = 1;
+            elseif abs(spks_epoch_u(s,6)) >= max(abs(spks_epoch_u(id,6)))
+                clunits_R(spks_epoch_u(s,11)+1,:) = [1 0 0];
+                spks_for_bias_R = [spks_for_bias_R; spks_epoch_u(s,:)];
+            end
             end
             %             if(spks_epoch_u(s,9)>3)
             %                 clunits_R(spks_epoch_u(s,end)+1,:) = 0.7;
             %             end
 
+            for s1=1:length(id)
+                s=id(s1);
             if spks_epoch_u(s,10)<1 | abs(spks_epoch_u(s,7))<0.1
-                clunits_C(spks_epoch_u(s,end)+1,:) = 1;
+                clunits_C(spks_epoch_u(s,11)+1,:) = 1;
+            elseif abs(spks_epoch_u(s,7)) >= max(abs(spks_epoch_u(id,7)))
+                clunits_C(spks_epoch_u(s,11)+1,:) = [1 0 0];
+                spks_for_bias_C = [spks_for_bias_C; spks_epoch_u(s,:)];
+            end
             end
             %             if(spks_epoch_u(s,10)>3)
             %                 clunits_C(spks_epoch_u(s,end)+1,:) = 0.7;
             %             end
         end
+        if size(spks_for_bias_L,1)==0, b=nan; 
+            else, b = sum(spks_for_bias_L(:,5)>0) / size(spks_for_bias_L,1); if b<0.5,b=1-b; end
+        end
+        RipplesTable.pRatio_L_UV(sid) = b; thisRip.pRatio_L_UV=b;
+
+        if size(spks_for_bias_R,1)==0, b=nan; 
+            else, b = sum(spks_for_bias_R(:,6)>0) / size(spks_for_bias_R,1); if b<0.5,b=1-b; end
+        end
+        RipplesTable.pRatio_R_UV(sid) = b; thisRip.pRatio_R_UV=b;
+
+        if size(spks_for_bias_C,1)==0, b=nan; 
+        else, b = sum(spks_for_bias_C(:,7)>0) / size(spks_for_bias_C,1); if b<0.5,b=1-b; end
+        end
+        RipplesTable.pRatio_C_UV(sid) = b; thisRip.pRatio_C_UV=b;
         %% reactivation rasterplot
         subplot(6,col,[3 5]*col+1)
         hold on
@@ -336,8 +375,9 @@ for sid=1:size(RipplesTable,1)
         %% RDI bar graph
         %         subplot(9,col,[3 4]*col+5);
         subplot(6,col,[1 5]*col+6);
-        bar_RDI(spks_epoch_u(:,end)+1,spks_epoch_u(:,5),clunits_L)
-        if thisRip.nRDI_L_max < 5, thisRip.pBinomDev_L_UV=nan; end
+        bar_RDI(spks_epoch_u(:,11)+1,spks_epoch_u(:,5),clunits_L)
+        if size(spks_for_bias_L,1) < 5 || isnan(thisRip.pRatio_L_UV), thisRip.pBinomDev_L_UV=nan; end
+        if thisRip.pRatio_L_UV<0.5, thisRip.pRatio_L_UV=1-thisRip.pRatio_L_UV; end
         if thisRip.pBinomDev_L_UV<0.05, c='r'; else, c='k'; end
             title(['Ratio= ' jjnum2str(thisRip.pRatio_L_UV,3) ', p=' jjnum2str(thisRip.pBinomDev_L_UV,3)],'color',c,'FontSize',12)
         set ( gca, 'xdir', 'reverse' )
@@ -345,8 +385,9 @@ for sid=1:size(RipplesTable,1)
 
         %         subplot(9,col,[5 6]*col+5);
         subplot(6,col,[1 5]*col+7);
-        bar_RDI(spks_epoch_u(:,end)+1,spks_epoch_u(:,6),clunits_R)
-if thisRip.nRDI_R_max < 5, thisRip.pBinomDev_R_UV=nan; end
+        bar_RDI(spks_epoch_u(:,11)+1,spks_epoch_u(:,6),clunits_R)
+if size(spks_for_bias_R,1) < 5 || isnan(thisRip.pRatio_R_UV), thisRip.pBinomDev_R_UV=nan; end
+if thisRip.pRatio_R_UV<0.5, thisRip.pRatio_R_UV=1-thisRip.pRatio_R_UV; end
 if thisRip.pBinomDev_R_UV<0.05, c='r'; else, c='k'; end
            title(['Ratio= ' jjnum2str(thisRip.pRatio_R_UV,3) ', p=' jjnum2str(thisRip.pBinomDev_R_UV,3)],'color',c,'FontSize',12)
      set ( gca, 'xdir', 'reverse' )
@@ -354,9 +395,10 @@ if thisRip.pBinomDev_R_UV<0.05, c='r'; else, c='k'; end
 
         %         subplot(9,col,[7 8]*col+5);
         subplot(6,col,[1 5]*col+8);
-        bar_RDI(spks_epoch_u(:,end)+1,spks_epoch_u(:,7),clunits_C)
-if thisRip.nRDI_C_max < 5, thisRip.pBinomDev_C_UV=nan; end
-if thisRip.pBinomDev_C_UV<0.05, c='r'; else, c='k'; end
+        bar_RDI(spks_epoch_u(:,11)+1,spks_epoch_u(:,7),clunits_C)
+if size(spks_for_bias_C,1) < 5 || isnan(thisRip.pRatio_C_UV), thisRip.pBinomDev_C_UV=nan; end
+if thisRip.pRatio_C_UV<0.5, thisRip.pRatio_C_UV=1-thisRip.pRatio_C_UV; end
+if thisRip.pBinomDev_C_UV<0.05 , c='r'; else, c='k'; end
           title(['Ratio= ' jjnum2str(thisRip.pRatio_C_UV,3) ', p=' jjnum2str(thisRip.pBinomDev_C_UV,3)],'color',c,'FontSize',12)
        set ( gca, 'xdir', 'reverse' )
 
@@ -384,7 +426,7 @@ end
         close all
     end
 end
-% writetable(RipplesTable,[ROOT.Save '\RipplesTable_' thisRegion0 '_forAnalysis.xlsx'],'writemode','replacefile')
+writetable(RipplesTable,[ROOT.Save '\RipplesTable_' thisRegion0 '_forAnalysis.xlsx'],'writemode','replacefile')
 end
 
 %%
@@ -442,6 +484,7 @@ yticks([1:max(x)+1]); yticklabels({})
 set(gca,'fontsize',8,'fontweight','b')
 line([-.1 -.1],[0 max(x)+1],'color','r','linestyle',':')
 line([.1 .1],[0 max(x)+1],'color','r','linestyle',':')
+ylim([.5 length(x)+.5])
 end
 
 
