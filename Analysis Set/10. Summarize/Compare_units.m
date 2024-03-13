@@ -20,6 +20,7 @@ RegionList = {'SUB','CA1'};
 RipplesTable.SUB = readtable([ROOT.Save '\RipplesTable_SUB_forAnalysis' '.xlsx']);
 ReactTable.SUB = readtable([ROOT.Save '\ReactTable_SUB_SUB.xlsx']);
 UnitsTable.SUB = readtable([ROOT.Save '\UnitsTable_SUB_forAnalysis_TP.xlsx']);
+UnitsTable.SUB_FR = readtable([ROOT.Save '\UnitsTable_SUB_RDI_FR.xlsx']);
 UnitsTable_field.SUB = readtable([ROOT.Save '\UnitsTable_SUB_field_forAnalysis.xlsx']);
 % UnitPair.SUB = readtable([ROOT.Save '\UnitPair_SUB.xlsx']);
 % UnitPair_field.SUB = readtable([ROOT.Save '\UnitPair_SUB_field.xlsx']);
@@ -27,6 +28,7 @@ UnitsTable_field.SUB = readtable([ROOT.Save '\UnitsTable_SUB_field_forAnalysis.x
 RipplesTable.CA1 = readtable([ROOT.Save '\RipplesTable_CA1_forAnalysis' '.xlsx']);
 ReactTable.CA1 = readtable([ROOT.Save '\ReactTable_CA1_CA1.xlsx']);
 UnitsTable.CA1 = readtable([ROOT.Save '\UnitsTable_CA1_forAnalysis_TP.xlsx']);
+UnitsTable.CA1_FR = readtable([ROOT.Save '\UnitsTable_CA1_RDI_FR.xlsx']);
 UnitsTable_field.CA1 = readtable([ROOT.Save '\UnitsTable_CA1_field_forAnalysis.xlsx']);
 % UnitPair.CA1= readtable([ROOT.Save '\UnitPair_CA1.xlsx']);
 % UnitPair_field.CA1 = readtable([ROOT.Save '\UnitPair_CA1_field.xlsx']);
@@ -36,11 +38,339 @@ Un_CA1= UnitsTable.CA1;
 UnF_SUB = UnitsTable_field.SUB;
 UnF_CA1= UnitsTable_field.CA1;
 
+Un_SUB_FR = UnitsTable.SUB_FR;
+Un_CA1_FR= UnitsTable.CA1_FR;
+
 Un_SUB(Un_SUB.rat==232 & Un_SUB.session==4,:)=[];
 UnF_SUB(UnF_SUB.rat==232 & UnF_SUB.session==4,:)=[];
 Un_CA1(Un_CA1.rat==232 & Un_CA1.session==4,:)=[];
 UnF_CA1(UnF_CA1.rat==232 & UnF_CA1.session==4,:)=[];
+Un_SUB_FR(Un_SUB_FR.rat==232 & Un_SUB_FR.session==4,:)=[];
+Un_CA1_FR(Un_CA1_FR.rat==232 & Un_CA1_FR.session==4,:)=[];
 
+
+for u=1:size(Un_CA1)
+    tFields = UnF_CA1(find(strncmp(Un_CA1.ID{u},UnF_CA1.ID,12)),:);
+    Un_CA1.nFields(u)=size(tFields,1);
+    if size(tFields,1)<1
+        continue;
+    end
+    [~,t] = max(abs(tFields.RDI_LScene)); Un_CA1.RDI_LScene(u)=tFields.RDI_LScene(t);
+    [~,t] = max(abs(tFields.RDI_RScene)); Un_CA1.RDI_RScene(u)=tFields.RDI_RScene(t);
+    [~,t] = max(abs(tFields.RDI_LR)); Un_CA1.RDI_LR(u)=tFields.RDI_LR(t);
+end
+
+for u=1:size(Un_SUB)
+    tFields = UnF_SUB(find(strncmp(Un_SUB.ID{u},UnF_SUB.ID,12)),:);
+    Un_SUB.nFields(u)=size(tFields,1);
+    if size(tFields,1)<1
+        continue;
+    end
+    [~,t] = max(abs(tFields.RDI_LScene)); Un_SUB.RDI_LScene(u)=tFields.RDI_LScene(t);
+    [~,t] = max(abs(tFields.RDI_RScene)); Un_SUB.RDI_RScene(u)=tFields.RDI_RScene(t);
+    [~,t] = max(abs(tFields.RDI_LR)); Un_SUB.RDI_LR(u)=tFields.RDI_LR(t);
+end
+%% histogram_RDI_FR vs. TP
+sz=0.1;
+figure;
+subplot(3,2,1); hold on; ylim([0 .2]); xlim([-1.2 1.2]); title('SUB')
+histogram(Un_SUB.RDI_LScene,'BinWidth',sz,'Normalization','probability');
+histogram(Un_SUB_FR.RDI_LScene,'BinWidth',sz,'Normalization','probability');
+subplot(3,2,2); hold on; ylim([0 .2]); xlim([-1.2 1.2]); title('CA1')
+histogram(Un_CA1.RDI_LScene,'BinWidth',sz,'Normalization','probability');
+histogram(Un_CA1_FR.RDI_LScene,'BinWidth',sz,'Normalization','probability');
+
+subplot(3,2,3); hold on; ylim([0 .2]); xlim([-1.2 1.2])
+histogram(Un_SUB.RDI_RScene,'BinWidth',sz,'Normalization','probability');
+histogram(Un_SUB_FR.RDI_RScene,'BinWidth',sz,'Normalization','probability');
+subplot(3,2,4); hold on; ylim([0 .2])
+histogram(Un_CA1.RDI_RScene,'BinWidth',sz,'Normalization','probability');
+histogram(Un_CA1_FR.RDI_RScene,'BinWidth',sz,'Normalization','probability');
+
+subplot(3,2,5); hold on; ylim([0 .2]); xlim([-1.2 1.2])
+histogram(Un_SUB.RDI_LR,'BinWidth',sz,'Normalization','probability');
+histogram(Un_SUB_FR.RDI_LR,'BinWidth',sz,'Normalization','probability');
+subplot(3,2,6); hold on; ylim([0 .2]); xlim([-1.2 1.2])
+histogram(Un_CA1.RDI_LR,'BinWidth',sz,'Normalization','probability');
+histogram(Un_CA1_FR.RDI_LR,'BinWidth',sz,'Normalization','probability');
+
+%% histogram_RDI_MF vs. SF
+figure;
+ subplot(3,2,1);hold on; ylim([0 .2]); xlim([-1.2 1.2]); title(['n=' num2str(sum(Un_SUB.nFields>1)) ',' num2str(sum(Un_SUB.nFields==1))])
+histogram(Un_SUB.RDI_LScene(Un_SUB.nFields>1),'BinWidth',sz,'Normalization','probability');
+histogram(Un_SUB.RDI_LScene(Un_SUB.nFields==1),'BinWidth',sz,'Normalization','probability');
+subplot(3,2,2); hold on; ylim([0 .2]); xlim([-1.2 1.2]); title(['n=' num2str(sum(Un_CA1.nFields>1)) ',' num2str(sum(Un_CA1.nFields==1))])
+histogram(Un_CA1.RDI_LScene(Un_CA1.nFields>1),'BinWidth',sz,'Normalization','probability');
+histogram(Un_CA1.RDI_LScene(Un_CA1.nFields==1),'BinWidth',sz,'Normalization','probability');
+
+ subplot(3,2,3);hold on; ylim([0 .2]); xlim([-1.2 1.2])
+histogram(Un_SUB.RDI_RScene(Un_SUB.nFields>1),'BinWidth',sz,'Normalization','probability');
+histogram(Un_SUB.RDI_RScene(Un_SUB.nFields==1),'BinWidth',sz,'Normalization','probability');
+subplot(3,2,4); hold on; ylim([0 .2]); xlim([-1.2 1.2])
+histogram(Un_CA1.RDI_RScene(Un_CA1.nFields>1),'BinWidth',sz,'Normalization','probability');
+histogram(Un_CA1.RDI_RScene(Un_CA1.nFields==1),'BinWidth',sz,'Normalization','probability');
+
+ subplot(3,2,5);hold on; ylim([0 .2]); xlim([-1.2 1.2])
+histogram(Un_SUB.RDI_LR(Un_SUB.nFields>1),'BinWidth',sz,'Normalization','probability');
+histogram(Un_SUB.RDI_LR(Un_SUB.nFields==1),'BinWidth',sz,'Normalization','probability');
+subplot(3,2,6); hold on; ylim([0 .2]); xlim([-1.2 1.2])
+histogram(Un_CA1.RDI_LR(Un_CA1.nFields>1),'BinWidth',sz,'Normalization','probability');
+histogram(Un_CA1.RDI_LR(Un_CA1.nFields==1),'BinWidth',sz,'Normalization','probability');
+
+%% bar_RDI_MF vs SF
+vsList={'RDI_LScene','RDI_RScene','RDI_LR'};
+U0 = Un_SUB;
+U1 = Un_CA1;
+US0 = U0(U0.NumField==1,:);
+US1 = U0(U0.NumField>1,:);
+UC0 = U1(U1.NumField==1,:);
+UC1 = U1(U1.NumField>1,:);
+
+xS0L = abs(US0.RDI_LScene); xS1L = abs(US1.RDI_LScene);
+xC0L = abs(UC0.RDI_LScene); xC1L = abs(UC1.RDI_LScene);
+xS0R = abs(US0.RDI_RScene); xS1R = abs(US1.RDI_RScene);
+xC0R = abs(UC0.RDI_RScene); xC1R = abs(UC1.RDI_RScene);
+xS0C = abs(US0.RDI_LR); xS1C = abs(US1.RDI_LR);
+xC0C = abs(UC0.RDI_LR); xC1C = abs(UC1.RDI_LR);
+
+figure; 
+subplot(1,2,1); hold on
+dat = [nanmean(xS0L) nanmean(xS1L) nanmean(xS0R) nanmean(xS1R) nanmean(xS0C) nanmean(xS1C)];
+err = [nanstd(xS0L)/sqrt(sum(~isnan(xS0L))) nanstd(xS1L)/sqrt(sum(~isnan(xS1L)))...
+    nanstd(xS0R)/sqrt(sum(~isnan(xS0R))) nanstd(xS1R)/sqrt(sum(~isnan(xS1R)))...
+    nanstd(xS0C)/sqrt(sum(~isnan(xS0C))) nanstd(xS1C)/sqrt(sum(~isnan(xS1C)))];
+bar(dat)
+errorbar(dat,err)
+ylim([0 .5])
+title('RDI SF vs. MF, SUB')
+xticks([1.5:2:5.5]); xticklabels({'Left', 'Right', 'Choice'})
+
+subplot(1,2,2); hold on
+dat = [nanmean(xC0L) nanmean(xC1L) nanmean(xC0R) nanmean(xC1R) nanmean(xC0C) nanmean(xC1C)];
+err = [nanstd(xC0L)/sqrt(sum(~isnan(xC0L))) nanstd(xC1L)/sqrt(sum(~isnan(xC1L)))...
+    nanstd(xC0R)/sqrt(sum(~isnan(xC0R))) nanstd(xC1R)/sqrt(sum(~isnan(xC1R)))...
+    nanstd(xC0C)/sqrt(sum(~isnan(xC0C))) nanstd(xC1C)/sqrt(sum(~isnan(xC1C)))];
+bar(dat)
+errorbar(dat,err)
+ylim([0 .5])
+title('RDI SF vs. MF, CA1')
+xticks([1.5:2:5.5]); xticklabels({'Left', 'Right', 'Choice'})
+% % yticks([0:al:0.2])
+
+tab_RDI=table;
+[p,h,stats] = ranksum(xS0L,xS1L);
+tab_RDI.SUB_Left(1)=p; tab_RDI.SUB_Left(2)=stats.zval;
+[p,h,stats] = ranksum(xS0R,xS1R);
+tab_RDI.SUB_Right(1)=p; tab_RDI.SUB_Right(2)=stats.zval;
+[p,h,stats] = ranksum(xS0C,xS1C);
+tab_RDI.SUB_Choice(1)=p; tab_RDI.SUB_Choice(2)=stats.zval;
+[p,h,stats] = ranksum(xC0L,xC1L);
+tab_RDI.CA1_Left(1)=p; tab_RDI.CA1_Left(2)=stats.zval;
+[p,h,stats] = ranksum(xC0R,xC1R);
+tab_RDI.CA1_Right(1)=p; tab_RDI.CA1_Right(2)=stats.zval;
+[p,h,stats] = ranksum(xC0C,xC1C);
+tab_RDI.CA1_Choice(1)=p; tab_RDI.CA1_Choice(2)=stats.zval;
+
+
+% ANOVA
+data = [xS0L;xS0R;xS0C;xC0L;xC0R;xC0C;xS1L;xS1R;xS1C;xC1L;xC1R;xC1C];
+g1 = [repmat('SUB',[size([xS0L;xS0R;xS0C],1) 1]); repmat('CA1',[size([xC0L;xC0R;xC0C],1) 1]);...
+    repmat('SUB',[size([xS1L;xS1R;xS1C],1) 1]); repmat('CA1',[size([xC1L;xC1R;xC1C],1) 1])];
+g2 = [repmat('L',[size([xS0L],1) 1]); repmat('R',[size([xS0R],1) 1]); repmat('C',[size([xS0C],1) 1]);...
+    repmat('L',[size([xC0L],1) 1]); repmat('R',[size([xC0R],1) 1]); repmat('C',[size([xC0C],1) 1]);...
+    repmat('L',[size([xS1L],1) 1]); repmat('R',[size([xS1R],1) 1]); repmat('C',[size([xS1C],1) 1]);...
+    repmat('L',[size([xC1L],1) 1]); repmat('R',[size([xC1R],1) 1]); repmat('C',[size([xC1C],1) 1]);];
+g3 = [repmat('SF',[size([xS0L],1) 1]); repmat('SF',[size([xS0R],1) 1]); repmat('SF',[size([xS0C],1) 1]);...
+    repmat('SF',[size([xC0L],1) 1]); repmat('SF',[size([xC0R],1) 1]); repmat('SF',[size([xC0C],1) 1]);...
+    repmat('MF',[size([xS1L],1) 1]); repmat('MF',[size([xS1R],1) 1]); repmat('MF',[size([xS1C],1) 1]);...
+    repmat('MF',[size([xC1L],1) 1]); repmat('MF',[size([xC1R],1) 1]); repmat('MF',[size([xC1C],1) 1]);];
+
+dat_xls=table;
+
+dat_xls.Region=g1;
+dat_xls.Item=g2;
+dat_xls.Field=g3;
+dat_xls.RPR=data;
+
+writetable(dat_xls,[ROOT.Processed '\RPR_SFMF.xlsx'])
+
+[p,tbl,stats] = anovan(data, {g1 g3},'model', 'interaction');
+%% bar_RDI_FR vs. TP
+vsList={'RDI_LScene','RDI_RScene','RDI_LR'};
+
+US0 = Un_SUB_FR;
+US1 = Un_SUB;
+UC0 = Un_CA1_FR;
+UC1 = Un_CA1;
+
+xS0L = abs(US0.RDI_LScene); xS1L = abs(US1.RDI_LScene);
+xC0L = abs(UC0.RDI_LScene); xC1L = abs(UC1.RDI_LScene);
+xS0R = abs(US0.RDI_RScene); xS1R = abs(US1.RDI_RScene);
+xC0R = abs(UC0.RDI_RScene); xC1R = abs(UC1.RDI_RScene);
+xS0C = abs(US0.RDI_LR); xS1C = abs(US1.RDI_LR);
+xC0C = abs(UC0.RDI_LR); xC1C = abs(UC1.RDI_LR);
+
+figure; 
+subplot(1,2,1); hold on
+dat = [nanmean(xS0L) nanmean(xS1L) nanmean(xS0R) nanmean(xS1R) nanmean(xS0C) nanmean(xS1C)];
+err = [nanstd(xS0L)/sqrt(sum(~isnan(xS0L))) nanstd(xS1L)/sqrt(sum(~isnan(xS1L)))...
+    nanstd(xS0R)/sqrt(sum(~isnan(xS0R))) nanstd(xS1R)/sqrt(sum(~isnan(xS1R)))...
+    nanstd(xS0C)/sqrt(sum(~isnan(xS0C))) nanstd(xS1C)/sqrt(sum(~isnan(xS1C)))];
+bar(dat)
+errorbar(dat,err)
+ylim([0 .5])
+title('RDI FR vs. TP, SUB')
+xticks([1.5:2:5.5]); xticklabels({'Left', 'Right', 'Choice'})
+
+subplot(1,2,2); hold on
+dat = [nanmean(xC0L) nanmean(xC1L) nanmean(xC0R) nanmean(xC1R) nanmean(xC0C) nanmean(xC1C)];
+err = [nanstd(xC0L)/sqrt(sum(~isnan(xC0L))) nanstd(xC1L)/sqrt(sum(~isnan(xC1L)))...
+    nanstd(xC0R)/sqrt(sum(~isnan(xC0R))) nanstd(xC1R)/sqrt(sum(~isnan(xC1R)))...
+    nanstd(xC0C)/sqrt(sum(~isnan(xC0C))) nanstd(xC1C)/sqrt(sum(~isnan(xC1C)))];
+bar(dat)
+errorbar(dat,err)
+ylim([0 .5])
+title('RDI FR vs. TP, CA1')
+xticks([1.5:2:5.5]); xticklabels({'Left', 'Right', 'Choice'})
+% % yticks([0:al:0.2])
+
+tab_RDI=table;
+[p,h,stats] = ranksum(xS0L,xS1L);
+tab_RDI.SUB_Left(1)=p; tab_RDI.SUB_Left(2)=stats.zval;
+[p,h,stats] = ranksum(xS0R,xS1R);
+tab_RDI.SUB_Right(1)=p; tab_RDI.SUB_Right(2)=stats.zval;
+[p,h,stats] = ranksum(xS0C,xS1C);
+tab_RDI.SUB_Choice(1)=p; tab_RDI.SUB_Choice(2)=stats.zval;
+[p,h,stats] = ranksum(xC0L,xC1L);
+tab_RDI.CA1_Left(1)=p; tab_RDI.CA1_Left(2)=stats.zval;
+[p,h,stats] = ranksum(xC0R,xC1R);
+tab_RDI.CA1_Right(1)=p; tab_RDI.CA1_Right(2)=stats.zval;
+[p,h,stats] = ranksum(xC0C,xC1C);
+tab_RDI.CA1_Choice(1)=p; tab_RDI.CA1_Choice(2)=stats.zval;
+
+% ANOVA
+data = [xS0L;xS0R;xS0C;xC0L;xC0R;xC0C;xS1L;xS1R;xS1C;xC1L;xC1R;xC1C];
+g1 = [repmat('SUB',[size([xS0L;xS0R;xS0C],1) 1]); repmat('CA1',[size([xC0L;xC0R;xC0C],1) 1]);...
+    repmat('SUB',[size([xS1L;xS1R;xS1C],1) 1]); repmat('CA1',[size([xC1L;xC1R;xC1C],1) 1])];
+g2 = [repmat('L',[size([xS0L],1) 1]); repmat('R',[size([xS0R],1) 1]); repmat('C',[size([xS0C],1) 1]);...
+    repmat('L',[size([xC0L],1) 1]); repmat('R',[size([xC0R],1) 1]); repmat('C',[size([xC0C],1) 1]);...
+    repmat('L',[size([xS1L],1) 1]); repmat('R',[size([xS1R],1) 1]); repmat('C',[size([xS1C],1) 1]);...
+    repmat('L',[size([xC1L],1) 1]); repmat('R',[size([xC1R],1) 1]); repmat('C',[size([xC1C],1) 1]);];
+g3 = [repmat('FR',[size([xS0L],1) 1]); repmat('FR',[size([xS0R],1) 1]); repmat('FR',[size([xS0C],1) 1]);...
+    repmat('FR',[size([xC0L],1) 1]); repmat('FR',[size([xC0R],1) 1]); repmat('FR',[size([xC0C],1) 1]);...
+    repmat('TP',[size([xS1L],1) 1]); repmat('TP',[size([xS1R],1) 1]); repmat('TP',[size([xS1C],1) 1]);...
+    repmat('TP',[size([xC1L],1) 1]); repmat('TP',[size([xC1R],1) 1]); repmat('TP',[size([xC1C],1) 1]);];
+
+dat_xls=table;
+
+dat_xls.Region=g1;
+dat_xls.Item=g2;
+dat_xls.Field=g3;
+dat_xls.RPR=data;
+
+writetable(dat_xls,[ROOT.Processed '\SI_FRTP.xlsx'])
+
+[p,tbl,stats] = anovan(data, {g1 g3},'model', 'interaction');
+
+
+
+%% pie_Unit field heterogeniety
+% var = DecodingP_all;
+U0 = Un_SUB(isnan(Un_SUB.FieldHet) & Un_SUB.NumField>1,:);
+U1 = Un_CA1(~isnan(Un_CA1.FieldHet) & Un_CA1.NumField>1,:);
+
+U0x = U0(isnan(U0.FieldHet),:);   U00 = U0(U0.FieldHet==0,:); U01 = U0(U0.FieldHet==1,:); U02 = U0(U0.FieldHet==2,:); U03 = U0(U0.FieldHet==3,:); 
+U1x = U1(isnan(U1.FieldHet),:);   U10 = U1(U1.FieldHet==0,:); U11 = U1(U1.FieldHet==1,:); U12 = U1(U1.FieldHet==2,:); U13 = U1(U1.FieldHet==3,:); 
+
+figure;
+subplot(1,2,1)
+pie([size(U0x,1), size(U00,1),size(U01,1),size(U02,1),size(U03,1)],'%.3f%%')
+title(['SUB - ' num2str(size(U0x,1)) ', ' num2str(size(U00,1)) ', ' num2str(size(U01,1)) ', ' num2str(size(U02,1)) ', ' num2str(size(U03,1))])
+subplot(1,2,2)
+pie([size(U1x,1), size(U10,1),size(U11,1),size(U12,1),size(U13,1)],'%.3f%%')
+title(['CA1 - ' num2str(size(U1x,1)) ', ' num2str(size(U10,1)) ', ' num2str(size(U11,1)) ', ' num2str(size(U12,1)) ', ' num2str(size(U13,1))])
+
+legend({'all fields are Non-sig', 'homo' , 'hetero-scenes','hetero-scene/choice','hetero-all 3'},'location','eastoutside')
+%% bar_RPR_het
+
+U00 = U0(U0.FieldHet<=1,:);
+U01 = U0(U0.FieldHet>1,:);
+U10 = U1(U1.FieldHet<=1,:);
+U11 = U1(U1.FieldHet>1,:);
+
+figure; 
+subplot(1,2,1); hold on
+x00 = U00.RipPartRate_all; x01 = U01.RipPartRate_all;
+x10 = U10.RipPartRate_all; x11 = U11.RipPartRate_all;
+
+dat = [nanmean(x00) nanmean(x01) nanmean(x10) nanmean(x11)];
+err = [nanstd(x00)/sqrt(sum(~isnan(x00))) nanstd(x01)/sqrt(sum(~isnan(x01))) nanstd(x10)/sqrt(sum(~isnan(x10))) nanstd(x11)/sqrt(sum(~isnan(x11)))];
+bar(dat)
+errorbar(dat,err)
+ylim([0 .6])
+title('Ripple Participation Rate, all SWRs')
+xticks([1:4]); xticklabels({'SUB-Hom','SUB-Het','CA1-Hom','CA1-Het'})
+
+subplot(1,2,2); hold on
+x00 = U00.RipPartRate_NonSp; x01 = U01.RipPartRate_NonSp;
+x10 = U10.RipPartRate_NonSp; x11 = U11.RipPartRate_NonSp;
+
+dat = [nanmean(x00) nanmean(x01) nanmean(x10) nanmean(x11)];
+err = [nanstd(x00)/sqrt(sum(~isnan(x00))) nanstd(x01)/sqrt(sum(~isnan(x01))) nanstd(x10)/sqrt(sum(~isnan(x10))) nanstd(x11)/sqrt(sum(~isnan(x11)))];
+bar(dat)
+errorbar(dat,err)
+ylim([0 .6])
+title('Ripple Participation Rate, task-related SWRs')
+xticks([1:4]); xticklabels({'SUB-Hom','SUB-Het','CA1-Hom','CA1-Het'})
+% % yticks([0:al:0.2])
+[p,h,stats] = ranksum(x01,x11)
+title(['p=' jjnum2str(p,3) ', t=' jjnum2str(stats.zval,3)])
+
+%%
+data = [x00;x01;x10;x11];
+g1 = [repmat('SUB',[size([x00;x01],1) 1]); repmat('CA1',[size([x10;x11],1) 1])]
+g2 = [repmat('Het',[size([x00],1) 1]); repmat('Hom',[size([x01],1) 1]);repmat('Het',[size([x10],1) 1]); repmat('Hom',[size([x11],1) 1])];
+
+[p,tbl,stats] = anovan(data, {g1,g2}, 'model', 'interaction');
+
+%% bar_RPR
+
+U00 = Un_SUB(Un_SUB.NumField==1,:);
+U01 = Un_SUB(Un_SUB.NumField>1,:);
+U10 = Un_CA1(Un_CA1.NumField==1,:);
+U11 = Un_CA1(Un_CA1.NumField>1,:);
+
+figure; 
+subplot(1,2,1); hold on
+x00 = U00.RipPartRate_all; x01 = U01.RipPartRate_all;
+x10 = U10.RipPartRate_all; x11 = U11.RipPartRate_all;
+
+dat = [nanmean(x00) nanmean(x01) nanmean(x10) nanmean(x11)];
+err = [nanstd(x00)/sqrt(sum(~isnan(x00))) nanstd(x01)/sqrt(sum(~isnan(x01))) nanstd(x10)/sqrt(sum(~isnan(x10))) nanstd(x11)/sqrt(sum(~isnan(x11)))];
+bar(dat)
+errorbar(dat,err)
+ylim([0 .6])
+title('Ripple Participation Rate, all SWRs')
+
+subplot(1,2,2); hold on
+x00 = U00.RipPartRate_NonSp; x01 = U01.RipPartRate_NonSp;
+x10 = U10.RipPartRate_NonSp; x11 = U11.RipPartRate_NonSp;
+
+dat = [nanmean(x00) nanmean(x01) nanmean(x10) nanmean(x11)];
+err = [nanstd(x00)/sqrt(sum(~isnan(x00))) nanstd(x01)/sqrt(sum(~isnan(x01))) nanstd(x10)/sqrt(sum(~isnan(x10))) nanstd(x11)/sqrt(sum(~isnan(x11)))];
+bar(dat)
+errorbar(dat,err)
+ylim([0 .6])
+title('Ripple Participation Rate, task-related SWRs')
+% % yticks([0:al:0.2])
+[p,h,stats] = ranksum(x00,x01)
+title(['p=' jjnum2str(p,3) ', t=' jjnum2str(stats.zval,3)])
+%%
+data = [x00;x01;x10;x11];
+g1 = [repmat('SUB',[size([x00;x01],1) 1]); repmat('CA1',[size([x10;x11],1) 1])]
+g2 = [repmat('Het',[size([x00],1) 1]); repmat('Hom',[size([x01],1) 1]);repmat('Het',[size([x10],1) 1]); repmat('Hom',[size([x11],1) 1])];
+
+[p,tbl,stats] = anovan(data, {g1,g2}, 'model', 'interaction');
 %%
 UnF = UnF_CA1; Un = Un_CA1;
 for uid = 1:size(Un,1)
@@ -428,7 +758,39 @@ xlim([-1.2 1.2]);ylim([0 .2])
 
 title(['p = ' num2str(p)])
 
+end
 
 
 
+%% hist_RDI_session
+    U0 = UnF_SUB;     U1 = UnF_CA1;
+sess = unique([Un_CA1(:,2:3)]);
+for s=1:size(sess,1)
+
+temp_CA1 = U1(U1.rat==sess.rat(s) & U1.session==sess.session(s),:);
+temp_SUB = U0(U0.rat==sess.rat(s) & U0.session==sess.session(s),:);
+figure;
+sgtitle([num2str(sess.rat(s)) '-' num2str(sess.session(s))])
+varList = {'LScene','RScene','LR'};
+for v=1:3
+subplot(2,3,v); hold on
+c0 = histogram((temp_SUB.(['RDI_' varList{v}])),'binwidth',.1,'Normalization','probability');
+c0.FaceColor = CList(1,:);
+xlim([-1.2 1.2]);ylim([0 .5])
+
+subplot(2,3,v+3); hold on
+c1 = histogram((temp_CA1.(['RDI_' varList{v}])),'binwidth',.1,'Normalization','probability');
+c1.FaceColor = CList(2,:);
+xlim([-1.2 1.2]);ylim([0 .5])
+
+% [h,p,r] = kstest2((temp_CA1.(['RDI_' varList{v}])),(temp_SUB.(['RDI_' varList{v}])))
+% 
+% 
+% title(['p = ' num2str(p)])
+
+end
+
+saveas(gca,['D:\HPC-SWR project\Processed Data_231113\Manuscript\supple\RDI_dist\' num2str(sess.rat(s)) '-' num2str(sess.session(s)) '.png'])
+saveas(gca,['D:\HPC-SWR project\Processed Data_231113\Manuscript\supple\RDI_dist\' num2str(sess.rat(s)) '-' num2str(sess.session(s)) '.svg'])
+close all
 end
