@@ -70,6 +70,7 @@ for u=1:size(Un_SUB)
     [~,t] = max(abs(tFields.RDI_RScene)); Un_SUB.RDI_RScene(u)=tFields.RDI_RScene(t);
     [~,t] = max(abs(tFields.RDI_LR)); Un_SUB.RDI_LR(u)=tFields.RDI_LR(t);
 end
+
 %% histogram_RDI_FR vs. TP
 sz=0.1;
 figure;
@@ -192,7 +193,7 @@ dat_xls.Item=g2;
 dat_xls.Field=g3;
 dat_xls.RPR=data;
 
-writetable(dat_xls,[ROOT.Processed '\RPR_SFMF.xlsx'])
+writetable(dat_xls,[ROOT.Processed '\SI_SFMF.xlsx'],'writemode','replacefile')
 
 [p,tbl,stats] = anovan(data, {g1 g3},'model', 'interaction');
 %% bar_RDI_FR vs. TP
