@@ -25,7 +25,7 @@ ROOT.Rip0 = [ROOT.Processed '\ripples_mat\R0\' thisRegion];
 ROOT.Rip = [ROOT.Processed '\ripples_mat\R2'];
 ROOT.Rip4 = [ROOT.Processed '\ripples_mat\R4'];
 ROOT.Rip5 = [ROOT.Processed '\ripples_mat\R5_cell_AllPopul'];
-ROOT.Fig = [ROOT.Processed '\ripples_mat\ProfilingSheet\R36 (bar only)_cmap(hot)_' thisRegion];
+ROOT.Fig = [ROOT.Processed '\ripples_mat\ProfilingSheet\R36 (bar only)_cmap(pink_r)_' thisRegion];
 ROOT.Units = [ROOT.Processed '\units_mat\U2'];
 ROOT.Behav = [ROOT.Processed '\behavior_mat'];
 
@@ -37,7 +37,13 @@ if ~exist(ROOT.Fig), mkdir(ROOT.Fig); end
 Recording_region = readtable([ROOT.Info '\Recording_region_SWR.csv'],'ReadRowNames',true);
 SessionList = readtable([ROOT.Info '\SessionList_SWR.xlsx'],'ReadRowNames',false);
 
+%         cmap1 = flipud(gray);
+%         cmap0='hot';
+        cmap1 = flipud(pink);
+%         cmap1 = coolwarm(256);
+%         cmap1 = sky(256);
 
+%           cmap1 = 1-gray_log(256);
 %%
 RipplesTable = readtable([ROOT.Save '\RipplesTable_' thisRegion0 '_forAnalysis.xlsx']);
 RipplesTable2 = readtable([ROOT.Save '\RipplesTable_' thisRegion0 '_forAnalysis_240310.xlsx']);
@@ -78,12 +84,17 @@ filter_ns2 = 'LR';
 %
 % writetable(UnitsTable_A,[ROOT.Units '\UnitsTable_' thisRegion '_forAnalysis.xlsx'])
 % writetable(UnitsTable_B,[ROOT.Units '\UnitsTable_' thisRegion2 '_forAnalysis.xlsx'])
-
+sList = {'415-12-SUB-6981','415-11-SUB-7975','232-07-SUB-1613','232-06-SUB-3473','232-06-SUB-1853','232-07-SUB-0376',...
+    '234-04-SUB-5212','232-06-SUB-2851','232-07-SUB-2200','232-06-SUB-1319','415-11-SUB-7733','232-07-SUB-0376','232-07-SUB-5433','415-10-SUB-5096',...
+    '232-07-CA1-0262','561-01-CA1-1538','561-03-CA1-0345','232-07-CA1-1254','561-05-CA1-2266','561-02-CA1-0788','232-07-SUB-3444',...
+    '234-01-CA1-1902','561-01-CA1-1731','561-05-CA1-0037','561-03-CA1-2132','561-02-CA1-1510','561-04-CA1-1366','561-01-CA1-0265','561-04-CA1-1464'};
 %%
 % RipplesTable = sortrows(RipplesTable,{'nFields','Decoding_Rsq'},{'descend','ascend'});
 for sid=1:size(RipplesTable,1)
     try
         thisRip = RipplesTable(sid,:);
+        thisID = thisRip.ID{1};
+        if ~ismember(thisID, sList), continue; end
         %                 if thisRip.correctness==1, continue; end
         thisRID = jmnum2str(thisRip.rat,3);
         thisSID = jmnum2str(thisRip.session,2);
@@ -359,18 +370,17 @@ for sid=1:size(RipplesTable,1)
             end
         end
 
-        cmap0 = flipud(gray);
-        cmap1='hot';
+
 
         ax1 = subplot(9,col,[1 2]*col+2);
         fig = popul_FRMap(flip(squeeze(FRMapsm_Aa(1,:,:))'),Unitsa,[0 stem_end_index size(FRMaps_A,2)],{' ', ' ',' '}, 1);
         line([stem_end_index stem_end_index],[0 size(FRMaps_A,3)+1],'color','w','linestyle','--')
-        title('Ensemble for Spatial React.')
+        title('Rate-based fields')
 
         ax2 = subplot(9,col,[1 2]*col+3);
         fig = popul_FRMap(flip(squeeze(FRMapsm_A(1,:,:))'),Units,[0 stem_end_index size(FRMaps_B,2)],{' ', ' ',' '}, 1);
         line([stem_end_index stem_end_index],[0 size(FRMaps_B,3)+1],'color','w','linestyle','--')
-        title('Ensemble for Non-Spatial React.')
+        title('Phase-based fields')
         for i=1:size(FRMapsm_A,3)
 
             text(52,i,jjnum2str(temp(i,4),2),'color','k')
@@ -394,16 +404,15 @@ for sid=1:size(RipplesTable,1)
             end
         end
 
-
-        ax3 = subplot(9,col,[3 4]*col+2);
+ ax4 = subplot(9,col,[3 4]*col+3);
+       
         fig = popul_FRMap(flip(squeeze(FRMap_Norm(1,:,:))'),ULabel_1 ,[0 stem_end_index size(FRMaps_B,2)],{' ', ' ',' '}, 1);
-        line([stem_end_index stem_end_index],[0 size(FRMaps_B,3)+1],'color','w','linestyle','--')
+        line([stem_end_index stem_end_index],[0 size(FRMaps_B,3)+1],'color','r')
         title('Zebra')
 
-        ax4 = subplot(9,col,[3 4]*col+3);
+        ax3 = subplot(9,col,[3 4]*col+2);
         fig = popul_FRMap(flip(squeeze(FRMap_Norm(2,:,:))'),ULabel_2 ,[0 stem_end_index size(FRMaps_B,2)],{' ', ' ',' '}, 1);
-
-        line([stem_end_index stem_end_index],[0 size(FRMaps_B,3)+1],'color','w','linestyle','--')
+        line([stem_end_index stem_end_index],[0 size(FRMaps_B,3)+1],'color','r')
         title('Bamboo')
         %%
         id = clunits_R(:,1)-clunits_R(:,2);
@@ -422,14 +431,15 @@ for sid=1:size(RipplesTable,1)
             end
         end
 
-        ax5 = subplot(9,col,[5 6]*col+2);
+        ax6 = subplot(9,col,[5 6]*col+3);
         fig = popul_FRMap(flip(squeeze(FRMap_Norm(1,:,:))'),ULabel_1,[0 stem_end_index size(FRMaps_B,2)],{' ', ' ',' '}, 1);
-        line([stem_end_index stem_end_index],[0 size(FRMaps_B,3)+1],'color','w','linestyle','--')
+        line([stem_end_index stem_end_index],[0 size(FRMaps_B,3)+1],'color','r')
         title('Pebbles')
 
-        ax6 = subplot(9,col,[5 6]*col+3);
+        
+        ax5 = subplot(9,col,[5 6]*col+2);
         fig = popul_FRMap(flip(squeeze(FRMap_Norm(2,:,:))'),ULabel_2,[0 stem_end_index size(FRMaps_B,2)],{' ', ' ',' '}, 1);
-        line([stem_end_index stem_end_index],[0 size(FRMaps_B,3)+1],'color','w','linestyle','--')
+        line([stem_end_index stem_end_index],[0 size(FRMaps_B,3)+1],'color','r')
         title('Mountain')
 
         %%
@@ -450,14 +460,15 @@ for sid=1:size(RipplesTable,1)
             end
         end
 
-        ax7 = subplot(9,col,[7 8]*col+2);
+        ax8 = subplot(9,col,[7 8]*col+3);
         fig = popul_FRMap(flip(squeeze(FRMap_Norm(1,1:stem_end_index,:))'),ULabel_1,[0 stem_end_index],{'Stbox', 'Dv'}, 1);
-        line([stem_end_index stem_end_index],[0 size(FRMaps_B,3)+1],'color','w','linestyle','--')
+        line([stem_end_index stem_end_index],[0 size(FRMaps_B,3)+1],'color','r')
         title('Left')
 
-        ax8 = subplot(9,col,[7 8]*col+3);
+        
+        ax7 = subplot(9,col,[7 8]*col+2);
         fig = popul_FRMap(flip(squeeze(FRMap_Norm(2,1:stem_end_index,:))'),ULabel_2,[0 stem_end_index],{'Stbox', 'Dv'}, 1);
-        line([stem_end_index stem_end_index],[0 size(FRMaps_B,3)+1],'color','w','linestyle','--')
+        line([stem_end_index stem_end_index],[0 size(FRMaps_B,3)+1],'color','r')
         title('Right')
 
         colormap(ax1,cmap1)
@@ -478,8 +489,8 @@ for sid=1:size(RipplesTable,1)
         if thisRip.pRatio_L_UV<0.5, thisRip.pRatio_L_UV=1-thisRip.pRatio_L_UV; end
         if thisRip.pRatio_L_UV<0.8, thisRip.pBinomDev_L_UV = RipplesTable2.pBinomDev_L_UV(sid); end
         if thisRip.pBinomDev_L_UV<0.05, c='r'; else, c='k'; end
-            title(['Ratio= ' jjnum2str(thisRip.pRatio_L_UV,3) ', p=' jjnum2str(thisRip.pBinomDev_L_UV,3)],'color',c,'FontSize',12)
-        set ( gca, 'xdir', 'reverse' )
+            title(['Ratio= ' jjnum2str(thisRip.pRatio_L_UV,3) ', p(SSIL)= ' jjnum2str(thisRip.pBinomDev_L_UV,3)],'color',c,'FontSize',12)
+%         set ( gca, 'xdir', 'reverse' )
 
 
         %         subplot(9,col,[5 6]*col+5);
@@ -489,8 +500,8 @@ if size(spks_for_bias_R,1) < 5 || isnan(thisRip.pRatio_R_UV), thisRip.pBinomDev_
 if thisRip.pRatio_R_UV<0.5, thisRip.pRatio_R_UV=1-thisRip.pRatio_R_UV; end
 if thisRip.pRatio_R_UV<0.8, thisRip.pBinomDev_R_UV = RipplesTable2.pBinomDev_R_UV(sid); end
 if thisRip.pBinomDev_R_UV<0.05, c='r'; else, c='k'; end
-           title(['Ratio= ' jjnum2str(thisRip.pRatio_R_UV,3) ', p=' jjnum2str(thisRip.pBinomDev_R_UV,3)],'color',c,'FontSize',12)
-     set ( gca, 'xdir', 'reverse' )
+           title(['Ratio= ' jjnum2str(thisRip.pRatio_R_UV,3) ', p(SSIR)= ' jjnum2str(thisRip.pBinomDev_R_UV,3)],'color',c,'FontSize',12)
+%      set ( gca, 'xdir', 'reverse' )
 
 
         %         subplot(9,col,[7 8]*col+5);
@@ -500,8 +511,8 @@ if size(spks_for_bias_C,1) < 5 || isnan(thisRip.pRatio_C_UV), thisRip.pBinomDev_
 if thisRip.pRatio_C_UV<0.5, thisRip.pRatio_C_UV=1-thisRip.pRatio_C_UV; end
 if thisRip.pRatio_C_UV<0.8, thisRip.pBinomDev_C_UV = RipplesTable2.pBinomDev_C_UV(sid); end
 if thisRip.pBinomDev_C_UV<0.05 , c='r'; else, c='k'; end
-          title(['Ratio= ' jjnum2str(thisRip.pRatio_C_UV,3) ', p=' jjnum2str(thisRip.pBinomDev_C_UV,3)],'color',c,'FontSize',12)
-       set ( gca, 'xdir', 'reverse' )
+          title(['Ratio= ' jjnum2str(thisRip.pRatio_C_UV,3) ', p(CSI)= ' jjnum2str(thisRip.pBinomDev_C_UV,3)],'color',c,'FontSize',12)
+%        set ( gca, 'xdir', 'reverse' )
 
         %% save fig
 if nanmin([thisRip.pBinomDev_L_UV, thisRip.pBinomDev_R_UV])<0.05
@@ -518,6 +529,7 @@ else
 end
 
         ROOT.Fig_en = [ROOT.Fig '\' suf1 '_' suf2];
+        ROOT.Fig_en = [ROOT.Fig];
         if ~exist(ROOT.Fig_en), mkdir(ROOT.Fig_en); end
         saveas(gca,[ROOT.Fig_en '\'  thisRip.ID{1} '.svg'])
         saveas(gca,[ROOT.Fig_en '\'  thisRip.ID{1} '.png'])
