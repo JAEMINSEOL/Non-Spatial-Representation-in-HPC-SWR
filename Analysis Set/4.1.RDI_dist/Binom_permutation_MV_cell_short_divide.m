@@ -14,10 +14,19 @@ if ~exist(ROOT.Rip), mkdir(ROOT.Rip); end
 Recording_region = readtable([ROOT.Info '\Recording_region_SWR.csv'],'ReadRowNames',true);
 SessionList = readtable([ROOT.Info '\SessionList_SWR.xlsx'],'ReadRowNames',false);
 
+RegionList = {'SUB','CA1'};
+for reg=1:2
+    for crit_si=.05:.05:.4
+thisR = RegionList{reg};
+% 
 
-thisRegion0 = 'CA1';
-thisRegion = 'CA1';
-thisRegion2 = 'CA1_field';
+thisRegion0 = thisR;
+thisRegion = thisR;
+thisRegion2 = [thisR '_field'];
+
+% thisRegion0 = 'CA1';
+% thisRegion = 'CA1';
+% thisRegion2 = 'CA1_field';
 
 % thisRegion0 = 'SUB';
 % thisRegion = 'SUB';
@@ -45,6 +54,7 @@ dur = 0.4*Params.Fs;
 randN=2000;
 
 UnitsTable = UnitsTable_B;
+UnitsTableA = UnitsTable_A;
 
 %%
 % RipplesTable_p = RipplesTable(RipplesTable.nPCs>2,:);
@@ -89,6 +99,11 @@ try
         thisUnits =[thisUnits;UnitsTable(find(cellfun(Params.cellfind(thisReact_B.UnitID(u)),UnitsTable.ID)),:)];
     end
 
+        thisUnitsA=table;
+    for u=1:size(thisReact_A,1)
+        thisUnitsA =[thisUnitsA;UnitsTableA(find(cellfun(Params.cellfind(thisReact_A.UnitID(u)),UnitsTableA.ID)),:)];
+    end
+
 %         RipplesTable_p.mRDI_L_UV(rid) = RDI_L.act_mean;
 %         RipplesTable_p.mRDI_R_UV(rid) = RDI_R.act_mean;
 %         RipplesTable_p.mRDI_C_UV(rid) = RDI_C.act_mean;
@@ -96,13 +111,28 @@ try
 
 
 %%
-[m,p1,p2,b1,b2,thisUnits_p,thisUnits_n] = FiltUnits(thisUnits,thisReact_A, UnitsTable_B,'RDI_LScene');
+[m,p1,p2,b1,b2,thisUnits_p,thisUnits_n] = FiltUnits(thisUnits,thisReact_A, UnitsTable_B,'RDI_LScene',crit_si);
+p1=0;p2=0;
+% q1 = sum(thisUnitsA.RDI_LScene>=0.1)/sum(abs(thisUnitsA.RDI_LScene)>=0.1); q2 = sum(thisUnitsA.RDI_LScene<=-0.1)/sum(abs(thisUnitsA.RDI_LScene)>=0.1);
+q1 = sum(thisUnits_p.RDI_LScene>=0.1)/sum(abs(thisUnits_p.RDI_LScene)>=0.1); if(sum(abs(thisUnits_p.RDI_LScene)>=crit_si))<5, q1=nan;end
+q2 = sum(thisUnits_n.RDI_LScene<=-0.1)/sum(abs(thisUnits_n.RDI_LScene)>=0.1); if(sum(abs(thisUnits_n.RDI_LScene)>=crit_si))<5, q2=nan;end
+RipplesTable_p.pRatio_L_UV(rid) = max([q1-p1,q2-p2]);
 RipplesTable_p.pBinomDev_L_UV(rid) = min([b1,b2]);
 
-[m,p1,p2,b1,b2,thisUnits_p,thisUnits_n] = FiltUnits(thisUnits,thisReact_A, UnitsTable_B,'RDI_RScene');
+[m,p1,p2,b1,b2,thisUnits_p,thisUnits_n] = FiltUnits(thisUnits,thisReact_A, UnitsTable_B,'RDI_RScene',crit_si);
+p1=0;p2=0;
+% q1 = sum(thisUnitsA.RDI_RScene>=0.1)/sum(abs(thisUnitsA.RDI_RScene)>=0.1); q2 = sum(thisUnitsA.RDI_RScene<=-0.1)/sum(abs(thisUnitsA.RDI_RScene)>=0.1);
+q1 = sum(thisUnits_p.RDI_RScene>=0.1)/sum(abs(thisUnits_p.RDI_RScene)>=0.1); if(sum(abs(thisUnits_p.RDI_RScene)>=crit_si))<5, q1=nan;end
+q2 = sum(thisUnits_n.RDI_RScene<=-0.1)/sum(abs(thisUnits_n.RDI_RScene)>=0.1); if(sum(abs(thisUnits_n.RDI_RScene)>=crit_si))<5, q2=nan;end
+RipplesTable_p.pRatio_R_UV(rid) = max([q1-p1,q2-p2]);
 RipplesTable_p.pBinomDev_R_UV(rid) = min([b1,b2]);
 
-[m,p1,p2,b1,b2,thisUnits_p,thisUnits_n] = FiltUnits(thisUnits,thisReact_A, UnitsTable_B,'RDI_LR');
+[m,p1,p2,b1,b2,thisUnits_p,thisUnits_n] = FiltUnits(thisUnits,thisReact_A, UnitsTable_B,'RDI_LR',crit_si);
+p1=0;p2=0;
+% q1 = sum(thisUnitsA.RDI_LR>=0.1)/sum(abs(thisUnitsA.RDI_LR)>=0.1); q2 = sum(thisUnitsA.RDI_LR<=-0.1)/sum(abs(thisUnitsA.RDI_LR)>=0.1);
+q1 = sum(thisUnits_p.RDI_LR>=0.1)/sum(abs(thisUnits_p.RDI_LR)>=0.1); if(sum(abs(thisUnits_p.RDI_LR)>=crit_si))<5, q1=nan;end
+q2 = sum(thisUnits_n.RDI_LR<=-0.1)/sum(abs(thisUnits_n.RDI_LR)>=0.1); if(sum(abs(thisUnits_n.RDI_LR)>=crit_si))<5, q2=nan;end
+RipplesTable_p.pRatio_C_UV(rid) = max([q1-p1,q2-p2]);
 RipplesTable_p.pBinomDev_C_UV(rid) = min([b1,b2]);
 %%
 %  sum(nanmin([RipplesTable_p.WilRDI_L_UV, RipplesTable_p.WilRDI_R_UV RipplesTable_p.WilRDI_C_UV],[],2)<0.05)
@@ -166,48 +196,49 @@ catch
 
 
     if ~isempty(thisUnits)
-            RipplesTable_p.mRDI_L_UV(rid) = mean(thisUnits.RDI_LScene(abs(thisUnits.RDI_LScene)>=0.1));
-        RipplesTable_p.mRDI_R_UV(rid) = mean(thisUnits.RDI_RScene(abs(thisUnits.RDI_RScene)>=0.1));
-        RipplesTable_p.mRDI_C_UV(rid) = mean(thisUnits.RDI_LR(abs(thisUnits.RDI_LR)>=0.1));
+        RipplesTable_p.mRDI_L_UV(rid) = mean(thisUnits.RDI_LScene(abs(thisUnits.RDI_LScene)>=crit_si));
+        RipplesTable_p.mRDI_R_UV(rid) = mean(thisUnits.RDI_RScene(abs(thisUnits.RDI_RScene)>=crit_si));
+        RipplesTable_p.mRDI_C_UV(rid) = mean(thisUnits.RDI_LR(abs(thisUnits.RDI_LR)>=crit_si));
 
         if isnan(RipplesTable_p.mRDI_L_UV(rid)), RipplesTable_p.mRDI_L_UV(rid) = nanmean(thisUnits.RDI_LScene); end
         if isnan(RipplesTable_p.mRDI_R_UV(rid)), RipplesTable_p.mRDI_R_UV(rid) = nanmean(thisUnits.RDI_RScene); end
         if isnan(RipplesTable_p.mRDI_C_UV(rid)), RipplesTable_p.mRDI_C_UV(rid) = nanmean(thisUnits.RDI_LR); end
 
-               RipplesTable_p.snr_RDI_L_UV(rid) = cal_snr(thisUnits.RDI_LScene);
-       RipplesTable_p.snr_RDI_R_UV(rid) = cal_snr(thisUnits.RDI_RScene); 
-       RipplesTable_p.snr_RDI_C_UV(rid) = cal_snr(thisUnits.RDI_LR);
+        RipplesTable_p.snr_RDI_L_UV(rid) = cal_snr(thisUnits.RDI_LScene);
+        RipplesTable_p.snr_RDI_R_UV(rid) = cal_snr(thisUnits.RDI_RScene);
+        RipplesTable_p.snr_RDI_C_UV(rid) = cal_snr(thisUnits.RDI_LR);
     else
-               RipplesTable_p.snr_RDI_L_UV(rid) = nan;
-       RipplesTable_p.snr_RDI_R_UV(rid) = nan; 
-       RipplesTable_p.snr_RDI_C_UV(rid) = nan;
+        RipplesTable_p.snr_RDI_L_UV(rid) = nan;
+        RipplesTable_p.snr_RDI_R_UV(rid) = nan;
+        RipplesTable_p.snr_RDI_C_UV(rid) = nan;
 
-           RipplesTable_p.WilRDI_L_UV(rid) = nan;
+        RipplesTable_p.WilRDI_L_UV(rid) = nan;
+        RipplesTable_p.MRDI_L_UV(rid) = nan;
+        RipplesTable_p.pBinom_L_UV(rid) = nan;
+
+        RipplesTable_p.WilRDI_R_UV(rid) = nan;
+        RipplesTable_p.MRDI_R_UV(rid) = nan;
+        RipplesTable_p.pBinom_R_UV(rid) = nan;
+
+        RipplesTable_p.WilRDI_C_UV(rid) = nan;
+        RipplesTable_p.MRDI_C_UV(rid) = nan;
+        RipplesTable_p.pBinom_C_UV(rid) = nan;
+
+    end
+
     RipplesTable_p.MRDI_L_UV(rid) = nan;
-     RipplesTable_p.pBinom_L_UV(rid) = nan;
-
-           RipplesTable_p.WilRDI_R_UV(rid) = nan;
     RipplesTable_p.MRDI_R_UV(rid) = nan;
-     RipplesTable_p.pBinom_R_UV(rid) = nan;
-
-         RipplesTable_p.WilRDI_C_UV(rid) = nan;
     RipplesTable_p.MRDI_C_UV(rid) = nan;
-     RipplesTable_p.pBinom_C_UV(rid) = nan;
-
-    end
-
-    RipplesTable_p.MRDI_L_UV(rid) = nan;
-RipplesTable_p.MRDI_R_UV(rid) = nan;
-RipplesTable_p.MRDI_C_UV(rid) = nan;
-    end
+end
 
 end
 % RipplesTable_p = RipplesTable_p(RipplesTable_p.nFields>=5,:);
-suff = '_forAnalysis';
-writetable(RipplesTable_p,[ROOT.Save '\RipplesTable_' thisRegion0 suff '.xlsx'],'writemode','replacefile')
+% suff = '_forAnalysis_240310';
+% writetable(RipplesTable_p,[ROOT.Save '\RipplesTable_' thisRegion0 suff '.xlsx'],'writemode','replacefile')
 % delete(gcp('nocreate'));
-
-
+RipplesTable_SI.(thisRegion0).(['SI_' jmnum2str(crit_si*100,3)]) = RipplesTable_p;
+    end
+end
 
 %%
 % RipplesTable_p.snr_RDI_L_UV(RipplesTable_p.snr_RDI_L_UV==20) =25;
@@ -215,35 +246,18 @@ writetable(RipplesTable_p,[ROOT.Save '\RipplesTable_' thisRegion0 suff '.xlsx'],
 %%
 
 
-
-function [x1,x2] = rand_samp(thisPool_A,thisPool_B,thisUnits,rdi)
-samp = datasample(thisPool_A,size(thisUnits,1),1);
-if ~isempty(samp)
-    samp2=table;
-    for j=1:size(thisPool_B,1)
-        if max(strcmp(thisPool_B.ID{j}(1:12),samp.ID)) & abs(thisPool_B.(rdi)(j))>0.1
-            samp2=[samp2;thisPool_B(j,:)];
-        end
-    end
-    x1 = nanmean(samp2.(rdi)); x2 = nanmedian(samp2.(rdi));
-else
-    x1 = nan; x2=nan;
-end
-end
-
-
 %%
-function [m,p1,p2,b1,b2,thisUnits_p,thisUnits_n] = FiltUnits(thisUnits,thisReact_A, UnitsTable_B,var)
+function [m,p1,p2,b1,b2,thisUnits_p,thisUnits_n] = FiltUnits(thisUnits,thisReact_A, UnitsTable_B,var,crit_si)
 
     thisUnits_p=table; thisUnits_n=table;
     for u=1:size(thisReact_A,1)
         temp =UnitsTable_B(find(strncmp(thisReact_A.UnitID(u),UnitsTable_B.ID,12)),:);
         if ~isempty(temp)
             if ~isnan(max(temp.(var)))
-        [~,m] = max(temp.(var));
+        [~,m] = max(abs(temp.(var)));
         thisUnits_p =[thisUnits_p;temp(m,:)];
 
-         [~,m] = min(temp.(var));
+         [~,m] = max(abs(temp.(var)));
         thisUnits_n =[thisUnits_n;temp(m,:)];
             else
                 thisUnits_p =[thisUnits_p;temp(1,:)];
@@ -253,13 +267,13 @@ function [m,p1,p2,b1,b2,thisUnits_p,thisUnits_n] = FiltUnits(thisUnits,thisReact
 
     end
 
-    m = median(UnitsTable_B.(var)(abs(UnitsTable_B.(var))>=0.1));
+    m = median(UnitsTable_B.(var)(abs(UnitsTable_B.(var))>=crit_si));
 p1 = sum(UnitsTable_B.(var)>=0.1)/sum(abs(UnitsTable_B.(var))>=0.1); p2 = sum(UnitsTable_B.(var)<=-0.1)/sum(abs(UnitsTable_B.(var))>=0.1);
 
 if sum(abs(thisUnits.(var))>=0.1)<1
 b1 = nan; b2=nan;
 else
-b1=myBinomTest(sum(thisUnits_p.(var)>=0.1),sum(abs(thisUnits_p.(var))>=0.1),p1,'one');
-b2= myBinomTest(sum(thisUnits_n.(var)<=-0.1),sum(abs(thisUnits_n.(var))>=0.1),p2,'one');
+b1=myBinomTest(sum(thisUnits_p.(var)>=0.1),sum(abs(thisUnits_p.(var))>=crit_si),p1,'one');
+b2= myBinomTest(sum(thisUnits_n.(var)>=0.1),sum(abs(thisUnits_n.(var))>=crit_si),p2,'one');
 end
 end
