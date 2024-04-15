@@ -243,7 +243,7 @@ RipplesTable_SI.(thisRegion0).(['SI_' jmnum2str(crit_si*100,3)]) = RipplesTable_
     end
 end
 
-save(RipplesTable_SI,[ROOT.Processed '\Manuscript\ripple_SI.mat']);
+save([ROOT.Processed '\Manuscript\ripple_SI.mat'],'RipplesTable_SI');
 %%
 % RipplesTable_p.snr_RDI_L_UV(RipplesTable_p.snr_RDI_L_UV==20) =25;
 % RipplesTable_p.snr_RDI_L_UV(RipplesTable_p.snr_RDI_L_UV==-20) =-25;
