@@ -129,3 +129,167 @@ ylim([0 .6])
 title('Ripple Participation Rate, task-related SWRs - CA1')
 xticks([1:3]); xticklabels({'Single-Single','Single-Multi','Multi-Multi'})
 ylabel('Ripple Part. Rate')
+
+%% line_RPR
+U0 = Un_SUB;
+U1 = Un_CA1;
+
+U0S = U0(U0.NumField==1,:);
+U0M = U0(U0.NumField>1,:);
+
+U1S = U1(U1.NumField==1,:);
+U1M = U1(U1.NumField>1,:);
+
+x0_AS = U0S.RipPartRate_all; x0_AM = U0M.RipPartRate_all; x0_NS = U0S.RipPartRate_NonSp; x0_NM = U0M.RipPartRate_NonSp;
+x1_AS = U1S.RipPartRate_all; x1_AM = U1M.RipPartRate_all; x1_NS = U1S.RipPartRate_NonSp; x1_NM = U1M.RipPartRate_NonSp;
+
+[p,~,stats] = ranksum(x1_AS,x1_NS)
+
+figure;
+subplot(1,2,1); hold on
+
+dat = [nanmean(x0_AS) nanmean(x0_NS)];
+err = [nanstd(x0_AS)/sqrt(sum(~isnan(x0_AS))) nanstd(x0_NS)/sqrt(sum(~isnan(x0_NS))) ];
+errorbar(dat,err,'color','k')
+plot(dat,'linewidth',2,'color',hex2rgb('d86d35'))
+
+dat = [nanmean(x0_AM) nanmean(x0_NM)];
+err = [nanstd(x0_AM)/sqrt(sum(~isnan(x0_AM))) nanstd(x0_NM)/sqrt(sum(~isnan(x0_NM))) ];
+errorbar(dat,err,'color','k')
+plot(dat,'linewidth',2,'color',hex2rgb('7e4b8e'))
+
+ylim([0 1])
+title('Ripple Participation Rate, SUB')
+xlim([0.5 2.5]); xticks([1:2]); xticklabels({'All','Task-related'})
+ylabel('Ripple Part. Rate')
+
+subplot(1,2,2); hold on
+
+dat = [nanmean(x1_AS) nanmean(x1_NS)];
+err = [nanstd(x1_AS)/sqrt(sum(~isnan(x1_AS))) nanstd(x1_NS)/sqrt(sum(~isnan(x1_NS))) ];
+errorbar(dat,err,'color','k')
+plot(dat,'linewidth',2,'color',hex2rgb('d86d35'))
+
+dat = [nanmean(x1_AM) nanmean(x1_NM)];
+err = [nanstd(x1_AM)/sqrt(sum(~isnan(x1_AM))) nanstd(x1_NM)/sqrt(sum(~isnan(x1_NM))) ];
+errorbar(dat,err,'color','k')
+plot(dat,'linewidth',2,'color',hex2rgb('7e4b8e'))
+
+ylim([0 1])
+title('Ripple Participation Rate, CA1')
+xlim([0.5 2.5]); xticks([1:2]); xticklabels({'All','Task-related'})
+ylabel('Ripple Part. Rate')
+%% scatter_RPR_SI_nonSp
+U0 = Un_SUB;
+U1 = Un_CA1;
+
+U0S = U0( U0.NumField==1,:);
+U0M = U0( U0.NumField>1,:);
+
+U1S = U1(U1.NumField==1,:);
+U1M = U1(U1.NumField>1,:);
+
+x0_S = U0S.RipPartRate_NonSp; x0_M = U0M.RipPartRate_NonSp;
+y0_SL = U0S.RDI_LScene; y0_SR = U0S.RDI_LScene; y0_SC = U0S.RDI_LR;
+y0_ML = U0M.RDI_LScene; y0_MR = U0M.RDI_LScene; y0_MC = U0M.RDI_LR;
+
+x1_S = U1S.RipPartRate_NonSp; x1_M = U1M.RipPartRate_NonSp;
+y1_SL = U1S.RDI_LScene; y1_SR = U1S.RDI_LScene; y1_SC = U1S.RDI_LR;
+y1_ML = U1M.RDI_LScene; y1_MR = U1M.RDI_LScene; y1_MC = U1M.RDI_LR;
+
+figure('position',[148,137,1208,715]);  
+sgtitle('Left Scene Selectivity vs. SWR Part. Rate (task-related reactivation)')
+subplot(1,2,1); hold on
+scatter(y0_SL,x0_S,40,hex2rgb('d86d35'))
+scatter(y0_ML,x0_M,40,hex2rgb('7e4b8e'))
+xlim([-1.5 1.5]); ylim([0 1]); xlabel('selectivity index'); ylabel('SWR Part. Rate')
+title('SUB'); legend({'SF','MF'})
+
+subplot(1,2,2); hold on
+scatter(y1_SL,x1_S,40,hex2rgb('d86d35'))
+scatter(y1_ML,x1_M,40,hex2rgb('7e4b8e'))
+xlim([-1.5 1.5]); ylim([0 1]); xlabel('selectivity index'); ylabel('SWR Part. Rate')
+title('CA1'); legend({'SF','MF'})
+
+
+figure('position',[148,137,1208,715]); 
+sgtitle('Right Scene Selectivity vs. SWR Part. Rate (task-related reactivation)')
+subplot(1,2,1); hold on
+scatter(y0_SR,x0_S,40,hex2rgb('d86d35'))
+scatter(y0_MR,x0_M,40,hex2rgb('7e4b8e'))
+xlim([-1.5 1.5]); ylim([0 1]); xlabel('selectivity index'); ylabel('SWR Part. Rate')
+title('SUB'); legend({'SF','MF'})
+
+subplot(1,2,2); hold on
+scatter(y1_SR,x1_S,40,hex2rgb('d86d35'))
+scatter(y1_MR,x1_M,40,hex2rgb('7e4b8e'))
+xlim([-1.5 1.5]); ylim([0 1]); xlabel('selectivity index'); ylabel('SWR Part. Rate')
+title('CA1'); legend({'SF','MF'})
+
+
+figure('position',[148,137,1208,715]); 
+sgtitle('Choice Selectivity vs. SWR Part. Rate (task-related reactivation)')
+subplot(1,2,1); hold on
+scatter(y0_SC,x0_S,40,hex2rgb('d86d35'))
+scatter(y0_MC,x0_M,40,hex2rgb('7e4b8e'))
+xlim([-1.5 1.5]); ylim([0 1]); xlabel('selectivity index'); ylabel('SWR Part. Rate')
+title('SUB'); legend({'SF','MF'})
+
+subplot(1,2,2); hold on
+scatter(y1_SC,x1_S,40,hex2rgb('d86d35'))
+scatter(y1_MC,x1_M,40,hex2rgb('7e4b8e'))
+xlim([-1.5 1.5]); ylim([0 1]); xlabel('selectivity index'); ylabel('SWR Part. Rate')
+title('CA1'); legend({'SF','MF'})
+
+%%
+[~,ia,ic] = unique(UnitPair_field.CA1.UID1);
+
+UF1 = UnitPair_field.CA1(ia,:);
+
+[~,ia,ic] = unique(UnitPair_field.SUB.UID1);
+
+UF0 = UnitPair_field.SUB(ia,:);
+
+
+    UF0.Nsp_M = nanmax(abs([UF0.Nsp_L,UF0.Nsp_R,UF0.Nsp_C]),[],2);
+    UF1.Nsp_M = nanmax(abs([UF1.Nsp_L,UF1.Nsp_R,UF1.Nsp_C]),[],2);
+ 
+    Reg='CA1';
+for u=1:size(UnitsTable_field.(Reg),1)
+    idx = find(strcmp(UnitsTable_field.(Reg).ID(u),UnitPair_field.(Reg).UID1),1);
+    if ~isempty(idx)
+    UnitsTable_field.(Reg).RPR(u) = UnitPair_field.(Reg).p(idx) / UnitPair_field.(Reg).p0(idx);
+    else
+        UnitsTable_field.(Reg).RPR(u)=nan;
+    end
+end
+%%
+UF1 = UnitsTable_field.CA1;
+UF0 = UnitsTable_field.SUB;
+
+figure;
+
+subplot(1,2,1)
+x=abs(UF0.RDI_RScene); y=UF0.RPR;
+x(~(y<=1))=[]; y(~(y<=1))=[];
+y(isnan(x))=[]; x(isnan(x))=[];
+scatter(x,y,40,CList(1,:),'filled')
+ylim([0 1]); xlim([0 1.2])
+X = [ones(size(x)) x];
+B = X\y;
+Rsq = 1 - sum((y - X*B).^2)/sum((y - mean(y)).^2);
+title(num2str(Rsq))
+
+subplot(1,2,2)
+x=abs(UF1.RDI_RScene); y=UF1.RPR;
+x(~(y<=1))=[]; y(~(y<=1))=[];
+y(isnan(x))=[]; x(isnan(x))=[];
+scatter(x,y,40,CList(2,:),'filled')
+ylim([0 1]); xlim([0 1.2])
+
+
+corrcoef(x,y)
+X = [ones(size(x)) x];
+B = X\y;
+Rsq = 1 - sum((y - X*B).^2)/sum((y - mean(y)).^2);
+title(num2str(Rsq))
