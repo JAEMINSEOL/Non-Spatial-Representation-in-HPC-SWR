@@ -7,13 +7,15 @@ ROOT.Unit = [ROOT.Save '\units_mat\U0'];
 
 % Rip_CA1 = readtable([ROOT.Save '\RipplesTable_' 'CA1_field' '_RDIs_UV_cell_HeteroIn_AllPopul.xlsx']);
 % Rip_SUB = readtable([ROOT.Save '\RipplesTable_' 'SUB_field' '_RDIs_UV_cell_HeteroIn_AllPopul.xlsx']);
-suff = '_forAnalysis'; 
+suff = '_forAnalysis_final'; 
 % suff='_Behav';
-% Rip_CA1 = readtable([ROOT.Save '\RipplesTable_' 'CA1' suff '.xlsx']);
-% Rip_SUB = readtable([ROOT.Save '\RipplesTable_' 'SUB' suff '.xlsx']);
-Rip_CA1 = readtable([ROOT.Rip '\RipplesTable_Behav_' 'CA1_speed_filtered' '.xlsx']);
-Rip_SUB = readtable([ROOT.Rip '\RipplesTable_Behav_' 'SUB_speed_filtered' '.xlsx']);
+Rip_CA1 = readtable([ROOT.Save '\RipplesTable_' 'CA1' suff '.xlsx']);
+Rip_SUB = readtable([ROOT.Save '\RipplesTable_' 'SUB' suff '.xlsx']);
+Rip2_CA1 = readtable([ROOT.Rip '\RipplesTable_Behav_' 'CA1' '.xlsx']);
+Rip2_SUB = readtable([ROOT.Rip '\RipplesTable_Behav_' 'SUB' '.xlsx']);
 
+Rip3_CA1 = readtable([ROOT.Rip '\RipplesTable_Behav_' 'CA1_speed_filtered' '.xlsx']);
+Rip3_SUB = readtable([ROOT.Rip '\RipplesTable_Behav_' 'SUB_speed_filtered' '.xlsx']);
 
 pt = table;
 
@@ -25,7 +27,21 @@ Rip_CA1(Rip_CA1.rat==232 & Rip_CA1.session==4,:)=[];
 Rip_SUB(Rip_SUB.rat==232 & Rip_SUB.session==4,:)=[];
 % Rip_CA1 = Rip_CA1(Rip_CA1.NormAmp_v3>0,:);
 
+Rip2_SUB = Rip2_SUB(Rip2_SUB.StartTime_fromTrialEnd>=0,:);
+Rip2_CA1 = Rip2_CA1(Rip2_CA1.StartTime_fromTrialEnd>=0,:);
+% 
+for rid=1:size(Rip2_SUB,1)
+    if max(strcmp(Rip2_SUB.ID(rid),Rip3_SUB.ID))==0
+        Rip2_SUB.rat(rid)=0;
+    end
+end
+Rip2_SUB(Rip2_SUB.rat==0,:)=[];
+Rip2_SUB = Rip2_SUB(Rip2_SUB.ensemble>=3,:);
+Rip2_CA1 = Rip2_CA1(Rip2_CA1.ensemble>=3,:);
 
+% writetable(Rip_CA1,[ROOT.Save 'RipplesTable_AfterCellandOverlap_CA1.xlsx'])
+
+nanmean(Rip2_SUB.Overlap)
 %%
 vrList = {'RippleDuration','MeanRaw','MeanFreq','RipplePower','spike','ensemble','SpikePerCell'};
 for v=1:numel(vrList)
@@ -52,7 +68,7 @@ pt.RipplePower = pt.RipplePower/(10^-12)
 %%
 
 %% Ripple Property Bar graphs
-for v=1:1
+for v=5:6
 vr  = vrList{v};
 
 x = [1 2];
@@ -81,8 +97,8 @@ ylabel('proportion')
 % ylim([180 200])
 if ~exist([ROOT.Save '\Manuscript\Table1']), mkdir([ROOT.Save '\Manuscript\Table1']); end
 xlim([0 0.2])
-saveas(gca,[ROOT.Save '\Manuscript\Table1\(hist)(filtered)' vr '.png'])
-saveas(gca,[ROOT.Save '\Manuscript\Table1\(hist)(filtered)' vr '.svg'])
+% saveas(gca,[ROOT.Save '\Manuscript\Table1\(hist)(filtered)' vr '.png'])
+% saveas(gca,[ROOT.Save '\Manuscript\Table1\(hist)(filtered)' vr '.svg'])
 
 
 vr
@@ -131,3 +147,72 @@ scatter(ones(length(x),1)*2,y,40,Rip_Rats(:,3),'filled')
 legend
 title (['ripples' '-Z=' jjnum2str(stats.zval,2) ',w=' jjnum2str(p,4)])
 
+
+%% MF cell ratio of each SWR
+ROOT.Units = [ROOT.Processed '\units_mat\U2'];
+U0 = readtable([ROOT.Units '\UnitsTable_' 'SUB' '_forAnalysis.xlsx']);
+U1 = readtable([ROOT.Units '\UnitsTable_' 'CA1' '_forAnalysis.xlsx']);
+    U0.isMF = U0.NumField>1;
+    U1.isMF = U1.NumField>1;
+
+R0 = readtable([ROOT.Processed '\ReactTable_SUB_SUB.xlsx']);
+R1 = readtable([ROOT.Processed '\ReactTable_CA1_CA1.xlsx']);
+
+for rid=1:size(Rip_CA1,1)
+    thisReact = R1(strcmp(R1.RippleID,Rip_CA1.ID(rid)),:);
+    temp = unique(thisReact.UnitID);
+    nfs=[];
+    for t=1:size(temp,1)
+        if isempty(find(strcmp(temp{t},U1.ID))), nfs(t)=nan;
+        else
+    nfs(t) = U1.isMF(find(strcmp(temp{t},U1.ID)));
+        end
+    end
+    Rip_CA1.propMF(rid)=nanmean(nfs);
+end
+
+for rid=1:size(Rip_SUB,1)
+    thisReact = R0(strcmp(R0.RippleID,Rip_SUB.ID(rid)),:);
+    temp = unique(thisReact.UnitID);
+    nfs=[];
+    for t=1:size(temp,1)
+        if isempty(find(strcmp(temp{t},U0.ID))), nfs(t)=nan;
+        else
+    nfs(t) = U0.isMF(find(strcmp(temp{t},U0.ID)));
+        end
+    end
+    Rip_SUB.propMF(rid)=nanmean(nfs);
+end
+
+Rip_SUB.isTR = nanmin([Rip_SUB.pBinomDev_L_UV,Rip_SUB.pBinomDev_R_UV,Rip_SUB.pBinomDev_C_UV],[],2)<0.05;
+Rip_CA1.isTR = nanmin([Rip_CA1.pBinomDev_L_UV,Rip_CA1.pBinomDev_R_UV,Rip_CA1.pBinomDev_C_UV],[],2)<0.05;
+
+%%
+T0_T = Rip_SUB(Rip_SUB.isTR,:); T0_N = Rip_SUB(~Rip_SUB.isTR,:);
+T1_T = Rip_CA1(Rip_CA1.isTR,:); T1_N = Rip_CA1(~Rip_CA1.isTR,:);
+
+x0_T = T0_T.propMF; x0_N = T0_N.propMF;
+x1_T = T1_T.propMF; x1_N = T1_N.propMF;
+
+[p,~,stats] = ranksum(x0_T,x0_N)
+[p,~,stats] = ranksum(x1_T,x1_N)
+
+figure;
+hold on
+
+dat = [nanmean(x0_T) nanmean(x0_N)];
+err = [nanstd(x0_T)/sqrt(sum(~isnan(x0_T))) nanstd(x0_N)/sqrt(sum(~isnan(x0_N))) ];
+errorbar(dat,err,'color','k')
+d0 = bar(dat,'linewidth',2,'FaceColor',hex2rgb('e71224'));
+
+
+dat = [nanmean(x1_T) nanmean(x1_N)];
+err = [nanstd(x1_T)/sqrt(sum(~isnan(x1_T))) nanstd(x1_N)/sqrt(sum(~isnan(x1_N))) ];
+errorbar(dat,err,'color','k')
+d1 = bar(dat,'linewidth',2,['face' ...
+    'color'],hex2rgb('155e95'));
+
+ylim([0 1])
+ legend([d0 d1],{'SUB','CA1'})
+xlim([0.5 2.5]); xticks([1:2]); xticklabels({'Task-related','Non-Task-related'})
+ylabel('MF cell proportion')
