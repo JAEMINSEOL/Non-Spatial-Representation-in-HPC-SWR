@@ -25,7 +25,7 @@ ROOT.Rip0 = [ROOT.Processed '\ripples_mat\R0\' thisRegion];
 ROOT.Rip = [ROOT.Processed '\ripples_mat\R2'];
 ROOT.Rip4 = [ROOT.Processed '\ripples_mat\R4'];
 ROOT.Rip5 = [ROOT.Processed '\ripples_mat\R5_cell_AllPopul'];
-ROOT.Fig = [ROOT.Processed '\ripples_mat\ProfilingSheet\R36 (bar only)_cmap(pink_r)_' thisRegion];
+ROOT.Fig = [ROOT.Processed '\ripples_mat\ProfilingSheet\R42_cmap(pink_r)_short' thisRegion];
 ROOT.Units = [ROOT.Processed '\units_mat\U2'];
 ROOT.Behav = [ROOT.Processed '\behavior_mat'];
 
@@ -65,7 +65,7 @@ Params.tbinDuration = 0.005;
 
 filter_ns = 'C';
 filter_ns2 = 'LR';
-
+isshort=1;
 
 %%
 
@@ -91,10 +91,12 @@ sList = {'415-12-SUB-6981','415-11-SUB-7975','232-07-SUB-1613','232-06-SUB-3473'
 %%
 % RipplesTable = sortrows(RipplesTable,{'nFields','Decoding_Rsq'},{'descend','ascend'});
 for sid=1:size(RipplesTable,1)
+%     sid=size(RipplesTable,1)-sid+1;
     try
         thisRip = RipplesTable(sid,:);
+        thisRip2 = RipplesTable2(sid,:);
         thisID = thisRip.ID{1};
-        if ~ismember(thisID, sList), continue; end
+%         if ~ismember(thisID, sList), continue; end
         %                 if thisRip.correctness==1, continue; end
         thisRID = jmnum2str(thisRip.rat,3);
         thisSID = jmnum2str(thisRip.session,2);
@@ -131,8 +133,9 @@ for sid=1:size(RipplesTable,1)
             [~,t] = max(thisTT_table.RippleBandMean);
             TargetTT_p = thisTT_table.TT(t);
 
-%             EEG = LoadEEGData(ROOT, thisRSID, TargetTT_p,Params,Params_Ripple);
-
+            if isshort
+            EEG = LoadEEGData(ROOT, thisRSID, TargetTT_p,Params,Params_Ripple);
+            end
 
             clusters_A = UnitsTable_A(UnitsTable_A.rat==thisRip.rat & UnitsTable_A.session==thisRip.session,:);
             clusters_B = UnitsTable_B(UnitsTable_B.rat==thisRip.rat & UnitsTable_B.session==thisRip.session,:);
@@ -184,10 +187,12 @@ for sid=1:size(RipplesTable,1)
 
         [FRMapsm_Aa,~,~,~,~,~] = SmoothFRMap(FRMap_A);
 
-%         %% load replay
-%         Replay = load([ROOT.Rip4 '\' RipplesTable.ID{sid} '.mat']);
-%         thisRip.Decoding_Rsq = Replay.R_actual(1); RipplesTable.Decoding_Rsq(sid)= Replay.R_actual(1);
-%         thisRip.DecodingDir = Replay.v{1}; RipplesTable.DecodingDir(sid) = Replay.v{1};
+        %% load replay
+        if isshort
+        Replay = load([ROOT.Rip4 '\' RipplesTable.ID{sid} '.mat']);
+        thisRip.Decoding_Rsq = Replay.R_actual(1); RipplesTable.Decoding_Rsq(sid)= Replay.R_actual(1);
+        thisRip.DecodingDir = Replay.v{1}; RipplesTable.DecodingDir(sid) = Replay.v{1};
+        end
         %%
         col=8;
         figure('position',[317,63,2000,1500],'color','w');
@@ -219,33 +224,35 @@ for sid=1:size(RipplesTable,1)
             %                  text(h*1.2,0.5,jjnum2str(het(h,2),2))
         end
         axis off
-        %% EEG
-%         thisEEG = EEG.(['TT' num2str(TargetTT_p)]).Raw(Ist:Ied);
-%         thisEEG_Ripple = EEG.(['TT' num2str(TargetTT_p)]).Filtered(Ist:Ied);
-%         hold on
-% 
-%         subplot(6,col,[1 col+1])
-%         plot(thisEEG,'k')
-%         title(['TT' num2str(TargetTT_p)])
-%         x1=mar; x2=mar+thisRip.RippleDuration*Params.Fs;
-%         dur2=x2+mar;
-%         xlim([0 dur2])
-%         line([x1 x1], [min(thisEEG) max(thisEEG)+50], 'color','r','linestyle','--')
-%         line([x2 x2], [min(thisEEG) max(thisEEG)+50], 'color','r','linestyle','--')
-%         axis off
-% 
-%         subplot(6,col,[col*2]+1)
-%         plot(thisEEG_Ripple,'b')
-% 
-%         x1=mar; x2=mar+thisRip.RippleDuration*Params.Fs;
-%         dur2=x2+mar;
-%         xlim([0 dur2])
-%         line([x1 x1], [min(thisEEG_Ripple) max(thisEEG_Ripple)+50], 'color','r','linestyle','--')
-%         line([x2 x2], [min(thisEEG_Ripple) max(thisEEG_Ripple)+50], 'color','r','linestyle','--')
-%         axis off
+         %% EEG
+         if isshort
+        thisEEG = EEG.(['TT' num2str(TargetTT_p)]).Raw(Ist:Ied);
+        thisEEG_Ripple = EEG.(['TT' num2str(TargetTT_p)]).Filtered(Ist:Ied);
+        hold on
+
+        subplot(6,col,[1 col+1])
+        plot(thisEEG,'k')
+        title(['TT' num2str(TargetTT_p)])
+        x1=mar; x2=mar+thisRip.RippleDuration*Params.Fs;
+        dur2=x2+mar;
+        xlim([0 dur2])
+        line([x1 x1], [min(thisEEG) max(thisEEG)+50], 'color','r','linestyle','--')
+        line([x2 x2], [min(thisEEG) max(thisEEG)+50], 'color','r','linestyle','--')
+        axis off
+
+        subplot(6,col,[col*2]+1)
+        plot(thisEEG_Ripple,'b')
+
+        x1=mar; x2=mar+thisRip.RippleDuration*Params.Fs;
+        dur2=x2+mar;
+        xlim([0 dur2])
+        line([x1 x1], [min(thisEEG_Ripple) max(thisEEG_Ripple)+50], 'color','r','linestyle','--')
+        line([x2 x2], [min(thisEEG_Ripple) max(thisEEG_Ripple)+50], 'color','r','linestyle','--')
+        axis off
+         end
         %% color scheme
         s = size(spks_epoch,1);
-        clunits = hsv(max(spks_epoch(s,end))+1);
+        clunits = hsv(max(spks_epoch_u_in(s,end))+1);
         clunits = [zeros(s,1),zeros(s,1) , zeros(s,1)];
 
         %         aclunits = hsv(max(aspks_epoch(s,end))+1);
@@ -309,59 +316,63 @@ for sid=1:size(RipplesTable,1)
         end
         RipplesTable.pRatio_C_UV(sid) = b; thisRip.pRatio_C_UV=b;
         %% reactivation rasterplot
-%         subplot(6,col,[3 5]*col+1)
-%         hold on
-%         x1=mar/2; x2=thisRip.RippleDuration*1e3+mar/2;
-%         xlim([0 dur2/2])
-%         ylim([0 max(aspks_epoch(:,3))+1])
-%         line([x1 x1], [min(aspks_epoch(:,3)) max(aspks_epoch(:,3))+1], 'color','r','linestyle','--')
-%         line([x2 x2], [min(aspks_epoch(:,3)) max(aspks_epoch(:,3))+1], 'color','r','linestyle','--')
-%         axis off
-%         for s=1:size(aspks_epoch,1)
-%             x = (aspks_epoch(s,1) - thisRip.STtime)*1e3+mar/2;
-%             patch([x-ti x+ti x+ti x-ti], [aspks_epoch(s,end)+.2 aspks_epoch(s,end)+.2 aspks_epoch(s,end)+.8 aspks_epoch(s,end)+.8],...
-%                 'k','edgecolor','k','edgealpha',0)
-%         end
-%         %% Bayesian decoding plotting
-%         if 1
-%             marR = mar/Params.Fs/Params.tbinDuration;
-%             ax1 = subplot(6,col,[1 5]*col+2);
-%             hold on; axis on
-%             [pbinN, tbinN] = size(Replay.posterior{1});
-%             imagesc(ax1,Replay.posterior{1});
-%             colormap(ax1,flipud(gray))
-% 
-%             plot([-marR tbinN+marR]+0.5,[stem_end_index stem_end_index]+0.5, 'k:');
-%             line([.5 .5], [0 pbinN], 'color','r','linestyle','--')
-%             line([tbinN tbinN], [0 pbinN], 'color','r','linestyle','--')
-% 
-%             xlim([-.25 tbinN+.5]);
-%             ylim([0 pbinN]+0.5);
-%             set(gca, 'xtick', [0 tbinN]+0.5, 'xticklabel', {'0' [jjnum2str(thisRip.RippleDuration*1e3,1) 'ms']}, 'Fontsize', 10);
-%             set(gca,  'ytick', [0 stem_end_index pbinN]+0.5, 'yticklabel', {'Stbox', 'Dv', 'Fw'}, 'Fontsize', 10);
-%             xlabel('time(ms)');
-%             ylabel('Decoded position');
-%             %             title(['Bayesian decoding']);
-% 
-%             % plot the linear fitting line which has the best goodness of fit
-%             c_temp = Replay.c{1}([find(Replay.v{1}>0, 1) find(Replay.v{1}<0,1)]);
-%             v_temp = Replay.v{1}([find(Replay.v{1}>0, 1) find(Replay.v{1}<0,1)]);
-% 
-%             x = [0 tbinN]+0.5;
-%             for i = 1 : length(c_temp)
-%                 plot(x,v_temp(i) * x + c_temp(i), '-', 'color', 'k', 'linewidth', 1);
-%                 temp = v_temp(i) * x + c_temp(i);
-% 
-%             end
-%             if temp(1)<0, temp(1)=0; end
-%             if temp(2)<0, temp(2)=0; end
-%             slope = abs(temp(1)-temp(2));
-% 
-%                 text(mean(x),mean(v_temp(i) * x + c_temp(i))*1.1,['R^2=' jjnum2str(thisRip.Decoding_Rsq,3)], 'color', 'r')
-%             hold off;
-%         end
+        if isshort
+        subplot(6,col,[3 5]*col+1)
+        hold on
+        x1=mar/2; x2=thisRip.RippleDuration*1e3+mar/2;
+        xlim([0 dur2/2])
+        ylim([0 max(aspks_epoch(:,3))+1])
+        line([x1 x1], [min(aspks_epoch(:,3)) max(aspks_epoch(:,3))+1], 'color','r','linestyle','--')
+        line([x2 x2], [min(aspks_epoch(:,3)) max(aspks_epoch(:,3))+1], 'color','r','linestyle','--')
+        axis off
+        for s=1:size(aspks_epoch,1)
+            x = (aspks_epoch(s,1) - thisRip.STtime)*1e3+mar/2;
+            patch([x-ti x+ti x+ti x-ti], [aspks_epoch(s,end)+.2 aspks_epoch(s,end)+.2 aspks_epoch(s,end)+.8 aspks_epoch(s,end)+.8],...
+                'k','edgecolor','k','edgealpha',0)
+        end
+        end
+        %% Bayesian decoding plotting
+        if isshort
+        if 1
+            marR = mar/Params.Fs/Params.tbinDuration;
+            ax1 = subplot(9,col,[1 3]*col+6);
+            hold on; axis on
+            [pbinN, tbinN] = size(Replay.posterior{1});
+            imagesc(ax1,Replay.posterior{1});
+            colormap(ax1,flipud(gray))
+
+            plot([-marR tbinN+marR]+0.5,[stem_end_index stem_end_index]+0.5, 'k:');
+            line([.5 .5], [0 pbinN], 'color','r','linestyle','--')
+            line([tbinN tbinN], [0 pbinN], 'color','r','linestyle','--')
+
+            xlim([-.25 tbinN+.5]);
+            ylim([0 pbinN]+0.5);
+            set(gca, 'xtick', [0 tbinN]+0.5, 'xticklabel', {'0' [jjnum2str(thisRip.RippleDuration*1e3,1) 'ms']}, 'Fontsize', 10);
+            set(gca,  'ytick', [0 stem_end_index pbinN]+0.5, 'yticklabel', {'Stbox', 'Dv', 'Fw'}, 'Fontsize', 10);
+            xlabel('time(ms)');
+            ylabel('Decoded position');
+            %             title(['Bayesian decoding']);
+
+            % plot the linear fitting line which has the best goodness of fit
+            c_temp = Replay.c{1}([find(Replay.v{1}>0, 1) find(Replay.v{1}<0,1)]);
+            v_temp = Replay.v{1}([find(Replay.v{1}>0, 1) find(Replay.v{1}<0,1)]);
+
+            x = [0 tbinN]+0.5;
+            for i = 1 : length(c_temp)
+                plot(x,v_temp(i) * x + c_temp(i), '-', 'color', 'k', 'linewidth', 1);
+                temp = v_temp(i) * x + c_temp(i);
+
+            end
+            if temp(1)<0, temp(1)=0; end
+            if temp(2)<0, temp(2)=0; end
+            slope = abs(temp(1)-temp(2));
+
+                text(mean(x),mean(v_temp(i) * x + c_temp(i))*1.1,['R^2=' jjnum2str(thisRip.Decoding_Rsq,3)], 'color', 'r')
+            hold off;
+        end
+        end
                %% Reactivated cells
-        temp = sortrows(spks_epoch_u,11);
+        temp = sortrows(spks_epoch_u,11,'descend');
         for c=1:size(Units,1)
             if isnan(temp(c,8))
                 Units{c,2}='k';
@@ -406,12 +417,12 @@ for sid=1:size(RipplesTable,1)
 
  ax4 = subplot(9,col,[3 4]*col+3);
        
-        fig = popul_FRMap(flip(squeeze(FRMap_Norm(1,:,:))'),ULabel_1 ,[0 stem_end_index size(FRMaps_B,2)],{' ', ' ',' '}, 1);
+        fig = popul_FRMap(flip(squeeze(FRMap_Norm(1,:,id))'),ULabel_1 ,[0 stem_end_index size(FRMaps_B,2)],{' ', ' ',' '}, 1);
         line([stem_end_index stem_end_index],[0 size(FRMaps_B,3)+1],'color','r')
         title('Zebra')
 
         ax3 = subplot(9,col,[3 4]*col+2);
-        fig = popul_FRMap(flip(squeeze(FRMap_Norm(2,:,:))'),ULabel_2 ,[0 stem_end_index size(FRMaps_B,2)],{' ', ' ',' '}, 1);
+        fig = popul_FRMap(flip(squeeze(FRMap_Norm(2,:,id))'),ULabel_2 ,[0 stem_end_index size(FRMaps_B,2)],{' ', ' ',' '}, 1);
         line([stem_end_index stem_end_index],[0 size(FRMaps_B,3)+1],'color','r')
         title('Bamboo')
         %%
@@ -485,9 +496,15 @@ for sid=1:size(RipplesTable,1)
         %         subplot(9,col,[3 4]*col+5);
         subplot(9,col,[3 4]*col+4);
         bar_RDI(spks_epoch_u(:,11)+1,spks_epoch_u(:,5),clunits_L)
-        if size(spks_for_bias_L,1) < 5 || isnan(thisRip.pRatio_L_UV), thisRip.pBinomDev_L_UV=nan; end
+        if size(spks_for_bias_L,1) < 5 || isnan(thisRip.pRatio_L_UV), thisRip.pBinomDev_L_UV=nan; thisRip2.pBinomDev_L_UV=nan; end
         if thisRip.pRatio_L_UV<0.5, thisRip.pRatio_L_UV=1-thisRip.pRatio_L_UV; end
-        if thisRip.pRatio_L_UV<0.8, thisRip.pBinomDev_L_UV = RipplesTable2.pBinomDev_L_UV(sid); end
+        if thisRip.pRatio_L_UV<-0.8
+            thisRip.pBinomDev_L_UV = thisRip2.pBinomDev_L_UV; 
+        elseif thisRip.pRatio_L_UV>=-0.8 && ~isnan(thisRip.pBinomDev_L_UV)
+        thisRip.pBinomDev_L_UV = min([thisRip2.pBinomDev_L_UV, thisRip.pBinomDev_L_UV]); 
+
+        end
+                RipplesTable.pBinomDev_L_UV(sid) = thisRip.pBinomDev_L_UV;
         if thisRip.pBinomDev_L_UV<0.05, c='r'; else, c='k'; end
             title(['Ratio= ' jjnum2str(thisRip.pRatio_L_UV,3) ', p(SSIL)= ' jjnum2str(thisRip.pBinomDev_L_UV,3)],'color',c,'FontSize',12)
 %         set ( gca, 'xdir', 'reverse' )
@@ -496,9 +513,16 @@ for sid=1:size(RipplesTable,1)
         %         subplot(9,col,[5 6]*col+5);
         subplot(9,col,[5 6]*col+4);
         bar_RDI(spks_epoch_u(:,11)+1,spks_epoch_u(:,6),clunits_R)
-if size(spks_for_bias_R,1) < 5 || isnan(thisRip.pRatio_R_UV), thisRip.pBinomDev_R_UV=nan; end
+if size(spks_for_bias_R,1) < 5 || isnan(thisRip.pRatio_R_UV), thisRip.pBinomDev_R_UV=nan; thisRip2.pBinomDev_R_UV=nan;end
 if thisRip.pRatio_R_UV<0.5, thisRip.pRatio_R_UV=1-thisRip.pRatio_R_UV; end
-if thisRip.pRatio_R_UV<0.8, thisRip.pBinomDev_R_UV = RipplesTable2.pBinomDev_R_UV(sid); end
+if thisRip.pRatio_R_UV<-0.8 && ~isnan(thisRip.pBinomDev_R_UV)
+    thisRip.pBinomDev_R_UV = RipplesTable2.pBinomDev_R_UV(sid);
+        elseif thisRip.pRatio_R_UV>=-0.8
+        thisRip.pBinomDev_R_UV = min([thisRip2.pBinomDev_R_UV, thisRip.pBinomDev_R_UV]); 
+
+end
+        RipplesTable.pBinomDev_R_UV(sid) = thisRip.pBinomDev_R_UV;
+
 if thisRip.pBinomDev_R_UV<0.05, c='r'; else, c='k'; end
            title(['Ratio= ' jjnum2str(thisRip.pRatio_R_UV,3) ', p(SSIR)= ' jjnum2str(thisRip.pBinomDev_R_UV,3)],'color',c,'FontSize',12)
 %      set ( gca, 'xdir', 'reverse' )
@@ -507,9 +531,15 @@ if thisRip.pBinomDev_R_UV<0.05, c='r'; else, c='k'; end
         %         subplot(9,col,[7 8]*col+5);
         subplot(9,col,[7 8]*col+4);
         bar_RDI(spks_epoch_u(:,11)+1,spks_epoch_u(:,7),clunits_C)
-if size(spks_for_bias_C,1) < 5 || isnan(thisRip.pRatio_C_UV), thisRip.pBinomDev_C_UV=nan; end
+if size(spks_for_bias_C,1) < 5 || isnan(thisRip.pRatio_C_UV), thisRip.pBinomDev_C_UV=nan; thisRip2.pBinomDev_C_UV=nan; end
 if thisRip.pRatio_C_UV<0.5, thisRip.pRatio_C_UV=1-thisRip.pRatio_C_UV; end
-if thisRip.pRatio_C_UV<0.8, thisRip.pBinomDev_C_UV = RipplesTable2.pBinomDev_C_UV(sid); end
+if thisRip.pRatio_C_UV<-0.8
+    thisRip.pBinomDev_C_UV = RipplesTable2.pBinomDev_C_UV(sid);
+elseif thisRip.pRatio_C_UV>=-0.8 && ~isnan(thisRip.pBinomDev_C_UV)
+        thisRip.pBinomDev_C_UV = min([thisRip2.pBinomDev_C_UV, thisRip.pBinomDev_C_UV]); 
+     
+end
+   RipplesTable.pBinomDev_C_UV(sid) = thisRip.pBinomDev_C_UV;
 if thisRip.pBinomDev_C_UV<0.05 , c='r'; else, c='k'; end
           title(['Ratio= ' jjnum2str(thisRip.pRatio_C_UV,3) ', p(CSI)= ' jjnum2str(thisRip.pBinomDev_C_UV,3)],'color',c,'FontSize',12)
 %        set ( gca, 'xdir', 'reverse' )
@@ -527,9 +557,11 @@ if nanmin([thisRip.pBinomDev_C_UV])<0.05
 else
     suf2='';
 end
-
+if isshort
         ROOT.Fig_en = [ROOT.Fig '\' suf1 '_' suf2];
+else
         ROOT.Fig_en = [ROOT.Fig];
+end
         if ~exist(ROOT.Fig_en), mkdir(ROOT.Fig_en); end
         saveas(gca,[ROOT.Fig_en '\'  thisRip.ID{1} '.svg'])
         saveas(gca,[ROOT.Fig_en '\'  thisRip.ID{1} '.png'])
@@ -539,7 +571,7 @@ end
         close all
     end
 end
-% writetable(RipplesTable,[ROOT.Save '\RipplesTable_' thisRegion0 '_forAnalysis.xlsx'],'writemode','replacefile')
+writetable(RipplesTable,[ROOT.Save '\RipplesTable_' thisRegion0 '_forAnalysis_final.xlsx'],'writemode','replacefile')
 end
 
 %%
