@@ -9,8 +9,17 @@ ROOT.Save = [ROOT.Processed];
 Recording_region = readtable([ROOT.Info '\Recording_region_SWR.csv'],'ReadRowNames',true);
 
 
-thisRegion = 'SUB';
-thisRegion2 = [thisRegion '_field'];
+RegionList = {'SUB','CA1'};
+for reg=1:2
+thisR = RegionList{reg};
+% 
+
+thisRegion0 = thisR;
+thisRegion = thisR;
+thisRegion2 = [thisR '_field'];
+
+% thisRegion = 'SUB';
+% thisRegion2 = [thisRegion '_field'];
 filt_time = 0;
 
 if filt_time==0, suff = ''; else, suff = ['_' num2str(filt_time) 's']; end
@@ -19,7 +28,7 @@ if filt_time==0, suff = ''; else, suff = ['_' num2str(filt_time) 's']; end
 ReactTable = readtable([ROOT.Save '\ReactTable_' thisRegion '_' thisRegion '.xlsx']);
 ReactTable = unique([ReactTable(:,1:2)],'rows');
 
-RipplesTable = readtable([ROOT.Save '\RipplesTable_' thisRegion '_forAnalysis.xlsx']);
+RipplesTable = readtable([ROOT.Save '\RipplesTable_' thisRegion '_forAnalysis_final.xlsx']);
 % UnitsTable = readtable([ROOT.Units '\UnitsTable_filtered_' thisRegion2 '.xlsx']);
 UnitsTable_B = readtable([ROOT.Save '\UnitsTable_' thisRegion2 '_forAnalysis.xlsx']);
 UnitsTable_A = readtable([ROOT.Save '\UnitsTable_' thisRegion '_forAnalysis_TP.xlsx']);
@@ -31,6 +40,8 @@ RipplesTable.pBinomDev_M_UV = min([RipplesTable.pBinomDev_L_UV,RipplesTable.pBin
 for r=1:size(RipCountTable,1)
     RipCountTable(r,3) = sum(RipplesTable.rat==RipCountTable(r,1) & RipplesTable.session==RipCountTable(r,2));
     RipCountTable(r,4) = sum(RipplesTable.rat==RipCountTable(r,1) & RipplesTable.session==RipCountTable(r,2) & RipplesTable.pBinomDev_M_UV<0.05);
+   RipCountTable(r,5) = sum(RipplesTable.rat==RipCountTable(r,1) & RipplesTable.session==RipCountTable(r,2) & RipplesTable.DecodingP_all<0.05);
+
 end
 
 
@@ -49,19 +60,32 @@ for clUnit = 1:size(UnitsTable,1)
         if ~isempty(rid)
             thisReactTable.Ensemble(clRip) = RipplesTable.ensemble(rid);
             thisReactTable.pBinomDev_M_UV(clRip) = RipplesTable.pBinomDev_M_UV(rid);
+            thisReactTable.DecodingP_all(clRip) = RipplesTable.DecodingP_all(rid);
         end
     end
     
     if ismember('Ensemble', thisReactTable.Properties.VariableNames)
         thisReactTable(thisReactTable.Ensemble<4,:)=[];
         thisReactTable_NonSp = thisReactTable(thisReactTable.pBinomDev_M_UV<0.05,:);
-        
+        thisReactTable_Replay = thisReactTable(thisReactTable.DecodingP_all<0.05,:);
+
         sid = find(str2double(UnitID(1:3))==RipCountTable(:,1) & str2double(UnitID(5:6))==RipCountTable(:,2));
         
         UnitsTable.RipPartRate_all(clUnit) = size(thisReactTable,1) / RipCountTable(sid,3);
         UnitsTable.RipPartRate_NonSp(clUnit) = size(thisReactTable_NonSp,1) / RipCountTable(sid,4);
-   end
+        UnitsTable.RipPartRate_N_TR(clUnit) = (size(thisReactTable,1)-size(thisReactTable_NonSp,1)) / ...
+            (RipCountTable(sid,3)-RipCountTable(sid,4));
+
+        UnitsTable.RipPartRate_Replay(clUnit) = size(thisReactTable_Replay,1) / RipCountTable(sid,5);
+
+        UnitsTable.RipPartRate_N_R(clUnit) = (size(thisReactTable,1)-size(thisReactTable_Replay,1)) / ...
+            (RipCountTable(sid,3)-RipCountTable(sid,5));
+
+    end
     
+end
+%%
+writetable(UnitsTable,[ROOT.Save '\UnitsTable_' thisRegion '_forAnalysis_TP.xlsx'],'writemode','replacefile')
 end
 %%
 figure;
@@ -74,7 +98,7 @@ cdfplot(UnitsTable.RipPartRate_NonSp(UnitsTable.NumField==1))
 cdfplot(UnitsTable.RipPartRate_NonSp(UnitsTable.NumField>1))
 title('Ripple Participation Rate (task-related reactivations)'); legend({'SF','MF'})
 %%
-writetable(UnitsTable,[ROOT.Save '\UnitsTable_' thisRegion '_forAnalysis_TP.xlsx'],'writemode','replacefile')
+% writetable(UnitsTable,[ROOT.Save '\UnitsTable_' thisRegion '_forAnalysis_TP_240310.xlsx'],'writemode','replacefile')
 % writetable(UnitsTable,[ROOT.Save '\UnitsTable_RPR_' thisRegion suff '.xlsx'])
 %%
 
@@ -111,3 +135,5 @@ cdfplot(rpr(UnitsTable.MultiVar_SC))
 hold on
 
 cdfplot(rpr(~UnitsTable.MultiVar_SC))
+
+% end
