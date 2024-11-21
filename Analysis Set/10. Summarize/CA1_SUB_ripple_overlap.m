@@ -28,7 +28,7 @@ for rc = 1:size(R1,1)
         s = thisR.STtime(rs);
         e = thisR.EDtime(rs);
 
-        if (st<=e && ed>=e) || (st<=s && ed>=s)
+        if (st<=e && ed>=e) || (st<=s && ed>=s)  || (st>=s && ed<=e) || (st<=s && ed>=e)
             R1.Overlap(rc) = R1.Overlap(rc)+1;
         end
     end
@@ -52,7 +52,7 @@ for rs = 1:size(R0,1)
         s = thisR.STtime(rc);
         e = thisR.EDtime(rc);
 
-        if (st<=e && ed>=e) || (st<=s && ed>=s)
+        if (st<=e && ed>=e) || (st<=s && ed>=s)  || (st>=s && ed<=e) || (st<=s && ed>=e)
             R0.Overlap(rs) = R0.Overlap(rs)+1;
         end
     end
